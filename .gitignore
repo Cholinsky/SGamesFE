@@ -59,7 +59,9 @@ coverage/
 # pero se permiten .env.local y .env.production
 # =========================
 .env
-.env.*
+.env.local
+.env.production
+.env.*.local
 
 
 # =========================
