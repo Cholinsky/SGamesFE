@@ -78,7 +78,7 @@ export default function AdminLogin() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="border-gray-700 bg-gray-800 pl-10 text-white"
-                    placeholder="admin@sgames.com"
+                    placeholder="correo@dominio"
                     required
                     disabled={isLoading}
                   />
@@ -123,16 +123,7 @@ export default function AdminLogin() {
               </Button>
             </form>
 
-            {/* Demo Credentials Info */}
-            <div className="mt-6 rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-4">
-              <p className="mb-2 text-sm font-semibold text-cyan-400">
-                Credenciales de demostración:
-              </p>
-              <div className="space-y-1 text-xs text-gray-400">
-                <p>Email: admin@sgames.com</p>
-                <p>Contraseña: admin123</p>
-              </div>
-            </div>
+           
           </CardContent>
         </Card>
 
