@@ -39,16 +39,13 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import {
-  getAdminNotificationSummary
+  getAdminNotificationSummary,
+  markAdminNotificationRead,
+  markAllAdminNotificationsRead,
+  type AdminNotificationItem,
 } from "../services/adminNotificationService";
 
-type AdminNotificationItem = {
-  type: string;
-  title: string;
-  description: string;
-  count: number;
-  path: string;
-};
+
 
 type AdminNotificationSummary = {
   total: number;
@@ -142,6 +139,60 @@ export function AdminLayout() {
       });
     }
   }
+
+  async function handleReadNotification(
+  item: AdminNotificationItem
+) {
+  try {
+    await markAdminNotificationRead(item);
+
+    setNotifications((current) => {
+      const newItems =
+        current.items.filter(
+          (notification) =>
+            !(
+              notification.type === item.type &&
+              notification.signature === item.signature
+            )
+        );
+
+      return {
+        ...current,
+        total: newItems.reduce(
+          (sum, notification) =>
+            sum + notification.count,
+          0
+        ),
+        items: newItems,
+      };
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function handleMarkAllRead() {
+  try {
+    const currentItems =
+      notifications.items;
+
+    if (currentItems.length === 0) {
+      return;
+    }
+
+    await markAllAdminNotificationsRead(
+      currentItems
+    );
+
+    setNotifications((current) => ({
+      ...current,
+      total: 0,
+      items: [],
+    }));
+  } catch (error) {
+    console.error(error);
+  }
+}
 
   const handleLogout = () => {
     logout();
@@ -332,13 +383,19 @@ export function AdminLayout() {
                   align="end"
                   className="w-80 border-gray-800 bg-gray-900 text-white"
                 >
-                  <DropdownMenuLabel className="flex items-center justify-between text-gray-300">
+                  <DropdownMenuLabel className="flex items-center justify-between gap-3 text-gray-300">
                     <span>Notificaciones</span>
 
-                    {notifications.total > 0 ? (
-                      <Badge className="bg-red-500/20 text-red-300">
-                        {notifications.total}
-                      </Badge>
+                    {notifications.items.length > 0 ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleMarkAllRead}
+                        className="h-7 px-2 text-xs text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
+                      >
+                        Marcar leídas
+                      </Button>
                     ) : (
                       <Badge className="bg-green-500/20 text-green-300">
                         Todo bien
@@ -368,6 +425,9 @@ export function AdminLayout() {
                       >
                         <Link
                           to={item.path}
+                          onClick={() =>
+                            handleReadNotification(item)
+                          }
                           className="flex w-full gap-3 py-2"
                         >
                           <div className="mt-1">
