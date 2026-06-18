@@ -22,13 +22,26 @@ import {
   Send,
   Edit,
   Trash2,
+  EyeOff,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   getScheduleDays,
   getScheduleEntries,
   updateScheduleEntry,
   publishSchedule,
+  unpublishSchedule,
   getActiveEvent,
   deleteScheduleEntry,
 } from "../../services/scheduleService";
@@ -374,6 +387,12 @@ export default function AdminHorarios() {
   const [editTime, setEditTime] =
     useState("");
 
+    const [deleteDialogOpen, setDeleteDialogOpen] =
+  useState(false);
+
+const [itemToDelete, setItemToDelete] =
+  useState<ScheduleItem | null>(null);
+
   useEffect(() => {
     loadSchedule();
   }, []);
@@ -598,29 +617,34 @@ export default function AdminHorarios() {
     setEditDialogOpen(false);
   };
 
-const handleDelete = async (
+
+const handleDelete = (
   item: ScheduleItem
 ) => {
-  const confirmDelete =
-    window.confirm(
-      `¿Eliminar "${item.game}" del horario? La postulación no se borrará.`
-    );
+  setItemToDelete(item);
+  setDeleteDialogOpen(true);
+};
 
-  if (!confirmDelete) {
+const handleConfirmDelete = async () => {
+  if (!itemToDelete) {
     return;
   }
 
   try {
-    await deleteScheduleEntry(item.id);
+    await deleteScheduleEntry(
+      itemToDelete.id
+    );
 
     setSchedule((prev) => {
-      const newSchedule: DaySchedule = {};
+      const newSchedule: DaySchedule =
+        {};
 
       Object.keys(prev).forEach((day) => {
         newSchedule[day] =
           prev[day].filter(
             (scheduleItem) =>
-              scheduleItem.id !== item.id
+              scheduleItem.id !==
+              itemToDelete.id
           );
       });
 
@@ -631,6 +655,9 @@ const handleDelete = async (
       "Run eliminada del horario"
     );
 
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+
     await loadSchedule();
   } catch (error) {
     console.error(error);
@@ -640,6 +667,33 @@ const handleDelete = async (
     );
   }
 };
+
+const handleUnpublish = async () => {
+  if (!activeEventId) {
+    toast.error("No hay evento activo");
+    return;
+  }
+
+  try {
+    await unpublishSchedule(activeEventId);
+
+    setIsPublished(false);
+
+    toast.success(
+      "Horario despublicado correctamente"
+    );
+
+    await loadSchedule();
+  } catch (error) {
+    console.error(error);
+
+    toast.error(
+      "No se pudo despublicar el horario"
+    );
+  }
+};
+
+
   const handleSaveDraft = async () => {
     try {
       const updates: Promise<any>[] =
@@ -749,17 +803,29 @@ const handleDelete = async (
               className="border-gray-700"
             >
               <Save className="mr-2 h-4 w-4" />
-              Guardar Borrador
+              {isPublished
+                ? "Guardar Cambios"
+                : "Guardar Borrador"}
             </Button>
-
-            <Button
-              onClick={handlePublish}
-              disabled={isPublished}
-              className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700"
-            >
-              <Send className="mr-2 h-4 w-4" />
-              Publicar Horario
+              
+            {isPublished ? (
+              <Button
+                onClick={handleUnpublish}
+                variant="outline"
+                className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+              >
+                <EyeOff className="mr-2 h-4 w-4" />
+                Despublicar Horario
+              </Button>
+            ) : (
+              <Button
+                onClick={handlePublish}
+                className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700"
+              >
+                <Send className="mr-2 h-4 w-4" />
+                Publicar Horario
             </Button>
+            )}
           </div>
         </div>
 
@@ -800,6 +866,54 @@ const handleDelete = async (
             />
           ))}
         </div>
+
+      {/* Delete Confirmation */}
+        <AlertDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+        >
+          <AlertDialogContent className="border-gray-800 bg-gray-900 text-white">
+            <AlertDialogHeader>
+              <div className="mb-2 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
+                  <AlertTriangle className="h-5 w-5 text-red-400" />
+                </div>
+
+                <AlertDialogTitle>
+                  Eliminar run del horario
+                </AlertDialogTitle>
+              </div>
+
+              <AlertDialogDescription className="text-gray-400">
+                {itemToDelete ? (
+                  <>
+                    Vas a eliminar{" "}
+                    <span className="font-semibold text-white">
+                      {itemToDelete.game}
+                    </span>{" "}
+                    del horario. La postulación seguirá guardada
+                    en el panel de postulaciones.
+                  </>
+                ) : (
+                  "Esta acción eliminará la run del horario."
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+              
+            <AlertDialogFooter>
+              <AlertDialogCancel className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white">
+                Cancelar
+              </AlertDialogCancel>
+              
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                Eliminar del horario
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Edit Dialog */}
         <Dialog

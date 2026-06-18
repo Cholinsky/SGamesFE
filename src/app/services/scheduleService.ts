@@ -161,3 +161,24 @@ export async function deleteScheduleEntry(
 
   return await response.json();
 }
+
+export async function unpublishSchedule(
+  eventId: string
+) {
+  const response = await fetch(
+    `${API_URL}/Schedule/unpublish/${eventId}`,
+    {
+      method: "PUT",
+      headers: getHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Error unpublishing schedule"
+    );
+  }
+
+  return await response.json();
+}
+
