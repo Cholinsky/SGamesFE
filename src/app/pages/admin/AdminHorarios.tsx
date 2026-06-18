@@ -21,6 +21,7 @@ import {
   Save,
   Send,
   Edit,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -29,6 +30,7 @@ import {
   updateScheduleEntry,
   publishSchedule,
   getActiveEvent,
+  deleteScheduleEntry,
 } from "../../services/scheduleService";
 
 type ScheduleItem = {
@@ -124,6 +126,7 @@ interface DraggableItemProps {
     toIndex: number
   ) => void;
   onEdit: (item: ScheduleItem) => void;
+  onDelete: (item: ScheduleItem) => void;
 }
 
 function DraggableItem({
@@ -132,6 +135,7 @@ function DraggableItem({
   index,
   moveItem,
   onEdit,
+  onDelete,
 }: DraggableItemProps) {
   const [{ isDragging }, drag] =
     useDrag({
@@ -250,6 +254,7 @@ interface DayColumnProps {
     toIndex: number
   ) => void;
   onEdit: (item: ScheduleItem) => void;
+  onDelete: (item: ScheduleItem) => void;
 }
 
 function DayColumn({
@@ -257,7 +262,8 @@ function DayColumn({
   items,
   moveItem,
   onEdit,
-}: DayColumnProps) {
+  onDelete,
+}: DayColumnProps){
   const [, drop] =
     useDrop({
       accept: ItemTypes.SCHEDULE_ITEM,
@@ -316,6 +322,7 @@ function DayColumn({
                   index={index}
                   moveItem={moveItem}
                   onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               ))
             )}
@@ -571,7 +578,49 @@ export default function AdminHorarios() {
 
     setEditDialogOpen(false);
   };
+  
+const handleDelete = async (
+  item: ScheduleItem
+) => {
+  const confirmDelete =
+    window.confirm(
+      `¿Eliminar "${item.game}" del horario? La postulación no se borrará.`
+    );
 
+  if (!confirmDelete) {
+    return;
+  }
+
+  try {
+    await deleteScheduleEntry(item.id);
+
+    setSchedule((prev) => {
+      const newSchedule: DaySchedule = {};
+
+      Object.keys(prev).forEach((day) => {
+        newSchedule[day] =
+          prev[day].filter(
+            (scheduleItem) =>
+              scheduleItem.id !== item.id
+          );
+      });
+
+      return newSchedule;
+    });
+
+    toast.success(
+      "Run eliminada del horario"
+    );
+
+    await loadSchedule();
+  } catch (error) {
+    console.error(error);
+
+    toast.error(
+      "No se pudo eliminar la run del horario"
+    );
+  }
+};
   const handleSaveDraft = async () => {
     try {
       const updates: Promise<any>[] =
@@ -728,6 +777,7 @@ export default function AdminHorarios() {
               items={schedule[day] || []}
               moveItem={moveItem}
               onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))}
         </div>

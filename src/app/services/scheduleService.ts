@@ -141,3 +141,23 @@ export async function getActiveEvent() {
 
   return await response.json();
 }
+
+export async function deleteScheduleEntry(
+  id: string
+) {
+  const response = await fetch(
+    `${API_URL}/Schedule/entries/${id}`,
+    {
+      method: "DELETE",
+      headers: getHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Error deleting schedule entry"
+    );
+  }
+
+  return await response.json();
+}
