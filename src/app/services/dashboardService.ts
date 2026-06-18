@@ -1,23 +1,16 @@
 import { API_URL } from "../config/api";
+import { getHeaders } from "./authservice";
 
 export async function getDashboardStats() {
-  const token =
-    localStorage.getItem(
-      "sgames_token"
-    );
-
   const response =
     await fetch(
       `${API_URL}/Dashboard/stats`,
       {
-        headers: {
-          Authorization:
-            `Bearer ${token}`
-        }
-      });
+        headers: getHeaders(),
+      }
+    );
 
-  if (!response.ok)
-  {
+  if (!response.ok) {
     throw new Error(
       "Error loading dashboard"
     );
@@ -25,3 +18,7 @@ export async function getDashboardStats() {
 
   return await response.json();
 }
+
+
+
+
