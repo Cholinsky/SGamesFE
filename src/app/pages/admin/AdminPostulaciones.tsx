@@ -3,6 +3,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
+import { Label } from "../../components/ui/label";
 import {
   getScheduleDays,
   createScheduleEntry,
@@ -46,13 +47,13 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Label } from "../../components/ui/label";
 
 type ScheduleDay = {
   id: string;
   event: string;
   dayDate: string;
 };
+
 type Postulacion = {
   id: string;
   runnerName: string;
@@ -61,6 +62,7 @@ type Postulacion = {
   status: string;
   submittedAt: string;
 };
+
 type SocialNetworkDetail = {
   socialNetworkId: string;
   name: string;
@@ -69,223 +71,61 @@ type SocialNetworkDetail = {
 
 type ApplicationDetail = {
   id: string;
-
   runnerName: string;
   email: string;
   discordUser: string;
   country: string;
-
   game: string;
   category: string;
   platform: string;
-
   estimatedTimeMinutes: number;
-
   aspectRatio: string;
-
   youtubeUrl: string;
-
   notes: string;
-
   status: string;
-
   priority: string;
-
   event: string;
-
   submittedAt: string;
-
   socialNetworks: SocialNetworkDetail[];
 };
 
-export default function AdminPostulaciones() {
-  const [scheduleDays, setScheduleDays] = useState<ScheduleDay[]>([]);
-  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
-  const [scheduleApplication, setScheduleApplication] = useState<ApplicationDetail | null>(null);
-  const [selectedScheduleDayId, setSelectedScheduleDayId] = useState("");
-  const [scheduleStartTime, setScheduleStartTime] = useState("");
-const [postulaciones, setPostulaciones] = useState<Postulacion[]>([]);
-const [searchTerm, setSearchTerm] = useState("");
-const [statusFilter, setStatusFilter] = useState("todos");
-const [platformFilter, setPlatformFilter] = useState("todos");
-  useEffect(() => {
-  loadApplications();
-}, []);
+function parseLocalDate(dayDate: string) {
+  const cleanDate =
+    dayDate.split("T")[0];
 
-async function loadApplications() {
-  try {
-    const data =
-      await getApplications();
+  const [year, month, day] =
+    cleanDate.split("-").map(Number);
 
-    setPostulaciones(data);
-  } catch {
-    toast.error(
-      "No se pudieron cargar las postulaciones"
-    );
-  }
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
 }
-  const [selectedPostulacion, setSelectedPostulacion] =
-    useState<ApplicationDetail | null>(null);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-  const filteredPostulaciones = postulaciones.filter((p) => {
-    const matchesSearch =
-      p.runnerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.game.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "todos" || p.status === statusFilter;
-    const matchesPlatform = true;
-    return matchesSearch && matchesStatus && matchesPlatform;
+function formatScheduleDate(dayDate: string) {
+  const date =
+    parseLocalDate(dayDate);
+
+  return date.toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
   });
+}
 
-const handleStatusChange = async (
-  id: string,
-  newStatus: "approved" | "rejected"
-) => {
-  try {
-
-    if (newStatus === "approved") {
-      await approveApplication(id);
-    } else {
-      await rejectApplication(id);
+function formatSubmittedDate(dateValue: string) {
+  return new Date(dateValue).toLocaleDateString(
+    "es-MX",
+    {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     }
+  );
+}
 
-    await loadApplications();
-
-    toast.success(
-      `Postulación ${
-        newStatus === "approved"
-          ? "aprobada"
-          : "rechazada"
-      }`
-    );
-
-  } catch {
-    toast.error(
-      "No se pudo actualizar"
-    );
-  }
-};
-
-const handleViewDetail = async (
-  postulacion: Postulacion
-) => {
-  try {
-
-    const detail =
-      await getApplicationById(
-        postulacion.id
-      );
-
-    setSelectedPostulacion(
-      detail
-    );
-
-    setDetailDialogOpen(true);
-
-  } catch {
-
-    toast.error(
-      "No se pudo cargar el detalle"
-    );
-
-  }
-};
-
-const handleOpenScheduleDialog = async (
-  postulacion: Postulacion
-) => {
-  try {
-    const detail =
-      await getApplicationById(postulacion.id);
-
-    const days =
-      await getScheduleDays();
-
-    setScheduleApplication(detail);
-    setScheduleDays(days);
-    setSelectedScheduleDayId("");
-    setScheduleStartTime("");
-    setScheduleDialogOpen(true);
-  } catch {
-    toast.error(
-      "No se pudo abrir el programador"
-    );
-  }
-};
-
-const handleAddToSchedule = async () => {
-  if (!scheduleApplication) return;
-
-  if (!selectedScheduleDayId || !scheduleStartTime) {
-    toast.error(
-      "Selecciona un día y una hora de inicio"
-    );
-    return;
-  }
-
-  try {
-    await createScheduleEntry({
-      scheduleDayId: selectedScheduleDayId,
-      applicationId: scheduleApplication.id,
-      entryType: "Run",
-      startTime: `${scheduleStartTime}:00`,
-      durationMinutes:
-        scheduleApplication.estimatedTimeMinutes,
-      positionOrder: 999,
-    });
-
-        toast.success(
-      "Run agregado al horario"
-    );
-
-    setScheduleDialogOpen(false);
-    setScheduleApplication(null);
-    setSelectedScheduleDayId("");
-    setScheduleStartTime("");
-  } catch {
-    toast.error(
-      "No se pudo agregar al horario"
-    );
-  }
-};
-
- const getStatusBadge = (
-  status: string
-) => {
-
-  switch (status) {
-
-    case "Pending":
-      return (
-        <Badge className="bg-yellow-500/20 text-yellow-400">
-          Pendiente
-        </Badge>
-      );
-
-    case "Approved":
-      return (
-        <Badge className="bg-green-500/20 text-green-400">
-          Aprobada
-        </Badge>
-      );
-
-    case "Rejected":
-      return (
-        <Badge className="bg-red-500/20 text-red-400">
-          Rechazada
-        </Badge>
-      );
-
-    default:
-      return null;
-  }
-};
-
-    const platforms: string[] = [];
-    function formatEstimatedTime(
-  totalMinutes: number
-) {
+function formatEstimatedTime(totalMinutes: number) {
   const hours =
     Math.floor(totalMinutes / 60);
 
@@ -299,6 +139,224 @@ const handleAddToSchedule = async () => {
     .padStart(2, "0")}:00`;
 }
 
+export default function AdminPostulaciones() {
+  const [scheduleDays, setScheduleDays] =
+    useState<ScheduleDay[]>([]);
+
+  const [scheduleDialogOpen, setScheduleDialogOpen] =
+    useState(false);
+
+  const [scheduleApplication, setScheduleApplication] =
+    useState<ApplicationDetail | null>(null);
+
+  const [selectedScheduleDayId, setSelectedScheduleDayId] =
+    useState("");
+
+  const [scheduleStartTime, setScheduleStartTime] =
+    useState("");
+
+  const [postulaciones, setPostulaciones] =
+    useState<Postulacion[]>([]);
+
+  const [searchTerm, setSearchTerm] =
+    useState("");
+
+  const [statusFilter, setStatusFilter] =
+    useState("todos");
+
+  const [platformFilter, setPlatformFilter] =
+    useState("todos");
+
+  const [selectedPostulacion, setSelectedPostulacion] =
+    useState<ApplicationDetail | null>(null);
+
+  const [detailDialogOpen, setDetailDialogOpen] =
+    useState(false);
+
+  useEffect(() => {
+    loadApplications();
+  }, []);
+
+  async function loadApplications() {
+    try {
+      const data =
+        await getApplications();
+
+      setPostulaciones(data);
+    } catch {
+      toast.error(
+        "No se pudieron cargar las postulaciones"
+      );
+    }
+  }
+
+  const filteredPostulaciones =
+    postulaciones.filter((p) => {
+      const matchesSearch =
+        p.runnerName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        p.game
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "todos" ||
+        p.status === statusFilter;
+
+      const matchesPlatform =
+        platformFilter === "todos" ||
+        true;
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesPlatform
+      );
+    });
+
+  const handleStatusChange = async (
+    id: string,
+    newStatus: "approved" | "rejected"
+  ) => {
+    try {
+      if (newStatus === "approved") {
+        await approveApplication(id);
+      } else {
+        await rejectApplication(id);
+      }
+
+      await loadApplications();
+
+      toast.success(
+        `Postulación ${
+          newStatus === "approved"
+            ? "aprobada"
+            : "rechazada"
+        }`
+      );
+    } catch {
+      toast.error(
+        "No se pudo actualizar"
+      );
+    }
+  };
+
+  const handleViewDetail = async (
+    postulacion: Postulacion
+  ) => {
+    try {
+      const detail =
+        await getApplicationById(
+          postulacion.id
+        );
+
+      setSelectedPostulacion(detail);
+      setDetailDialogOpen(true);
+    } catch {
+      toast.error(
+        "No se pudo cargar el detalle"
+      );
+    }
+  };
+
+  const handleOpenScheduleDialog = async (
+    postulacion: Postulacion
+  ) => {
+    try {
+      const detail =
+        await getApplicationById(
+          postulacion.id
+        );
+
+      const days =
+        await getScheduleDays();
+
+      setScheduleApplication(detail);
+      setScheduleDays(days);
+      setSelectedScheduleDayId("");
+      setScheduleStartTime("");
+      setScheduleDialogOpen(true);
+    } catch {
+      toast.error(
+        "No se pudo abrir el programador"
+      );
+    }
+  };
+
+  const handleAddToSchedule = async () => {
+    if (!scheduleApplication) {
+      return;
+    }
+
+    if (
+      !selectedScheduleDayId ||
+      !scheduleStartTime
+    ) {
+      toast.error(
+        "Selecciona un día y una hora de inicio"
+      );
+      return;
+    }
+
+    try {
+      await createScheduleEntry({
+        scheduleDayId: selectedScheduleDayId,
+        applicationId: scheduleApplication.id,
+        entryType: "Run",
+        startTime: `${scheduleStartTime}:00`,
+        durationMinutes:
+          scheduleApplication.estimatedTimeMinutes,
+        positionOrder: 999,
+      });
+
+      toast.success(
+        "Run agregado al horario"
+      );
+
+      setScheduleDialogOpen(false);
+      setScheduleApplication(null);
+      setSelectedScheduleDayId("");
+      setScheduleStartTime("");
+    } catch {
+      toast.error(
+        "No se pudo agregar al horario"
+      );
+    }
+  };
+
+  const getStatusBadge = (
+    status: string
+  ) => {
+    switch (status) {
+      case "Pending":
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400">
+            Pendiente
+          </Badge>
+        );
+
+      case "Approved":
+        return (
+          <Badge className="bg-green-500/20 text-green-400">
+            Aprobada
+          </Badge>
+        );
+
+      case "Rejected":
+        return (
+          <Badge className="bg-red-500/20 text-red-400">
+            Rechazada
+          </Badge>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const platforms: string[] = [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -306,6 +364,7 @@ const handleAddToSchedule = async () => {
         <h1 className="mb-2 text-3xl font-bold text-white">
           Gestión de Postulaciones
         </h1>
+
         <p className="text-gray-400">
           Administra todas las postulaciones del evento
         </p>
@@ -317,30 +376,47 @@ const handleAddToSchedule = async () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-cyan-400" />
+
               <span className="font-semibold text-white">
                 Filtros y búsqueda:
               </span>
             </div>
+
             <div className="grid gap-3 md:grid-cols-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+
                 <Input
                   placeholder="Buscar por runner o juego..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) =>
+                    setSearchTerm(e.target.value)
+                  }
                   className="border-gray-700 bg-gray-800 pl-10 text-white"
                 />
               </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+              >
                 <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
+
                 <SelectContent className="border-gray-700 bg-gray-800">
-                  <SelectItem value="todos">Todos los estados</SelectItem>
-                  <SelectItem value="Pending">Pendiente</SelectItem>
-                  <SelectItem value="Approved">Aprobada</SelectItem>
-                  <SelectItem value="Rejected">Rechazada</SelectItem>
+                  <SelectItem value="todos">
+                    Todos los estados
+                  </SelectItem>
+                  <SelectItem value="Pending">
+                    Pendiente
+                  </SelectItem>
+                  <SelectItem value="Approved">
+                    Aprobada
+                  </SelectItem>
+                  <SelectItem value="Rejected">
+                    Rechazada
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -351,10 +427,17 @@ const handleAddToSchedule = async () => {
                 <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
                   <SelectValue placeholder="Plataforma" />
                 </SelectTrigger>
+
                 <SelectContent className="border-gray-700 bg-gray-800">
-                  <SelectItem value="todos">Todas las plataformas</SelectItem>
+                  <SelectItem value="todos">
+                    Todas las plataformas
+                  </SelectItem>
+
                   {platforms.map((platform) => (
-                    <SelectItem key={platform} value={platform}>
+                    <SelectItem
+                      key={platform}
+                      value={platform}
+                    >
                       {platform}
                     </SelectItem>
                   ))}
@@ -372,17 +455,30 @@ const handleAddToSchedule = async () => {
             <Table>
               <TableHeader>
                 <TableRow className="border-gray-800 hover:bg-gray-800/50">
-                  <TableHead className="text-gray-400">Runner</TableHead>
-                  <TableHead className="text-gray-400">Juego</TableHead>
-                  <TableHead className="text-gray-400">Categoría</TableHead>
-                  <TableHead className="text-gray-400">Plataforma</TableHead>
-                  <TableHead className="text-gray-400">Estado</TableHead>
-                  <TableHead className="text-gray-400">Fecha</TableHead>
+                  <TableHead className="text-gray-400">
+                    Runner
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Juego
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Categoría
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Plataforma
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Estado
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Fecha
+                  </TableHead>
                   <TableHead className="text-right text-gray-400">
                     Acciones
                   </TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {filteredPostulaciones.length === 0 ? (
                   <TableRow>
@@ -394,312 +490,436 @@ const handleAddToSchedule = async () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPostulaciones.map((postulacion) => (
-                    <TableRow
-                      key={postulacion.id}
-                      className="border-gray-800 hover:bg-gray-800/50"
-                    >
-                      <TableCell className="font-medium text-white">
-                        {postulacion.runnerName}
-                      </TableCell>
-                      <TableCell className="text-gray-300">
-                        {postulacion.game}
-                      </TableCell>
-                      <TableCell className="text-gray-400">
-                        {postulacion.category}
-                      </TableCell>
-                      <TableCell className="text-gray-400">
-                        -
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(postulacion.status)}
-                      </TableCell>
-                      <TableCell className="text-gray-400">
-                        {new Date(postulacion.submittedAt).toLocaleDateString(
-                          "es-ES"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleViewDetail(postulacion)}
-                            className="text-cyan-400 hover:bg-cyan-500/10"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {postulacion.status === "Pending" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  handleStatusChange(
-                                    postulacion.id,
-                                    "approved"
-                                  )
-                                }
-                                className="text-green-400 hover:bg-green-500/10"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  handleStatusChange(
-                                    postulacion.id,
-                                    "rejected"
-                                  )
-                                }
-                                className="text-red-400 hover:bg-red-500/10"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </>
+                  filteredPostulaciones.map(
+                    (postulacion) => (
+                      <TableRow
+                        key={postulacion.id}
+                        className="border-gray-800 hover:bg-gray-800/50"
+                      >
+                        <TableCell className="font-medium text-white">
+                          {postulacion.runnerName}
+                        </TableCell>
+
+                        <TableCell className="text-gray-300">
+                          {postulacion.game}
+                        </TableCell>
+
+                        <TableCell className="text-gray-400">
+                          {postulacion.category}
+                        </TableCell>
+
+                        <TableCell className="text-gray-400">
+                          -
+                        </TableCell>
+
+                        <TableCell>
+                          {getStatusBadge(
+                            postulacion.status
                           )}
-                          {postulacion.status === "Approved" && (
-                           <Button
+                        </TableCell>
+
+                        <TableCell className="text-gray-400">
+                          {formatSubmittedDate(
+                            postulacion.submittedAt
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                handleViewDetail(
+                                  postulacion
+                                )
+                              }
+                              className="text-cyan-400 hover:bg-cyan-500/10"
+                              title="Ver detalle"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            {postulacion.status === "Pending" && (
+                              <>
+                                <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() =>
-                                    handleOpenScheduleDialog(postulacion)
+                                    handleStatusChange(
+                                      postulacion.id,
+                                      "approved"
+                                    )
                                   }
-                                  className="text-purple-400 hover:bg-purple-500/10"
-                            >
-                            <Calendar className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                                  className="text-green-400 hover:bg-green-500/10"
+                                  title="Aprobar"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleStatusChange(
+                                      postulacion.id,
+                                      "rejected"
+                                    )
+                                  }
+                                  className="text-red-400 hover:bg-red-500/10"
+                                  title="Rechazar"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+
+                            {postulacion.status === "Approved" && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleOpenScheduleDialog(
+                                    postulacion
+                                  )
+                                }
+                                className="text-purple-400 hover:bg-purple-500/10"
+                                title="Agregar al horario"
+                              >
+                                <Calendar className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )
                 )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
-{/* Detail Dialog */}
-<Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-  <DialogContent className="max-w-2xl border-gray-800 bg-gray-900 text-white">
-    <DialogHeader>
-      <DialogTitle className="text-2xl">
-        Detalle de Postulación
-      </DialogTitle>
-    </DialogHeader>
 
-    {selectedPostulacion && (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          {getStatusBadge(selectedPostulacion.status)}
-          <span className="text-sm text-gray-400">
-            {new Date(selectedPostulacion.submittedAt).toLocaleDateString("es-ES")}
-          </span>
-        </div>
+      {/* Detail Dialog */}
+      <Dialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      >
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-3xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
+          <DialogHeader className="shrink-0 border-b border-gray-800 px-6 py-4">
+            <DialogTitle className="text-2xl">
+              Detalle de Postulación
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-3 rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-          <h3 className="font-semibold text-cyan-400">
-            Información del Runner
-          </h3>
+          {selectedPostulacion && (
+            <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {getStatusBadge(
+                  selectedPostulacion.status
+                )}
 
-          <div>
-            <span className="text-sm text-gray-400">Nombre:</span>
-            <p className="text-white">{selectedPostulacion.runnerName}</p>
-          </div>
+                <span className="text-sm text-gray-400">
+                  {formatSubmittedDate(
+                    selectedPostulacion.submittedAt
+                  )}
+                </span>
+              </div>
 
-          <div>
-            <span className="text-sm text-gray-400">Correo:</span>
-            <p className="text-white">{selectedPostulacion.email}</p>
-          </div>
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 font-semibold text-cyan-400">
+                  Información del Runner
+                </h3>
 
-          {selectedPostulacion.discordUser && (
-            <div>
-              <span className="text-sm text-gray-400">Discord:</span>
-              <p className="text-white">{selectedPostulacion.discordUser}</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Nombre:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.runnerName}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Correo:
+                    </span>
+                    <p className="break-all text-white">
+                      {selectedPostulacion.email}
+                    </p>
+                  </div>
+
+                  {selectedPostulacion.discordUser && (
+                    <div>
+                      <span className="text-sm text-gray-400">
+                        Discord:
+                      </span>
+                      <p className="break-words text-white">
+                        {selectedPostulacion.discordUser}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedPostulacion.country && (
+                    <div>
+                      <span className="text-sm text-gray-400">
+                        País:
+                      </span>
+                      <p className="break-words text-white">
+                        {selectedPostulacion.country}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 font-semibold text-cyan-400">
+                  Información del Speedrun
+                </h3>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Evento:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.event}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Juego:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.game}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Categoría:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.category}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Plataforma:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.platform}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Tiempo estimado:
+                    </span>
+                    <p className="text-white">
+                      {formatEstimatedTime(
+                        selectedPostulacion.estimatedTimeMinutes
+                      )}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Relación de pantalla:
+                    </span>
+                    <p className="text-white">
+                      {selectedPostulacion.aspectRatio}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedPostulacion.youtubeUrl && (
+                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                  <h3 className="mb-3 font-semibold text-cyan-400">
+                    Video Demostrativo
+                  </h3>
+
+                  <a
+                    href={selectedPostulacion.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex max-w-full items-center gap-2 break-all text-cyan-400 hover:text-cyan-300"
+                  >
+                    <ExternalLink className="h-4 w-4 shrink-0" />
+                    <span className="break-all">
+                      Ver en YouTube
+                    </span>
+                  </a>
+                </div>
+              )}
+
+              {selectedPostulacion.socialNetworks?.length > 0 && (
+                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                  <h3 className="mb-3 font-semibold text-cyan-400">
+                    Redes Sociales
+                  </h3>
+
+                  <div className="space-y-3">
+                    {selectedPostulacion.socialNetworks.map(
+                      (sn) => (
+                        <div
+                          key={sn.socialNetworkId}
+                          className="space-y-1"
+                        >
+                          <span className="text-sm text-gray-400">
+                            {sn.name}
+                          </span>
+
+                          <a
+                            href={sn.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block break-all text-sm text-cyan-400 hover:text-cyan-300"
+                          >
+                            {sn.url}
+                          </a>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedPostulacion.notes && (
+                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                  <h3 className="mb-3 font-semibold text-cyan-400">
+                    Notas
+                  </h3>
+
+                  <p className="whitespace-pre-wrap break-words text-gray-300">
+                    {selectedPostulacion.notes}
+                  </p>
+                </div>
+              )}
             </div>
           )}
-        </div>
 
-        <div className="space-y-3 rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-          <h3 className="font-semibold text-cyan-400">
-            Información del Speedrun
-          </h3>
+          <DialogFooter className="shrink-0 border-t border-gray-800 px-6 py-4">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setDetailDialogOpen(false)
+              }
+              className="border-gray-700"
+            >
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <div className="grid gap-2 md:grid-cols-2">
-            <div>
-              <span className="text-sm text-gray-400">Evento:</span>
-              <p className="text-white">{selectedPostulacion.event}</p>
-            </div>
+      {/* Schedule Dialog */}
+      <Dialog
+        open={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
+      >
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
+          <DialogHeader className="shrink-0 border-b border-gray-800 px-6 py-4">
+            <DialogTitle>
+              Agregar al Horario
+            </DialogTitle>
+          </DialogHeader>
 
-            <div>
-              <span className="text-sm text-gray-400">Juego:</span>
-              <p className="text-white">{selectedPostulacion.game}</p>
-            </div>
+          {scheduleApplication && (
+            <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <p className="text-sm text-gray-400">
+                  Run
+                </p>
 
-            <div>
-              <span className="text-sm text-gray-400">Categoría:</span>
-              <p className="text-white">{selectedPostulacion.category}</p>
-            </div>
+                <p className="font-medium text-white">
+                  {scheduleApplication.game} -{" "}
+                  {scheduleApplication.category}
+                </p>
 
-            <div>
-              <span className="text-sm text-gray-400">Plataforma:</span>
-              <p className="text-white">{selectedPostulacion.platform}</p>
-            </div>
-
-            <div>
-              <span className="text-sm text-gray-400">Tiempo estimado:</span>
-              <p className="text-white">
-                {formatEstimatedTime(selectedPostulacion.estimatedTimeMinutes)}
-              </p>
-            </div>
-
-            <div>
-              <span className="text-sm text-gray-400">Relación de pantalla:</span>
-              <p className="text-white">{selectedPostulacion.aspectRatio}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3 rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-          <h3 className="font-semibold text-cyan-400">
-            Video Demostrativo
-          </h3>
-
-          <a
-            href={selectedPostulacion.youtubeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Ver en YouTube
-          </a>
-        </div>
-
-        {selectedPostulacion.socialNetworks?.length > 0 && (
-          <div className="space-y-3 rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-            <h3 className="font-semibold text-cyan-400">
-              Redes Sociales
-            </h3>
-
-            {selectedPostulacion.socialNetworks.map((sn) => (
-              <div key={sn.socialNetworkId}>
-                <span className="text-sm text-gray-400">{sn.name}</span>
-                <a
-                  href={sn.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-cyan-400 hover:text-cyan-300"
-                >
-                  {sn.url}
-                </a>
+                <p className="text-sm text-gray-400">
+                  Runner:{" "}
+                  {scheduleApplication.runnerName}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
 
-        {selectedPostulacion.notes && (
-          <div className="space-y-3 rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-            <h3 className="font-semibold text-cyan-400">Notas</h3>
-            <p className="text-gray-300">{selectedPostulacion.notes}</p>
-          </div>
-        )}
-      </div>
-    )}
+              <div>
+                <Label className="text-gray-300">
+                  Día del horario
+                </Label>
 
-    <DialogFooter>
-      <Button
-        variant="outline"
-        onClick={() => setDetailDialogOpen(false)}
-        className="border-gray-700"
-      >
-        Cerrar
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+                <Select
+                  value={selectedScheduleDayId}
+                  onValueChange={setSelectedScheduleDayId}
+                >
+                  <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                    <SelectValue placeholder="Selecciona un día" />
+                  </SelectTrigger>
 
-{/* Schedule Dialog */}
-<Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
-  <DialogContent className="border-gray-800 bg-gray-900 text-white">
-    <DialogHeader>
-      <DialogTitle>Agregar al Horario</DialogTitle>
-    </DialogHeader>
+                  <SelectContent className="border-gray-700 bg-gray-800">
+                    {scheduleDays.map((day) => (
+                      <SelectItem
+                        key={day.id}
+                        value={day.id}
+                      >
+                        {formatScheduleDate(
+                          day.dayDate
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-    {scheduleApplication && (
-      <div className="space-y-4">
-        <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-          <p className="text-sm text-gray-400">Run</p>
-          <p className="font-medium text-white">
-            {scheduleApplication.game} - {scheduleApplication.category}
-          </p>
-          <p className="text-sm text-gray-400">
-            Runner: {scheduleApplication.runnerName}
-          </p>
-        </div>
+              <div>
+                <Label
+                  htmlFor="scheduleStartTime"
+                  className="text-gray-300"
+                >
+                  Hora de inicio
+                </Label>
 
-        <div>
-          <Label className="text-gray-300">Día del horario</Label>
+                <Input
+                  id="scheduleStartTime"
+                  type="time"
+                  value={scheduleStartTime}
+                  onChange={(e) =>
+                    setScheduleStartTime(
+                      e.target.value
+                    )
+                  }
+                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                />
+              </div>
+            </div>
+          )}
 
-          <Select
-            value={selectedScheduleDayId}
-            onValueChange={setSelectedScheduleDayId}
-          >
-            <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
-              <SelectValue placeholder="Selecciona un día" />
-            </SelectTrigger>
+          <DialogFooter className="shrink-0 border-t border-gray-800 px-6 py-4">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setScheduleDialogOpen(false)
+              }
+              className="border-gray-700"
+            >
+              Cancelar
+            </Button>
 
-            <SelectContent className="border-gray-700 bg-gray-800">
-              {scheduleDays.map((day) => (
-                <SelectItem key={day.id} value={day.id}>
-                  {new Date(day.dayDate).toLocaleDateString("es-MX", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                  })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="scheduleStartTime" className="text-gray-300">
-            Hora de inicio
-          </Label>
-
-          <Input
-            id="scheduleStartTime"
-            type="time"
-            value={scheduleStartTime}
-            onChange={(e) => setScheduleStartTime(e.target.value)}
-            className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-          />
-        </div>
-      </div>
-    )}
-
-    <DialogFooter>
-      <Button
-        variant="outline"
-        onClick={() => setScheduleDialogOpen(false)}
-        className="border-gray-700"
-      >
-        Cancelar
-      </Button>
-
-      <Button
-        onClick={handleAddToSchedule}
-        className="bg-cyan-600 hover:bg-cyan-700"
-      >
-        Agregar al Horario
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
+            <Button
+              onClick={handleAddToSchedule}
+              className="bg-cyan-600 hover:bg-cyan-700"
+            >
+              Agregar al Horario
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
