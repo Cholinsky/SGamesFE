@@ -1,0 +1,49 @@
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.12), transparent 32rem),
+    radial-gradient(circle at top right, rgba(236, 72, 153, 0.12), transparent 32rem),
+    #070817;
+}
+
+::selection {
+  background: rgba(236, 72, 153, 0.35);
+  color: #ffffff;
+}
+
+img {
+  max-width: 100%;
+}
+
+.sgames-glass {
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  background: rgba(16, 24, 43, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.sgames-neon-text {
+  background: linear-gradient(90deg, #67e8f9, #a78bfa, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sgames-neon-border {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.18),
+    0 0 32px rgba(217, 70, 239, 0.16);
+}
+
+.sgames-logo-shadow {
+  box-shadow:
+    0 0 24px rgba(34, 211, 238, 0.22),
+    0 0 44px rgba(217, 70, 239, 0.28);
+}

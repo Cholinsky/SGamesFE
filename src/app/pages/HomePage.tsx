@@ -7,8 +7,11 @@ import {
   Gamepad2,
   ChevronDown,
   Zap,
-  Globe,
   Heart,
+  CalendarDays,
+  ClipboardCheck,
+  Clock3,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -17,6 +20,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../components/ui/accordion";
+import logoSgames from "../../assets/logo-sgames.jpeg";
 
 export default function HomePage() {
   const features = [
@@ -24,25 +28,56 @@ export default function HomePage() {
       icon: Play,
       title: "Speedruns en vivo",
       description:
-        "Disfruta de carreras cronometradas en tiempo real por los mejores jugadores.",
+        "Runs preparadas por la comunidad para compartir juegos, categorías y rutas con otros espectadores.",
     },
     {
       icon: Users,
       title: "Comunidad",
       description:
-        "Conecta con otros speedrunners y comparte tu pasión por los videojuegos.",
+        "Un espacio para runners, espectadores y organizadores que disfrutan los videojuegos y los retos cronometrados.",
     },
     {
       icon: Trophy,
       title: "Competencia amistosa",
       description:
-        "Participa en un ambiente competitivo pero amigable y de respeto mutuo.",
+        "El objetivo es mostrar talento, constancia y buen ambiente, sin perder el respeto entre participantes.",
     },
     {
       icon: Gamepad2,
-      title: "Múltiples plataformas",
+      title: "Variedad de plataformas",
       description:
-        "Aceptamos speedruns de PC, consolas retro, modernas y dispositivos móviles.",
+        "Aceptamos propuestas de PC, consolas modernas, retro, portátiles y otras plataformas válidas.",
+    },
+  ];
+
+  const eventInfo = [
+    {
+      icon: CalendarDays,
+      title: "Fecha del evento",
+      value: "31 julio - 2 agosto 2026",
+      description:
+        "Tres días dedicados a runs, comunidad y juegos variados.",
+    },
+    {
+      icon: ClipboardCheck,
+      title: "Postulaciones",
+      value: "Abiertas",
+      description:
+        "Envía tu run desde el formulario público para revisión del staff.",
+    },
+    {
+      icon: Clock3,
+      title: "Horario",
+      value: "Publicado por el staff",
+      description:
+        "El calendario se actualizará conforme se aprueben y acomoden las runs.",
+    },
+    {
+      icon: Sparkles,
+      title: "Lineup",
+      value: "Curado por SGames",
+      description:
+        "Buscamos variedad de juegos, categorías, plataformas y runners.",
     },
   ];
 
@@ -50,70 +85,103 @@ export default function HomePage() {
     {
       question: "¿Cómo puedo participar?",
       answer:
-        'Para participar, dirígete a la sección de "Postulación" en el menú superior y completa el formulario con toda la información requerida sobre tu speedrun. Nuestro equipo revisará tu postulación y te contactaremos vía correo electrónico.',
+        'Ve a la sección "Postulación" y completa el formulario con tu nombre, juego, categoría, plataforma, tiempo estimado, video demostrativo y datos de contacto. El staff revisará tu propuesta.',
     },
     {
       question: "¿Qué juegos son aceptados?",
       answer:
-        "Aceptamos speedruns de cualquier videojuego, desde títulos clásicos hasta lanzamientos recientes. Lo importante es que tengas un tiempo competitivo y un video demostrativo de tu run. Priorizamos la diversidad en el lineup del evento.",
+        "Puedes postular juegos de distintas plataformas y generaciones. La selección final dependerá de la calidad de la propuesta, variedad del lineup, duración y organización del evento.",
     },
     {
       question: "¿Necesito video demostrativo?",
       answer:
-        "Sí, es obligatorio incluir un enlace a un video demostrativo de tu speedrun en YouTube. Este video nos ayuda a evaluar la calidad de tu run y asegurar que cumple con los estándares del evento.",
+        "Sí. El video demostrativo ayuda al staff a revisar que la run sea viable, que el tiempo estimado sea razonable y que la categoría esté clara.",
     },
     {
-      question: "¿Cómo se publican los horarios?",
+      question: "¿Cuándo se publica el horario?",
       answer:
-        'Una vez finalizadas las postulaciones, nuestro equipo organizará el horario del evento. Los horarios oficiales se publicarán en la sección "Horario" y notificaremos a todos los participantes seleccionados vía correo electrónico.',
+        'El horario se publicará cuando el staff acomode las runs aprobadas. Podrás consultarlo en la sección "Horario".',
+    },
+    {
+      question: "¿Puedo poner redes sociales?",
+      answer:
+        "Sí. Son opcionales, pero recomendadas para que la comunidad pueda conocer tu contenido o seguirte durante el evento.",
     },
   ];
 
   return (
-    <div>
+    <div className="overflow-hidden bg-[#070817]">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 py-20 lg:py-32">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
+      <section className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_35%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.18),transparent_35%),linear-gradient(180deg,#0b1022_0%,#070817_70%)] py-20 lg:py-28">
+        <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:48px_48px]" />
 
-        {/* Speedrun decorative elements - subtle timers */}
-        <div className="absolute left-8 top-20 hidden text-cyan-400/20 lg:block">
-          <div className="font-mono text-sm">00:15:42.31</div>
+        <div className="absolute left-8 top-20 hidden text-cyan-300/25 lg:block">
+          <div className="font-mono text-sm">
+            00:15:42.31
+          </div>
         </div>
-        <div className="absolute right-12 top-32 hidden text-purple-400/20 lg:block">
-          <div className="font-mono text-sm">00:15:42.32</div>
+
+        <div className="absolute right-12 top-32 hidden text-pink-300/25 lg:block">
+          <div className="font-mono text-sm">
+            PB: 00:14:58
+          </div>
         </div>
-        <div className="absolute bottom-24 left-16 hidden text-pink-400/20 lg:block">
-          <div className="font-mono text-sm">00:15:42.33</div>
-        </div>
-        <div className="absolute bottom-32 right-20 hidden text-cyan-400/20 lg:block">
-          <div className="font-mono text-sm">PB: 00:14:58</div>
+
+        <div className="absolute bottom-24 left-16 hidden text-violet-300/25 lg:block">
+          <div className="font-mono text-sm">
+            RUN READY
+          </div>
         </div>
 
         <div className="container relative mx-auto px-4 text-center">
-          <div className="mx-auto max-w-4xl">
-            <h1 className="mb-6 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-4xl font-bold text-transparent md:text-6xl lg:text-7xl">
-              Bienvenido a SGames
-            </h1>
-            <p className="mb-8 text-lg text-gray-300 md:text-xl lg:text-2xl">
-              Un evento dedicado a reunir speedrunners de distintos juegos y
-              plataformas para compartir su talento con la comunidad.
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-8 flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-[2rem] bg-pink-500/40 blur-2xl" />
+
+                <img
+                  src={logoSgames}
+                  alt="Logo de SGames"
+                  className="relative h-36 w-36 rounded-[2rem] border border-white/20 object-cover shadow-[0_0_50px_rgba(217,70,239,0.45)] md:h-44 md:w-44"
+                />
+              </div>
+            </div>
+
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em] text-cyan-300">
+              Speedrun Event
             </p>
+
+            <h1 className="mb-6 bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-5xl font-black tracking-tight text-transparent md:text-7xl lg:text-8xl">
+              SGames
+            </h1>
+
+            <p className="mx-auto mb-4 max-w-3xl text-lg text-slate-300 md:text-xl lg:text-2xl">
+              Un evento comunitario para reunir speedrunners
+              de distintos juegos, categorías y plataformas.
+            </p>
+
+            <p className="mx-auto mb-8 max-w-2xl text-sm text-slate-500 md:text-base">
+              Del 31 de julio al 2 de agosto de 2026.
+              Postula tu run, comparte tu talento y forma parte
+              del lineup.
+            </p>
+
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link to="/postulacion">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-cyan-500 to-purple-600 text-lg hover:from-cyan-600 hover:to-purple-700"
+                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-base font-bold text-white shadow-[0_0_28px_rgba(217,70,239,0.35)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
                 >
                   <Zap className="mr-2 h-5 w-5" />
                   Enviar Postulación
                 </Button>
               </Link>
+
               <Link to="/horario">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-cyan-500/50 text-lg text-cyan-400 hover:bg-cyan-500/10"
+                  className="border-cyan-400/40 bg-white/5 text-base font-bold text-cyan-200 hover:border-pink-400/60 hover:bg-pink-500/10 hover:text-pink-100"
                 >
                   Ver Horario
                 </Button>
@@ -121,39 +189,44 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mt-12 flex justify-center">
-            <ChevronDown className="h-8 w-8 animate-bounce text-cyan-400" />
+          <div className="mt-16 flex justify-center">
+            <ChevronDown className="h-8 w-8 animate-bounce text-cyan-300" />
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="bg-gray-950 py-20">
+      <section className="bg-[#070817] py-20">
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-bold text-white md:text-4xl">
+          <h2 className="mb-12 text-center text-3xl font-black text-white md:text-4xl">
             ¿Por qué participar en{" "}
-            <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-transparent">
               SGames
             </span>
             ?
           </h2>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => {
               const Icon = feature.icon;
+
               return (
                 <Card
                   key={index}
-                  className="border-gray-800 bg-gray-900/50 backdrop-blur-sm transition-all hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/20"
+                  className="group border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-pink-400/50 hover:shadow-[0_0_30px_rgba(217,70,239,0.18)]"
                 >
                   <CardContent className="p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_22px_rgba(56,189,248,0.25)]">
                       <Icon className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="mb-2 text-xl font-semibold text-white">
+
+                    <h3 className="mb-2 text-xl font-bold text-white">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-400">{feature.description}</p>
+
+                    <p className="text-sm leading-relaxed text-slate-400">
+                      {feature.description}
+                    </p>
                   </CardContent>
                 </Card>
               );
@@ -162,49 +235,75 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-gradient-to-r from-cyan-900/20 to-purple-900/20 py-16">
+      {/* Event Info Section */}
+      <section className="border-y border-violet-500/20 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.16),transparent_55%)] py-16">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div className="text-center">
-              <div className="mb-2 text-4xl font-bold text-cyan-400">150+</div>
-              <div className="text-gray-400">Speedrunners</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-2 text-4xl font-bold text-purple-400">72h</div>
-              <div className="text-gray-400">Duración del evento</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-2 text-4xl font-bold text-pink-400">50+</div>
-              <div className="text-gray-400">Juegos distintos</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-2 text-4xl font-bold text-green-400">10k+</div>
-              <div className="text-gray-400">Espectadores</div>
-            </div>
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-black text-white md:text-4xl">
+              Información del evento
+            </h2>
+
+            <p className="mt-3 text-slate-400">
+              Datos base para participantes y espectadores.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {eventInfo.map((item, index) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={index}
+                  className="rounded-2xl border border-violet-500/20 bg-[#10182b]/70 p-6 shadow-[0_0_30px_rgba(15,23,42,0.35)]"
+                >
+                  <Icon className="mb-4 h-7 w-7 text-cyan-300" />
+
+                  <p className="mb-2 text-sm uppercase tracking-[0.2em] text-slate-500">
+                    {item.title}
+                  </p>
+
+                  <p className="mb-3 text-xl font-black text-white">
+                    {item.value}
+                  </p>
+
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    {item.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="bg-gray-950 py-20">
+      <section
+        id="faq"
+        className="bg-[#070817] py-20"
+      >
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-bold text-white md:text-4xl">
+          <h2 className="mb-12 text-center text-3xl font-black text-white md:text-4xl">
             Preguntas Frecuentes
           </h2>
 
           <div className="mx-auto max-w-3xl">
-            <Accordion type="single" collapsible className="space-y-4">
+            <Accordion
+              type="single"
+              collapsible
+              className="space-y-4"
+            >
               {faqs.map((faq, index) => (
                 <AccordionItem
                   key={index}
                   value={`item-${index}`}
-                  className="rounded-lg border border-gray-800 bg-gray-900/50 px-6"
+                  className="rounded-2xl border border-violet-500/20 bg-[#10182b]/70 px-6"
                 >
-                  <AccordionTrigger className="text-left text-lg font-semibold text-white hover:text-cyan-400">
+                  <AccordionTrigger className="text-left text-lg font-bold text-white hover:text-cyan-300">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-400">
+
+                  <AccordionContent className="leading-relaxed text-slate-400">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -215,22 +314,25 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-cyan-900/30 to-purple-900/30 py-20">
-        {/* Enhanced pattern with circuit/speedrun theme */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImNpcmN1aXQiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMiIgZmlsbD0icmdiYSgwLDI1NSwyNTUsMC4wNSkiLz48cGF0aCBkPSJNIDQwIDAgTCA0MCA0MCBNIDAgNDAgTCA0MCA0MCBNIDQwIDQwIEwgODAgNDAgTSA0MCA0MCBMIDQWIDA4MCIgc3Ryb2tlPSJyZ2JhKDAsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2NpcmN1aXQpIi8+PC9zdmc+')] opacity-20" />
+      <section className="relative overflow-hidden bg-[linear-gradient(135deg,rgba(34,211,238,0.14),rgba(168,85,247,0.18),rgba(236,72,153,0.14))] py-20">
+        <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.16)_0,transparent_25%),radial-gradient(circle_at_80%_30%,rgba(236,72,153,0.2)_0,transparent_25%)]" />
 
         <div className="container relative mx-auto px-4 text-center">
-          <Heart className="mx-auto mb-6 h-16 w-16 text-pink-400" />
-          <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
-            ¿Listo para mostrar tu talento?
+          <Heart className="mx-auto mb-6 h-16 w-16 text-pink-300" />
+
+          <h2 className="mb-4 text-3xl font-black text-white md:text-4xl">
+            ¿Listo para mostrar tu run?
           </h2>
-          <p className="mb-8 text-lg text-gray-300">
-            Únete a la comunidad de speedrunning más grande de la región
+
+          <p className="mx-auto mb-8 max-w-2xl text-lg text-slate-300">
+            Envía tu postulación y ayúdanos a construir un
+            lineup variado, entretenido y memorable.
           </p>
+
           <Link to="/postulacion">
             <Button
               size="lg"
-              className="bg-gradient-to-r from-cyan-500 to-purple-600 text-lg hover:from-cyan-600 hover:to-purple-700"
+              className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-lg font-bold text-white shadow-[0_0_28px_rgba(217,70,239,0.35)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
             >
               <Zap className="mr-2 h-5 w-5" />
               Enviar mi Postulación
