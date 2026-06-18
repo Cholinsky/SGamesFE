@@ -59,6 +59,7 @@ type Postulacion = {
   runnerName: string;
   game: string;
   category: string;
+  platform: string;
   status: string;
   submittedAt: string;
 };
@@ -355,7 +356,14 @@ export default function AdminPostulaciones() {
     }
   };
 
-  const platforms: string[] = [];
+const platforms =
+  Array.from(
+    new Set(
+      postulaciones
+        .map((p) => p.platform)
+        .filter(Boolean)
+    )
+  ).sort();
 
   return (
     <div className="space-y-6">
@@ -509,7 +517,7 @@ export default function AdminPostulaciones() {
                         </TableCell>
 
                         <TableCell className="text-gray-400">
-                          -
+                          {postulacion.platform || "-"}
                         </TableCell>
 
                         <TableCell>
