@@ -1,4 +1,8 @@
-import { Outlet, Link, useLocation } from "react-router";
+import {
+  Outlet,
+  Link,
+  useLocation
+} from "react-router";
 import {
   LayoutDashboard,
   FileText,
@@ -10,11 +14,21 @@ import {
   X,
   Newspaper,
   LogOut,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { useState } from "react";
+import {
+  useEffect,
+  useState
+} from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   DropdownMenu,
@@ -24,11 +38,45 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import {
+  getAdminNotificationSummary
+} from "../services/adminNotificationService";
+
+type AdminNotificationItem = {
+  type: string;
+  title: string;
+  description: string;
+  count: number;
+  path: string;
+};
+
+type AdminNotificationSummary = {
+  total: number;
+  pendingApplications: number;
+  approvedWithoutSchedule: number;
+  scheduleUnpublished: boolean;
+  hiddenPosts: number;
+  items: AdminNotificationItem[];
+};
 
 export function AdminLayout() {
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(false);
+
+  const [notifications, setNotifications] =
+    useState<AdminNotificationSummary>({
+      total: 0,
+      pendingApplications: 0,
+      approvedWithoutSchedule: 0,
+      scheduleUnpublished: false,
+      hiddenPosts: 0,
+      items: [],
+    });
+
+  const { user, logout } =
+    useAuth();
 
   const isActive = (path: string) =>
     location.pathname === path;
@@ -61,9 +109,69 @@ export function AdminLayout() {
     },
   ];
 
+  useEffect(() => {
+    loadNotifications();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const interval =
+      window.setInterval(() => {
+        loadNotifications();
+      }, 60000);
+
+    return () =>
+      window.clearInterval(interval);
+  }, []);
+
+  async function loadNotifications() {
+    try {
+      const data =
+        await getAdminNotificationSummary();
+
+      setNotifications(data);
+    } catch (error) {
+      console.error(error);
+
+      setNotifications({
+        total: 0,
+        pendingApplications: 0,
+        approvedWithoutSchedule: 0,
+        scheduleUnpublished: false,
+        hiddenPosts: 0,
+        items: [],
+      });
+    }
+  }
+
   const handleLogout = () => {
     logout();
   };
+
+  function getNotificationIcon(
+    type: string
+  ) {
+    if (type === "pendingApplications") {
+      return (
+        <Clock className="h-4 w-4 text-yellow-400" />
+      );
+    }
+
+    if (type === "approvedWithoutSchedule") {
+      return (
+        <Calendar className="h-4 w-4 text-cyan-400" />
+      );
+    }
+
+    if (type === "scheduleUnpublished") {
+      return (
+        <AlertCircle className="h-4 w-4 text-pink-400" />
+      );
+    }
+
+    return (
+      <Bell className="h-4 w-4 text-purple-400" />
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-950">
@@ -118,7 +226,9 @@ export function AdminLayout() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="absolute inset-0 bg-black/50"
-            onClick={() => setSidebarOpen(false)}
+            onClick={() =>
+              setSidebarOpen(false)
+            }
           />
 
           <aside className="absolute left-0 top-0 h-full w-64 border-r border-gray-800 bg-gray-900">
@@ -131,7 +241,9 @@ export function AdminLayout() {
 
                 <button
                   type="button"
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={() =>
+                    setSidebarOpen(false)
+                  }
                 >
                   <X className="h-6 w-6 text-gray-400" />
                 </button>
@@ -146,7 +258,9 @@ export function AdminLayout() {
                     <Link
                       key={item.path}
                       to={item.path}
-                      onClick={() => setSidebarOpen(false)}
+                      onClick={() =>
+                        setSidebarOpen(false)
+                      }
                       className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
                         isActive(item.path)
                           ? "bg-cyan-500/10 text-cyan-400"
@@ -184,25 +298,105 @@ export function AdminLayout() {
             variant="ghost"
             size="icon"
             className="lg:hidden"
-            onClick={() => setSidebarOpen(true)}
+            onClick={() =>
+              setSidebarOpen(true)
+            }
           >
             <Menu className="h-6 w-6" />
           </Button>
 
           <div className="flex flex-1 justify-end">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-              >
-                <Bell className="h-5 w-5" />
+              {/* Real Notifications */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative text-gray-300 hover:bg-gray-800 hover:text-white"
+                    title="Notificaciones"
+                  >
+                    <Bell className="h-5 w-5" />
 
-                <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-red-500 p-0 text-xs">
-                  3
-                </Badge>
-              </Button>
+                    {notifications.total > 0 && (
+                      <Badge className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0 text-xs text-white">
+                        {notifications.total > 99
+                          ? "99+"
+                          : notifications.total}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
 
+                <DropdownMenuContent
+                  align="end"
+                  className="w-80 border-gray-800 bg-gray-900 text-white"
+                >
+                  <DropdownMenuLabel className="flex items-center justify-between text-gray-300">
+                    <span>Notificaciones</span>
+
+                    {notifications.total > 0 ? (
+                      <Badge className="bg-red-500/20 text-red-300">
+                        {notifications.total}
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-green-500/20 text-green-300">
+                        Todo bien
+                      </Badge>
+                    )}
+                  </DropdownMenuLabel>
+
+                  <DropdownMenuSeparator className="bg-gray-800" />
+
+                  {notifications.items.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
+                      <CheckCircle2 className="h-8 w-8 text-green-400" />
+
+                      <p className="font-medium text-white">
+                        Sin pendientes
+                      </p>
+
+                      <p className="text-sm text-gray-500">
+                        No hay alertas administrativas por ahora.
+                      </p>
+                    </div>
+                  ) : (
+                    notifications.items.map((item) => (
+                      <DropdownMenuItem
+                        key={item.type}
+                        className="cursor-pointer focus:bg-gray-800"
+                      >
+                        <Link
+                          to={item.path}
+                          className="flex w-full gap-3 py-2"
+                        >
+                          <div className="mt-1">
+                            {getNotificationIcon(item.type)}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-medium text-white">
+                                {item.title}
+                              </p>
+
+                              <Badge className="bg-cyan-500/20 text-cyan-300">
+                                {item.count}
+                              </Badge>
+                            </div>
+
+                            <p className="mt-1 text-sm leading-snug text-gray-400">
+                              {item.description}
+                            </p>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -219,11 +413,13 @@ export function AdminLayout() {
 
                     <div className="hidden text-left md:block">
                       <p className="text-sm font-medium text-white">
-                        {user?.nombre || "Administrador"}
+                        {user?.nombre ||
+                          "Administrador"}
                       </p>
 
                       <p className="text-xs text-gray-400">
-                        {user?.email || "admin@sgames.com"}
+                        {user?.email ||
+                          "admin@sgames.com"}
                       </p>
                     </div>
                   </Button>
@@ -260,3 +456,4 @@ export function AdminLayout() {
     </div>
   );
 }
+
