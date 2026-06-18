@@ -54,24 +54,36 @@ type DraggedScheduleItem = {
   day: string;
   index: number;
 };
+
 const ItemTypes = {
   SCHEDULE_ITEM: "scheduleItem",
 };
-const EVENT_ID =
-  "04337355-98CA-4836-A1C1-5A8F84869F6D";
+
+function parseLocalDate(dayDate: string) {
+  const cleanDate =
+    dayDate.split("T")[0];
+
+  const [year, month, day] =
+    cleanDate.split("-").map(Number);
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+}
 
 function getDayKey(dayDate: string) {
   const date =
-    new Date(`${dayDate}T00:00:00`);
+    parseLocalDate(dayDate);
 
-  const rawDay =
-    date.toLocaleDateString("es-MX", {
+  return date.toLocaleDateString(
+    "es-MX",
+    {
       weekday: "long",
-    });
-
-  return (
-    rawDay.charAt(0).toUpperCase() +
-    rawDay.slice(1)
+      day: "numeric",
+      month: "long",
+    }
   );
 }
 
@@ -275,7 +287,7 @@ function DayColumn({
       <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
         <CardContent className="p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold capitalize text-white">
               {day}
             </h3>
 
@@ -317,8 +329,10 @@ function DayColumn({
 export default function AdminHorarios() {
   const [schedule, setSchedule] =
     useState<DaySchedule>({});
-const [activeEventId, setActiveEventId] =
-  useState("");
+
+  const [activeEventId, setActiveEventId] =
+    useState("");
+
   const [scheduleDayIds, setScheduleDayIds] =
     useState<Record<string, string>>({});
 
@@ -340,16 +354,18 @@ const [activeEventId, setActiveEventId] =
 
   async function loadSchedule() {
     try {
-
       const activeEvent =
         await getActiveEvent();
-        setActiveEventId(activeEvent.id);
-        setIsPublished(activeEvent.isPublished);
+
+      setActiveEventId(activeEvent.id);
+      setIsPublished(activeEvent.isPublished);
+
       const days =
         await getScheduleDays();
 
       const entries =
         await getScheduleEntries();
+
       const grouped: DaySchedule =
         {};
 
@@ -608,30 +624,30 @@ const [activeEventId, setActiveEventId] =
     }
   };
 
-const handlePublish = async () => {
-  try {
-    await handleSaveDraft();
+  const handlePublish = async () => {
+    try {
+      await handleSaveDraft();
 
-    if (!activeEventId) {
-      toast.error("No hay evento activo");
-      return;
+      if (!activeEventId) {
+        toast.error("No hay evento activo");
+        return;
+      }
+
+      await publishSchedule(activeEventId);
+
+      setIsPublished(true);
+
+      toast.success(
+        "Horario publicado con éxito"
+      );
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo publicar el horario"
+      );
     }
-
-    await publishSchedule(activeEventId);
-
-    setIsPublished(true);
-
-    toast.success(
-      "Horario publicado con éxito"
-    );
-  } catch (error) {
-    console.error(error);
-
-    toast.error(
-      "No se pudo publicar el horario"
-    );
-  }
-};
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
