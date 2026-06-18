@@ -198,14 +198,33 @@ function DraggableItem({
               </span>
             </div>
 
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onEdit(item)}
-              className="opacity-0 group-hover:opacity-100"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(item);
+                  }}
+                  title="Editar hora"
+                  className="h-8 w-8 p-0 text-cyan-400 hover:text-cyan-300"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(item);
+                  }}
+                  title="Eliminar del horario"
+                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -578,7 +597,7 @@ export default function AdminHorarios() {
 
     setEditDialogOpen(false);
   };
-  
+
 const handleDelete = async (
   item: ScheduleItem
 ) => {
