@@ -45,6 +45,9 @@ import {
   XCircle,
   Calendar,
   ExternalLink,
+  CalendarDays,
+  Clock3,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -70,6 +73,15 @@ type SocialNetworkDetail = {
   url: string;
 };
 
+type AvailabilityDetail = {
+  id: string;
+  dayDate: string;
+  availableFrom: string;
+  availableTo: string;
+  isPreferred: boolean;
+  notes?: string | null;
+};
+
 type ApplicationDetail = {
   id: string;
   runnerName: string;
@@ -88,6 +100,7 @@ type ApplicationDetail = {
   event: string;
   submittedAt: string;
   socialNetworks: SocialNetworkDetail[];
+  availabilities: AvailabilityDetail[];
 };
 
 function parseLocalDate(dayDate: string) {
@@ -138,6 +151,14 @@ function formatEstimatedTime(totalMinutes: number) {
     .padStart(2, "0")}:${minutes
     .toString()
     .padStart(2, "0")}:00`;
+}
+
+function formatTimeValue(value: string) {
+  if (!value) {
+    return "--:--";
+  }
+
+  return value.substring(0, 5);
 }
 
 export default function AdminPostulaciones() {
@@ -199,6 +220,9 @@ export default function AdminPostulaciones() {
           .includes(searchTerm.toLowerCase()) ||
         p.game
           .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        p.category
+          .toLowerCase()
           .includes(searchTerm.toLowerCase());
 
       const matchesStatus =
@@ -207,7 +231,7 @@ export default function AdminPostulaciones() {
 
       const matchesPlatform =
         platformFilter === "todos" ||
-        true;
+        p.platform === platformFilter;
 
       return (
         matchesSearch &&
@@ -356,14 +380,14 @@ export default function AdminPostulaciones() {
     }
   };
 
-const platforms =
-  Array.from(
-    new Set(
-      postulaciones
-        .map((p) => p.platform)
-        .filter(Boolean)
-    )
-  ).sort();
+  const platforms =
+    Array.from(
+      new Set(
+        postulaciones
+          .map((p) => p.platform)
+          .filter(Boolean)
+      )
+    ).sort();
 
   return (
     <div className="space-y-6">
@@ -395,7 +419,7 @@ const platforms =
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
 
                 <Input
-                  placeholder="Buscar por runner o juego..."
+                  placeholder="Buscar por runner, juego o categoría..."
                   value={searchTerm}
                   onChange={(e) =>
                     setSearchTerm(e.target.value)
@@ -747,6 +771,64 @@ const platforms =
                 </div>
               </div>
 
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-400">
+                  <CalendarDays className="h-5 w-5" />
+                  Disponibilidad del Runner
+                </h3>
+
+                {selectedPostulacion.availabilities?.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedPostulacion.availabilities.map(
+                      (availability) => (
+                        <div
+                          key={availability.id}
+                          className="rounded-lg border border-gray-700 bg-gray-900/60 p-3"
+                        >
+                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div>
+                              <p className="font-medium capitalize text-white">
+                                {formatScheduleDate(
+                                  availability.dayDate
+                                )}
+                              </p>
+
+                              <p className="mt-1 flex items-center gap-2 text-sm text-gray-400">
+                                <Clock3 className="h-4 w-4 text-cyan-400" />
+                                {formatTimeValue(
+                                  availability.availableFrom
+                                )}{" "}
+                                -{" "}
+                                {formatTimeValue(
+                                  availability.availableTo
+                                )}
+                              </p>
+                            </div>
+
+                            {availability.isPreferred && (
+                              <Badge className="w-fit bg-yellow-500/20 text-yellow-300">
+                                <Star className="mr-1 h-3.5 w-3.5" />
+                                Preferido
+                              </Badge>
+                            )}
+                          </div>
+
+                          {availability.notes && (
+                            <p className="mt-2 text-sm text-gray-400">
+                              {availability.notes}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Esta postulación no tiene disponibilidad registrada.
+                  </p>
+                )}
+              </div>
+
               {selectedPostulacion.youtubeUrl && (
                 <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
                   <h3 className="mb-3 font-semibold text-cyan-400">
@@ -857,6 +939,57 @@ const platforms =
                 </p>
               </div>
 
+              {scheduleApplication.availabilities?.length > 0 && (
+                <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-4">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-300">
+                    <CalendarDays className="h-5 w-5" />
+                    Disponibilidad declarada
+                  </h3>
+
+                  <div className="space-y-2">
+                    {scheduleApplication.availabilities.map(
+                      (availability) => (
+                        <div
+                          key={availability.id}
+                          className="rounded-md border border-cyan-500/20 bg-gray-900/50 p-3"
+                        >
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="font-medium capitalize text-white">
+                              {formatScheduleDate(
+                                availability.dayDate
+                              )}
+                            </p>
+
+                            {availability.isPreferred && (
+                              <Badge className="w-fit bg-yellow-500/20 text-yellow-300">
+                                <Star className="mr-1 h-3.5 w-3.5" />
+                                Preferido
+                              </Badge>
+                            )}
+                          </div>
+
+                          <p className="mt-1 text-sm text-gray-300">
+                            {formatTimeValue(
+                              availability.availableFrom
+                            )}{" "}
+                            -{" "}
+                            {formatTimeValue(
+                              availability.availableTo
+                            )}
+                          </p>
+
+                          {availability.notes && (
+                            <p className="mt-1 text-xs text-gray-400">
+                              {availability.notes}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <Label className="text-gray-300">
                   Día del horario
@@ -931,3 +1064,4 @@ const platforms =
     </div>
   );
 }
+
