@@ -13,6 +13,7 @@ import {
   getApplicationById,
   approveApplication,
   rejectApplication,
+  deleteApplication,
 } from "../../services/applicationService";
 
 import {
@@ -48,6 +49,7 @@ import {
   CalendarDays,
   Clock3,
   Star,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -195,6 +197,9 @@ export default function AdminPostulaciones() {
   const [detailDialogOpen, setDetailDialogOpen] =
     useState(false);
 
+  const [deletingApplicationId, setDeletingApplicationId] =
+    useState<string | null>(null);
+
   useEffect(() => {
     loadApplications();
   }, []);
@@ -264,6 +269,61 @@ export default function AdminPostulaciones() {
       toast.error(
         "No se pudo actualizar"
       );
+    }
+  };
+
+  const handleDeleteApplication = async (
+    postulacion: Postulacion
+  ) => {
+    const confirmDelete =
+      window.confirm(
+        `¿Seguro que quieres eliminar la postulación de ${postulacion.runnerName}?\n\nEsta acción eliminará la postulación sin importar su estado. También puede eliminar sus redes sociales, notas, disponibilidad y entradas relacionadas en el horario.`
+      );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      setDeletingApplicationId(
+        postulacion.id
+      );
+
+      await deleteApplication(
+        postulacion.id
+      );
+
+      await loadApplications();
+
+      if (
+        selectedPostulacion?.id ===
+        postulacion.id
+      ) {
+        setSelectedPostulacion(null);
+        setDetailDialogOpen(false);
+      }
+
+      if (
+        scheduleApplication?.id ===
+        postulacion.id
+      ) {
+        setScheduleApplication(null);
+        setScheduleDialogOpen(false);
+        setSelectedScheduleDayId("");
+        setScheduleStartTime("");
+      }
+
+      toast.success(
+        "Postulación eliminada correctamente"
+      );
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo eliminar la postulación"
+      );
+    } finally {
+      setDeletingApplicationId(null);
     }
   };
 
@@ -572,6 +632,24 @@ export default function AdminPostulaciones() {
                               <Eye className="h-4 w-4" />
                             </Button>
 
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={
+                                deletingApplicationId ===
+                                postulacion.id
+                              }
+                              onClick={() =>
+                                handleDeleteApplication(
+                                  postulacion
+                                )
+                              }
+                              className="text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              title="Eliminar postulación"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+
                             {postulacion.status === "Pending" && (
                               <>
                                 <Button
@@ -660,6 +738,7 @@ export default function AdminPostulaciones() {
               </div>
 
               <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 fontrounded-lg border border-gray-800 bg-gray-800/50 p-4">
                 <h3 className="mb-3 font-semibold text-cyan-400">
                   Información del Runner
                 </h3>

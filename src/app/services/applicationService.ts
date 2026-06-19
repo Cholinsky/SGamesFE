@@ -98,3 +98,25 @@ export async function createApplication(
 
   return await response.json();
 }
+
+export async function deleteApplication(id: string) {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/${id}`,
+      {
+        method: "DELETE",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    const error =
+      await response.text();
+
+    throw new Error(
+      error || "Error deleting application"
+    );
+  }
+
+  return true;
+}
