@@ -738,7 +738,7 @@ export default function AdminPostulaciones() {
               </div>
 
               <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                <h3 className="mb-3 fontrounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 fontrounded-lg border border-gray-800 bg-gray-800/50 p-4"/>
                 <h3 className="mb-3 font-semibold text-cyan-400">
                   Información del Runner
                 </h3>
