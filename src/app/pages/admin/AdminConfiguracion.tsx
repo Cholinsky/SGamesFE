@@ -1,67 +1,483 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Switch } from "../../components/ui/switch";
-import { Separator } from "../../components/ui/separator";
+import { Badge } from "../../components/ui/badge";
 import {
-  Settings,
-  Save,
   Calendar,
-  Mail,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
   Globe,
-  Users,
-  AlertCircle,
+  Mail,
+  Radio,
+  Save,
+  Settings,
+  ShieldCheck,
+  Twitch,
+  Youtube,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  getActiveEvent,
+  updateEvent,
+} from "../../services/eventService";
+import {
+  createSettings,
+  getSettings,
+  updateSettings,
+} from "../../services/settingsService";
+
+type EventConfig = {
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  streamUrl: string;
+  discordUrl: string;
+  isActive: boolean;
+  isPublished: boolean;
+};
+
+type SettingsConfig = {
+  id: number | null;
+  eventName: string;
+  contactEmail: string;
+  twitchUrl: string;
+  youtubeUrl: string;
+  discordUrl: string;
+  twitterUrl: string;
+};
+
+function toDateInputValue(
+  value?: string | null
+) {
+  if (!value) {
+    return "";
+  }
+
+  return value.split("T")[0];
+}
+
+function toApiDate(
+  value: string
+) {
+  if (!value) {
+    return null;
+  }
+
+  return `${value}T00:00:00`;
+}
+
+function normalizeText(
+  value: string
+) {
+  const trimmed =
+    value.trim();
+
+  return trimmed.length > 0
+    ? trimmed
+    : null;
+}
 
 export default function AdminConfiguracion() {
-  const [eventConfig, setEventConfig] = useState({
-    nombre: "SGames 2026",
-    descripcion:
-      "Un evento dedicado a reunir speedrunners de distintos juegos y plataformas",
-    fechaInicio: "2026-07-12",
-    fechaFin: "2026-07-14",
-    ubicacion: "Online",
-    emailContacto: "contacto@sgames.com",
-    urlStream: "https://twitch.tv/sgames",
-  });
+  const [eventConfig, setEventConfig] =
+    useState<EventConfig>({
+      id: "",
+      name: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      streamUrl: "",
+      discordUrl: "",
+      isActive: false,
+      isPublished: false,
+    });
 
-  const [postulacionesConfig, setPostulacionesConfig] = useState({
-    abiertas: true,
-    fechaLimite: "2026-06-30",
-    requiereAprobacion: true,
-    maximoPorUsuario: 3,
-  });
+  const [settingsConfig, setSettingsConfig] =
+    useState<SettingsConfig>({
+      id: null,
+      eventName: "",
+      contactEmail: "",
+      twitchUrl: "",
+      youtubeUrl: "",
+      discordUrl: "",
+      twitterUrl: "",
+    });
 
-  const [notificacionesConfig, setNotificacionesConfig] = useState({
-    emailNuevaPostulacion: true,
-    emailCambioEstado: true,
-    emailPublicacionHorario: true,
-  });
+  const [loading, setLoading] =
+    useState(true);
 
-  const handleSaveEventConfig = () => {
-    toast.success("Configuración del evento guardada");
-  };
+  const [savingEvent, setSavingEvent] =
+    useState(false);
 
-  const handleSavePostulacionesConfig = () => {
-    toast.success("Configuración de postulaciones guardada");
-  };
+  const [savingSettings, setSavingSettings] =
+    useState(false);
 
-  const handleSaveNotificacionesConfig = () => {
-    toast.success("Configuración de notificaciones guardada");
-  };
+  useEffect(() => {
+    loadConfiguration();
+  }, []);
+
+  async function loadConfiguration() {
+    try {
+      setLoading(true);
+
+      const activeEvent =
+        await getActiveEvent();
+
+      setEventConfig({
+        id: activeEvent.id,
+        name: activeEvent.name ?? "",
+        description: activeEvent.description ?? "",
+        startDate: toDateInputValue(
+          activeEvent.startDate
+        ),
+        endDate: toDateInputValue(
+          activeEvent.endDate
+        ),
+        streamUrl: activeEvent.streamUrl ?? "",
+        discordUrl: activeEvent.discordUrl ?? "",
+        isActive: Boolean(
+          activeEvent.isActive
+        ),
+        isPublished: Boolean(
+          activeEvent.isPublished
+        ),
+      });
+
+      const settings =
+        await getSettings();
+
+      const currentSettings =
+        Array.isArray(settings) &&
+        settings.length > 0
+          ? settings[0]
+          : null;
+
+      if (currentSettings) {
+        setSettingsConfig({
+          id: currentSettings.id,
+          eventName:
+            currentSettings.eventName ??
+            activeEvent.name ??
+            "",
+          contactEmail:
+            currentSettings.contactEmail ?? "",
+          twitchUrl:
+            currentSettings.twitchUrl ?? "",
+          youtubeUrl:
+            currentSettings.youtubeUrl ?? "",
+          discordUrl:
+            currentSettings.discordUrl ??
+            activeEvent.discordUrl ??
+            "",
+          twitterUrl:
+            currentSettings.twitterUrl ?? "",
+        });
+      } else {
+        setSettingsConfig({
+          id: null,
+          eventName:
+            activeEvent.name ?? "",
+          contactEmail: "",
+          twitchUrl:
+            activeEvent.streamUrl ?? "",
+          youtubeUrl: "",
+          discordUrl:
+            activeEvent.discordUrl ?? "",
+          twitterUrl: "",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo cargar la configuración"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function updateEventField(
+    field: keyof EventConfig,
+    value: string
+  ) {
+    setEventConfig((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function updateSettingsField(
+    field: keyof SettingsConfig,
+    value: string
+  ) {
+    setSettingsConfig((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  async function handleSaveEventConfig() {
+    if (!eventConfig.name.trim()) {
+      toast.error(
+        "El nombre del evento es obligatorio"
+      );
+      return;
+    }
+
+    if (!eventConfig.startDate) {
+      toast.error(
+        "La fecha de inicio es obligatoria"
+      );
+      return;
+    }
+
+    if (!eventConfig.endDate) {
+      toast.error(
+        "La fecha de fin es obligatoria"
+      );
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+
+      await updateEvent(
+        eventConfig.id,
+        {
+          name:
+            eventConfig.name.trim(),
+
+          description:
+            normalizeText(
+              eventConfig.description
+            ),
+
+          startDate:
+            toApiDate(
+              eventConfig.startDate
+            ),
+
+          endDate:
+            toApiDate(
+              eventConfig.endDate
+            ),
+
+          streamUrl:
+            normalizeText(
+              eventConfig.streamUrl
+            ),
+
+          discordUrl:
+            normalizeText(
+              eventConfig.discordUrl
+            ),
+        }
+      );
+
+      toast.success(
+        "Configuración del evento guardada"
+      );
+
+      await loadConfiguration();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo guardar el evento"
+      );
+    } finally {
+      setSavingEvent(false);
+    }
+  }
+
+  async function handleSaveSettingsConfig() {
+    try {
+      setSavingSettings(true);
+
+      const payload = {
+        eventName:
+          normalizeText(
+            settingsConfig.eventName
+          ),
+
+        contactEmail:
+          normalizeText(
+            settingsConfig.contactEmail
+          ),
+
+        twitchUrl:
+          normalizeText(
+            settingsConfig.twitchUrl
+          ),
+
+        youtubeUrl:
+          normalizeText(
+            settingsConfig.youtubeUrl
+          ),
+
+        discordUrl:
+          normalizeText(
+            settingsConfig.discordUrl
+          ),
+
+        twitterUrl:
+          normalizeText(
+            settingsConfig.twitterUrl
+          ),
+      };
+
+      if (settingsConfig.id === null) {
+        await createSettings(payload);
+      } else {
+        await updateSettings(
+          settingsConfig.id,
+          payload
+        );
+      }
+
+      toast.success(
+        "Contacto y redes guardados"
+      );
+
+      await loadConfiguration();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo guardar contacto y redes"
+      );
+    } finally {
+      setSavingSettings(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="mb-2 text-3xl font-bold text-white">
+            Configuración
+          </h1>
+
+          <p className="text-gray-400">
+            Cargando configuración real del evento...
+          </p>
+        </div>
+
+        <Card className="border-gray-800 bg-gray-900/50">
+          <CardContent className="p-8 text-center text-gray-400">
+            Cargando...
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="mb-2 text-3xl font-bold text-white">Configuración</h1>
-        <p className="text-gray-400">
-          Administra la configuración general del evento
-        </p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="mb-2 text-3xl font-bold text-white">
+            Configuración
+          </h1>
+
+          <p className="text-gray-400">
+            Administra los datos reales del evento, contacto y redes oficiales
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          onClick={loadConfiguration}
+          className="w-fit border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          Recargar
+        </Button>
+      </div>
+
+      {/* Estado Operativo */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="border-gray-800 bg-gray-900/50">
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm text-gray-400">
+                Evento activo
+              </p>
+
+              <div className="mt-2">
+                {eventConfig.isActive ? (
+                  <Badge className="bg-green-500/20 text-green-400">
+                    Activo
+                  </Badge>
+                ) : (
+                  <Badge className="bg-gray-500/20 text-gray-400">
+                    Inactivo
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <ShieldCheck className="h-8 w-8 text-green-400" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-800 bg-gray-900/50">
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm text-gray-400">
+                Horario público
+              </p>
+
+              <div className="mt-2">
+                {eventConfig.isPublished ? (
+                  <Badge className="bg-green-500/20 text-green-400">
+                    Publicado
+                  </Badge>
+                ) : (
+                  <Badge className="bg-yellow-500/20 text-yellow-400">
+                    Borrador
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {eventConfig.isPublished ? (
+              <CheckCircle2 className="h-8 w-8 text-green-400" />
+            ) : (
+              <Clock className="h-8 w-8 text-yellow-400" />
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-800 bg-gray-900/50">
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm text-gray-400">
+                Fechas del evento
+              </p>
+
+              <p className="mt-2 text-sm font-semibold text-white">
+                {eventConfig.startDate || "Sin inicio"} →{" "}
+                {eventConfig.endDate || "Sin fin"}
+              </p>
+            </div>
+
+            <Calendar className="h-8 w-8 text-cyan-400" />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Event Configuration */}
@@ -69,328 +485,346 @@ export default function AdminConfiguracion() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Calendar className="h-5 w-5 text-cyan-400" />
-            Configuración del Evento
+            Configuración del Evento Activo
           </CardTitle>
         </CardHeader>
+
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="nombre" className="text-gray-300">
+              <Label
+                htmlFor="eventName"
+                className="text-gray-300"
+              >
                 Nombre del evento
               </Label>
+
               <Input
-                id="nombre"
-                value={eventConfig.nombre}
-                onChange={(e) =>
-                  setEventConfig({ ...eventConfig, nombre: e.target.value })
+                id="eventName"
+                value={eventConfig.name}
+                onChange={(event) =>
+                  updateEventField(
+                    "name",
+                    event.target.value
+                  )
                 }
                 className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="Ej. SGames Julio 2026"
               />
             </div>
 
             <div>
-              <Label htmlFor="ubicacion" className="text-gray-300">
-                Ubicación
+              <Label
+                htmlFor="streamUrl"
+                className="text-gray-300"
+              >
+                <Radio className="mr-1 inline h-4 w-4" />
+                URL del stream
               </Label>
+
               <Input
-                id="ubicacion"
-                value={eventConfig.ubicacion}
-                onChange={(e) =>
-                  setEventConfig({ ...eventConfig, ubicacion: e.target.value })
+                id="streamUrl"
+                type="url"
+                value={eventConfig.streamUrl}
+                onChange={(event) =>
+                  updateEventField(
+                    "streamUrl",
+                    event.target.value
+                  )
                 }
                 className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="https://twitch.tv/..."
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="descripcion" className="text-gray-300">
+            <Label
+              htmlFor="description"
+              className="text-gray-300"
+            >
               Descripción
             </Label>
+
             <Textarea
-              id="descripcion"
-              value={eventConfig.descripcion}
-              onChange={(e) =>
-                setEventConfig({ ...eventConfig, descripcion: e.target.value })
+              id="description"
+              value={eventConfig.description}
+              onChange={(event) =>
+                updateEventField(
+                  "description",
+                  event.target.value
+                )
               }
               className="mt-1.5 min-h-[100px] border-gray-700 bg-gray-800 text-white"
+              placeholder="Descripción pública del evento"
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <Label htmlFor="fechaInicio" className="text-gray-300">
+              <Label
+                htmlFor="startDate"
+                className="text-gray-300"
+              >
                 Fecha de inicio
               </Label>
+
               <Input
-                id="fechaInicio"
+                id="startDate"
                 type="date"
-                value={eventConfig.fechaInicio}
-                onChange={(e) =>
-                  setEventConfig({
-                    ...eventConfig,
-                    fechaInicio: e.target.value,
-                  })
+                value={eventConfig.startDate}
+                onChange={(event) =>
+                  updateEventField(
+                    "startDate",
+                    event.target.value
+                  )
                 }
                 className="mt-1.5 border-gray-700 bg-gray-800 text-white"
               />
             </div>
 
             <div>
-              <Label htmlFor="fechaFin" className="text-gray-300">
+              <Label
+                htmlFor="endDate"
+                className="text-gray-300"
+              >
                 Fecha de fin
               </Label>
+
               <Input
-                id="fechaFin"
+                id="endDate"
                 type="date"
-                value={eventConfig.fechaFin}
-                onChange={(e) =>
-                  setEventConfig({ ...eventConfig, fechaFin: e.target.value })
+                value={eventConfig.endDate}
+                onChange={(event) =>
+                  updateEventField(
+                    "endDate",
+                    event.target.value
+                  )
                 }
                 className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+              />
+            </div>
+
+            <div>
+              <Label
+                htmlFor="eventDiscordUrl"
+                className="text-gray-300"
+              >
+                Discord del evento
+              </Label>
+
+              <Input
+                id="eventDiscordUrl"
+                type="url"
+                value={eventConfig.discordUrl}
+                onChange={(event) =>
+                  updateEventField(
+                    "discordUrl",
+                    event.target.value
+                  )
+                }
+                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="https://discord.gg/..."
               />
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="emailContacto" className="text-gray-300">
-                <Mail className="mr-1 inline h-4 w-4" />
-                Email de contacto
-              </Label>
-              <Input
-                id="emailContacto"
-                type="email"
-                value={eventConfig.emailContacto}
-                onChange={(e) =>
-                  setEventConfig({
-                    ...eventConfig,
-                    emailContacto: e.target.value,
-                  })
-                }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="urlStream" className="text-gray-300">
-                <Globe className="mr-1 inline h-4 w-4" />
-                URL del stream
-              </Label>
-              <Input
-                id="urlStream"
-                type="url"
-                value={eventConfig.urlStream}
-                onChange={(e) =>
-                  setEventConfig({ ...eventConfig, urlStream: e.target.value })
-                }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-              />
-            </div>
+          <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-100">
+            El estado de publicación del horario se controla desde{" "}
+            <span className="font-semibold">
+              Horarios
+            </span>
+            . Aquí sólo se editan los datos generales del evento.
           </div>
 
           <div className="flex justify-end">
             <Button
               onClick={handleSaveEventConfig}
+              disabled={savingEvent}
               className="bg-cyan-600 hover:bg-cyan-700"
             >
               <Save className="mr-2 h-4 w-4" />
-              Guardar Configuración
+              {savingEvent
+                ? "Guardando..."
+                : "Guardar Evento"}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Postulaciones Configuration */}
+      {/* Contact and Social Settings */}
       <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
-            <Users className="h-5 w-5 text-purple-400" />
-            Configuración de Postulaciones
+            <Globe className="h-5 w-5 text-purple-400" />
+            Contacto y Redes Oficiales
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base text-white">
-                Postulaciones abiertas
-              </Label>
-              <p className="text-sm text-gray-400">
-                Permitir que los usuarios envíen postulaciones
-              </p>
-            </div>
-            <Switch
-              checked={postulacionesConfig.abiertas}
-              onCheckedChange={(checked) =>
-                setPostulacionesConfig({
-                  ...postulacionesConfig,
-                  abiertas: checked,
-                })
-              }
-            />
-          </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base text-white">
-                Requiere aprobación
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label
+                htmlFor="publicEventName"
+                className="text-gray-300"
+              >
+                Nombre público del evento
               </Label>
-              <p className="text-sm text-gray-400">
-                Las postulaciones deben ser aprobadas por un administrador
-              </p>
+
+              <Input
+                id="publicEventName"
+                value={settingsConfig.eventName}
+                onChange={(event) =>
+                  updateSettingsField(
+                    "eventName",
+                    event.target.value
+                  )
+                }
+                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="Ej. SGames Julio 2026"
+              />
             </div>
-            <Switch
-              checked={postulacionesConfig.requiereAprobacion}
-              onCheckedChange={(checked) =>
-                setPostulacionesConfig({
-                  ...postulacionesConfig,
-                  requiereAprobacion: checked,
-                })
-              }
-            />
+
+            <div>
+              <Label
+                htmlFor="contactEmail"
+                className="text-gray-300"
+              >
+                <Mail className="mr-1 inline h-4 w-4" />
+                Email de contacto
+              </Label>
+
+              <Input
+                id="contactEmail"
+                type="email"
+                value={settingsConfig.contactEmail}
+                onChange={(event) =>
+                  updateSettingsField(
+                    "contactEmail",
+                    event.target.value
+                  )
+                }
+                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="correo@ejemplo.com"
+              />
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="fechaLimite" className="text-gray-300">
-                Fecha límite
+              <Label
+                htmlFor="twitchUrl"
+                className="text-gray-300"
+              >
+                <Twitch className="mr-1 inline h-4 w-4" />
+                Twitch
               </Label>
+
               <Input
-                id="fechaLimite"
-                type="date"
-                value={postulacionesConfig.fechaLimite}
-                onChange={(e) =>
-                  setPostulacionesConfig({
-                    ...postulacionesConfig,
-                    fechaLimite: e.target.value,
-                  })
+                id="twitchUrl"
+                type="url"
+                value={settingsConfig.twitchUrl}
+                onChange={(event) =>
+                  updateSettingsField(
+                    "twitchUrl",
+                    event.target.value
+                  )
                 }
                 className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="https://twitch.tv/..."
               />
             </div>
 
             <div>
-              <Label htmlFor="maximoPorUsuario" className="text-gray-300">
-                Máximo por usuario
+              <Label
+                htmlFor="youtubeUrl"
+                className="text-gray-300"
+              >
+                <Youtube className="mr-1 inline h-4 w-4" />
+                YouTube
               </Label>
+
               <Input
-                id="maximoPorUsuario"
-                type="number"
-                min="1"
-                max="10"
-                value={postulacionesConfig.maximoPorUsuario}
-                onChange={(e) =>
-                  setPostulacionesConfig({
-                    ...postulacionesConfig,
-                    maximoPorUsuario: parseInt(e.target.value),
-                  })
+                id="youtubeUrl"
+                type="url"
+                value={settingsConfig.youtubeUrl}
+                onChange={(event) =>
+                  updateSettingsField(
+                    "youtubeUrl",
+                    event.target.value
+                  )
                 }
                 className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="https://youtube.com/..."
+              />
+            </div>
+
+            <div>
+              <Label
+                htmlFor="discordUrl"
+                className="text-gray-300"
+              >
+                Discord
+              </Label>
+
+              <Input
+                id="discordUrl"
+                type="url"
+                value={settingsConfig.discordUrl}
+                onChange={(event) =>
+                  updateSettingsField(
+                    "discordUrl",
+                    event.target.value
+                  )
+                }
+                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="https://discord.gg/..."
+              />
+            </div>
+
+            <div>
+              <Label
+                htmlFor="twitterUrl"
+                className="text-gray-300"
+              >
+                <ExternalLink className="mr-1 inline h-4 w-4" />
+                Twitter / X
+              </Label>
+
+              <Input
+                id="twitterUrl"
+                type="url"
+                value={settingsConfig.twitterUrl}
+                onChange={(event) =>
+                  updateSettingsField(
+                    "twitterUrl",
+                    event.target.value
+                  )
+                }
+                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                placeholder="https://x.com/..."
               />
             </div>
           </div>
 
-          {!postulacionesConfig.abiertas && (
-            <div className="flex items-start gap-2 rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
-              <AlertCircle className="h-5 w-5 text-yellow-400" />
-              <div>
-                <p className="font-medium text-yellow-400">
-                  Postulaciones cerradas
-                </p>
-                <p className="text-sm text-yellow-400/80">
-                  Los usuarios no podrán enviar nuevas postulaciones mientras
-                  esta opción esté desactivada.
-                </p>
-              </div>
-            </div>
-          )}
+          <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4 text-sm text-purple-100">
+            Estos datos se guardan en la tabla{" "}
+            <span className="font-semibold">
+              Settings
+            </span>
+            . Después podemos usarlos para pintar el footer público y enlaces oficiales.
+          </div>
 
           <div className="flex justify-end">
             <Button
-              onClick={handleSavePostulacionesConfig}
+              onClick={handleSaveSettingsConfig}
+              disabled={savingSettings}
               className="bg-purple-600 hover:bg-purple-700"
             >
               <Save className="mr-2 h-4 w-4" />
-              Guardar Configuración
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Notificaciones Configuration */}
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Mail className="h-5 w-5 text-green-400" />
-            Configuración de Notificaciones
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base text-white">
-                Nueva postulación
-              </Label>
-              <p className="text-sm text-gray-400">
-                Recibir email cuando llegue una nueva postulación
-              </p>
-            </div>
-            <Switch
-              checked={notificacionesConfig.emailNuevaPostulacion}
-              onCheckedChange={(checked) =>
-                setNotificacionesConfig({
-                  ...notificacionesConfig,
-                  emailNuevaPostulacion: checked,
-                })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base text-white">Cambio de estado</Label>
-              <p className="text-sm text-gray-400">
-                Notificar al runner cuando su postulación cambie de estado
-              </p>
-            </div>
-            <Switch
-              checked={notificacionesConfig.emailCambioEstado}
-              onCheckedChange={(checked) =>
-                setNotificacionesConfig({
-                  ...notificacionesConfig,
-                  emailCambioEstado: checked,
-                })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base text-white">
-                Publicación de horario
-              </Label>
-              <p className="text-sm text-gray-400">
-                Notificar cuando se publique el horario oficial
-              </p>
-            </div>
-            <Switch
-              checked={notificacionesConfig.emailPublicacionHorario}
-              onCheckedChange={(checked) =>
-                setNotificacionesConfig({
-                  ...notificacionesConfig,
-                  emailPublicacionHorario: checked,
-                })
-              }
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSaveNotificacionesConfig}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              Guardar Configuración
+              {savingSettings
+                ? "Guardando..."
+                : "Guardar Contacto y Redes"}
             </Button>
           </div>
         </CardContent>
