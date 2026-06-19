@@ -96,6 +96,8 @@ maintenance/backups/*
 !maintenance/backups/README.md
 *.bak
 *.bacpac
+*.sqlbak
+*.dump
 <<<<<<< HEAD
 *.sqlbak
 =======
