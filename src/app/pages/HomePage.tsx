@@ -112,55 +112,74 @@ export default function HomePage() {
   return (
     <div className="overflow-hidden bg-[#070817]">
       {/* Hero Section */}
-      <section className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_35%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.18),transparent_35%),linear-gradient(180deg,#0b1022_0%,#070817_70%)] py-20 lg:py-28">
-        <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:48px_48px]" />
+      <section className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[#070817] py-20 lg:py-28">
+        {/* Video Background */}
+        <video
+          className="absolute inset-0 h-full w-full object-cover opacity-70"
+          src="/videos/transicion-sg.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+        />
 
-        <div className="absolute left-8 top-20 hidden text-cyan-300/25 lg:block">
+        {/* Video Overlays */}
+        <div className="absolute inset-0 bg-[#050713]/70" />
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.24),transparent_35%),linear-gradient(180deg,rgba(7,8,23,0.30)_0%,rgba(7,8,23,0.72)_70%,#070817_100%)]" />
+
+        <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
+
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#070817] to-transparent" />
+
+        <div className="absolute left-8 top-20 hidden text-cyan-300/30 lg:block">
           <div className="font-mono text-sm">
             00:15:42.31
           </div>
         </div>
 
-        <div className="absolute right-12 top-32 hidden text-pink-300/25 lg:block">
+        <div className="absolute right-12 top-32 hidden text-pink-300/30 lg:block">
           <div className="font-mono text-sm">
             PB: 00:14:58
           </div>
         </div>
 
-        <div className="absolute bottom-24 left-16 hidden text-violet-300/25 lg:block">
+        <div className="absolute bottom-24 left-16 hidden text-violet-300/30 lg:block">
           <div className="font-mono text-sm">
             RUN READY
           </div>
         </div>
 
-        <div className="container relative mx-auto px-4 text-center">
+        <div className="container relative z-10 mx-auto px-4 text-center">
           <div className="mx-auto max-w-5xl">
             <div className="mb-8 flex justify-center">
               <div className="relative">
-                <div className="absolute inset-0 rounded-[2rem] bg-pink-500/40 blur-2xl" />
+                <div className="absolute inset-0 rounded-[2rem] bg-pink-500/45 blur-2xl" />
 
                 <img
                   src={logoSgames}
                   alt="Logo de SGames"
-                  className="relative h-36 w-36 rounded-[2rem] border border-white/20 object-cover shadow-[0_0_50px_rgba(217,70,239,0.45)] md:h-44 md:w-44"
+                  className="relative h-36 w-36 rounded-[2rem] border border-white/25 object-cover shadow-[0_0_55px_rgba(217,70,239,0.55)] md:h-44 md:w-44"
                 />
               </div>
             </div>
 
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em] text-cyan-300">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em] text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">
               Speedrun Event
             </p>
 
-            <h1 className="mb-6 bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-5xl font-black tracking-tight text-transparent md:text-7xl lg:text-8xl">
+            <h1 className="mb-6 bg-gradient-to-r from-cyan-200 via-violet-200 to-pink-200 bg-clip-text text-5xl font-black tracking-tight text-transparent drop-shadow-[0_0_28px_rgba(217,70,239,0.35)] md:text-7xl lg:text-8xl">
               SGames
             </h1>
 
-            <p className="mx-auto mb-4 max-w-3xl text-lg text-slate-300 md:text-xl lg:text-2xl">
+            <p className="mx-auto mb-4 max-w-3xl text-lg text-slate-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-xl lg:text-2xl">
               Un evento comunitario para reunir speedrunners
               de distintos juegos, categorías y plataformas.
             </p>
 
-            <p className="mx-auto mb-8 max-w-2xl text-sm text-slate-500 md:text-base">
+            <p className="mx-auto mb-8 max-w-2xl text-sm text-slate-300 drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
               Del 31 de julio al 2 de agosto de 2026.
               Postula tu run, comparte tu talento y forma parte
               del lineup.
@@ -170,7 +189,7 @@ export default function HomePage() {
               <Link to="/postulacion">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-base font-bold text-white shadow-[0_0_28px_rgba(217,70,239,0.35)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-base font-bold text-white shadow-[0_0_32px_rgba(217,70,239,0.45)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
                 >
                   <Zap className="mr-2 h-5 w-5" />
                   Enviar Postulación
@@ -181,7 +200,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-cyan-400/40 bg-white/5 text-base font-bold text-cyan-200 hover:border-pink-400/60 hover:bg-pink-500/10 hover:text-pink-100"
+                  className="border-cyan-300/50 bg-[#070817]/55 text-base font-bold text-cyan-100 backdrop-blur-md hover:border-pink-300/70 hover:bg-pink-500/15 hover:text-pink-100"
                 >
                   Ver Horario
                 </Button>
@@ -190,7 +209,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-16 flex justify-center">
-            <ChevronDown className="h-8 w-8 animate-bounce text-cyan-300" />
+            <ChevronDown className="h-8 w-8 animate-bounce text-cyan-200 drop-shadow-[0_0_14px_rgba(34,211,238,0.7)]" />
           </div>
         </div>
       </section>
@@ -343,3 +362,4 @@ export default function HomePage() {
     </div>
   );
 }
+
