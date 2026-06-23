@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Twitch,
   Youtube,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -45,6 +46,7 @@ type EventConfig = {
   discordUrl: string;
   isActive: boolean;
   isPublished: boolean;
+  applicationsOpen: boolean;
 };
 
 type SettingsConfig = {
@@ -100,6 +102,7 @@ export default function AdminConfiguracion() {
       discordUrl: "",
       isActive: false,
       isPublished: false,
+      applicationsOpen: true,
     });
 
   const [settingsConfig, setSettingsConfig] =
@@ -151,6 +154,8 @@ export default function AdminConfiguracion() {
         isPublished: Boolean(
           activeEvent.isPublished
         ),
+        applicationsOpen:
+          activeEvent.applicationsOpen ?? true,
       });
 
       const settings =
@@ -209,7 +214,7 @@ export default function AdminConfiguracion() {
 
   function updateEventField(
     field: keyof EventConfig,
-    value: string
+    value: string | boolean
   ) {
     setEventConfig((current) => ({
       ...current,
@@ -282,6 +287,8 @@ export default function AdminConfiguracion() {
             normalizeText(
               eventConfig.discordUrl
             ),
+            applicationsOpen:
+              eventConfig.applicationsOpen,
         }
       );
 
@@ -409,7 +416,7 @@ export default function AdminConfiguracion() {
       </div>
 
       {/* Estado Operativo */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card className="border-gray-800 bg-gray-900/50">
           <CardContent className="flex items-center justify-between p-6">
             <div>
@@ -460,6 +467,36 @@ export default function AdminConfiguracion() {
               <Clock className="h-8 w-8 text-yellow-400" />
             )}
           </CardContent>
+        </Card>
+
+        <Card className="border-gray-800 bg-gray-900/50">
+            <CardContent className="flex items-center justify-between p-6">
+              <div>
+                <p className="text-sm text-gray-400">
+                  Postulaciones
+                </p>
+
+                <div className="mt-2">
+                  {eventConfig.applicationsOpen ? (
+                    <Badge className="bg-green-500/20 text-green-400">
+                      Abiertas
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-red-500/20 text-red-400">
+                      Cerradas
+                    </Badge>
+                  )}
+                </div>
+              </div>
+                
+              <Users
+                className={`h-8 w-8 ${
+                  eventConfig.applicationsOpen
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+              />
+            </CardContent>
         </Card>
 
         <Card className="border-gray-800 bg-gray-900/50">
@@ -626,8 +663,54 @@ export default function AdminConfiguracion() {
                 className="mt-1.5 border-gray-700 bg-gray-800 text-white"
                 placeholder="https://discord.gg/..."
               />
+              </div>
             </div>
-          </div>
+
+                      <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-semibold text-white">
+                    Postulaciones públicas
+                  </p>
+
+                  <p className="mt-1 text-sm text-purple-100/80">
+                    Controla si los runners pueden enviar nuevas postulaciones desde el formulario público.
+                  </p>
+
+                  <div className="mt-3">
+                    {eventConfig.applicationsOpen ? (
+                      <Badge className="bg-green-500/20 text-green-400">
+                        Abiertas
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-red-500/20 text-red-400">
+                        Cerradas
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                  
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    updateEventField(
+                      "applicationsOpen",
+                      !eventConfig.applicationsOpen
+                    )
+                  }
+                  className={
+                    eventConfig.applicationsOpen
+                      ? "border-red-400/50 text-red-300 hover:bg-red-500/10"
+                      : "border-green-400/50 text-green-300 hover:bg-green-500/10"
+                  }
+                >
+                  {eventConfig.applicationsOpen
+                    ? "Cerrar postulaciones"
+                    : "Abrir postulaciones"}
+                </Button>
+              </div>
+            </div>
 
           <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-100">
             El estado de publicación del horario se controla desde{" "}

@@ -4,6 +4,8 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Link } from "react-router";
+import { getActivePublicEvent } from "../services/eventService";
 import {
   Select,
   SelectContent,
@@ -20,6 +22,7 @@ import {
   AlertCircle,
   CalendarDays,
   Star,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createApplication } from "../services/applicationService";
@@ -157,10 +160,43 @@ export default function PostulacionPage() {
 
   const [submitSuccess, setSubmitSuccess] =
     useState(false);
+    const [loadingEventStatus, setLoadingEventStatus] =
+  useState(true);
+
+const [applicationsOpen, setApplicationsOpen] =
+  useState(true);
 
   useEffect(() => {
-    loadSocialNetworks();
-  }, []);
+  loadInitialData();
+}, []);
+
+async function loadInitialData() {
+  await loadSocialNetworks();
+  await loadActiveEventStatus();
+}
+
+async function loadActiveEventStatus() {
+  try {
+    setLoadingEventStatus(true);
+
+    const activeEvent =
+      await getActivePublicEvent();
+
+    setApplicationsOpen(
+      activeEvent.applicationsOpen ?? true
+    );
+  } catch (error) {
+    console.error(error);
+
+    setApplicationsOpen(false);
+
+    toast.error(
+      "No fue posible validar si las postulaciones están abiertas"
+    );
+  } finally {
+    setLoadingEventStatus(false);
+  }
+}
 
   async function loadSocialNetworks() {
     try {
@@ -242,7 +278,15 @@ export default function PostulacionPage() {
     try {
       setIsSubmitting(true);
       setSubmitSuccess(false);
-
+      if (!applicationsOpen) {
+        toast.error(
+          "Las postulaciones están cerradas"
+        );
+      
+        setIsSubmitting(false);
+        return;
+      }
+      
       const totalSeconds =
         Number(data.hours || 0) * 3600 +
         Number(data.minutes || 0) * 60 +
@@ -380,7 +424,56 @@ export default function PostulacionPage() {
       setIsSubmitting(false);
     }
   };
+if (loadingEventStatus) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+      <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-3xl">
+          <Card className="border-gray-800 bg-gray-900/50">
+            <CardContent className="p-8 text-center text-gray-400">
+              Verificando estado de postulaciones...
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
 
+if (!applicationsOpen) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+      <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-3xl">
+          <Card className="border-yellow-500/30 bg-yellow-500/10">
+            <CardContent className="p-8 text-center">
+              <Lock className="mx-auto mb-5 h-14 w-14 text-yellow-300" />
+
+              <h1 className="mb-3 text-3xl font-bold text-white">
+                Postulaciones cerradas
+              </h1>
+
+              <p className="mx-auto mb-6 max-w-xl text-gray-300">
+                Las postulaciones para esta edición de SGames ya fueron cerradas.
+                El staff está revisando las propuestas recibidas y preparando el
+                horario oficial.
+              </p>
+
+              <Link to="/">
+                <Button
+                  variant="outline"
+                  className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+                >
+                  Volver al inicio
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
       <div className="container mx-auto px-4">

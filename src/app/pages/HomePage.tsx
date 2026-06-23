@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { getActivePublicEvent } from "../services/eventService";
 import { Link } from "react-router";
 import { Button } from "../components/ui/button";
 import {
@@ -23,6 +25,27 @@ import {
 import logoSgames from "../../assets/logo-sgames.jpeg";
 
 export default function HomePage() {
+const [applicationsOpen, setApplicationsOpen] =
+  useState(true);
+
+useEffect(() => {
+  loadActiveEventStatus();
+}, []);
+
+async function loadActiveEventStatus() {
+  try {
+    const activeEvent =
+      await getActivePublicEvent();
+
+    setApplicationsOpen(
+      activeEvent.applicationsOpen ?? true
+    );
+  } catch (error) {
+    console.error(error);
+    setApplicationsOpen(true);
+  }
+}
+
   const features = [
     {
       icon: Play,
@@ -61,9 +84,12 @@ export default function HomePage() {
     {
       icon: ClipboardCheck,
       title: "Postulaciones",
-      value: "Abiertas",
-      description:
-        "Envía tu run desde el formulario público para revisión del staff.",
+      value: applicationsOpen
+      ? "Abiertas"
+      : "Cerradas",
+      description: applicationsOpen
+      ? "Envía tu run desde el formulario público para revisión del staff."
+      : "Las postulaciones para esta edición ya fueron cerradas por el staff.",
     },
     {
       icon: Clock3,
@@ -186,15 +212,26 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link to="/postulacion">
+              {applicationsOpen ? (
+                <Link to="/postulacion">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-base font-bold text-white shadow-[0_0_32px_rgba(217,70,239,0.45)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+                  >
+                    <Zap className="mr-2 h-5 w-5" />
+                    Enviar Postulación
+                  </Button>
+                </Link>
+              ) : (
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-base font-bold text-white shadow-[0_0_32px_rgba(217,70,239,0.45)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+                  disabled
+                  className="cursor-not-allowed bg-gray-700 text-base font-bold text-gray-300"
                 >
                   <Zap className="mr-2 h-5 w-5" />
-                  Enviar Postulación
+                  Postulaciones cerradas
                 </Button>
-              </Link>
+              )}
 
               <Link to="/horario">
                 <Button
@@ -348,15 +385,26 @@ export default function HomePage() {
             lineup variado, entretenido y memorable.
           </p>
 
-          <Link to="/postulacion">
+          {applicationsOpen ? (
+            <Link to="/postulacion">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-lg font-bold text-white shadow-[0_0_28px_rgba(217,70,239,0.35)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+              >
+                <Zap className="mr-2 h-5 w-5" />
+                Enviar mi Postulación
+              </Button>
+            </Link>
+          ) : (
             <Button
               size="lg"
-              className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-lg font-bold text-white shadow-[0_0_28px_rgba(217,70,239,0.35)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+              disabled
+              className="cursor-not-allowed bg-gray-700 text-lg font-bold text-gray-300"
             >
               <Zap className="mr-2 h-5 w-5" />
-              Enviar mi Postulación
+              Postulaciones cerradas
             </Button>
-          </Link>
+          )}
         </div>
       </section>
     </div>

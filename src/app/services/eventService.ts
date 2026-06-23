@@ -44,3 +44,18 @@ export async function updateEvent(
 
   return true;
 }
+
+export async function getActivePublicEvent() {
+  const response =
+    await fetch(
+      `${API_URL}/Events/active`
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      "Error loading active public event"
+    );
+  }
+
+  return await response.json();
+}
