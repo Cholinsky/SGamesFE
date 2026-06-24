@@ -482,7 +482,7 @@ async function loadPublicRunners() {
             key={runner.id}
             className="group overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
           >
-            <div className="aspect-video bg-[#070817]">
+            <div className="aspect-[4/5] bg-[#070817]">
               {runner.photoUrl ? (
                 <img
                   src={runner.photoUrl}
