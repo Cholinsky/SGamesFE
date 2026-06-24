@@ -10,6 +10,7 @@ import {
   Settings,
   Bell,
   User,
+  Users,
   Menu,
   X,
   Newspaper,
@@ -79,32 +80,37 @@ export function AdminLayout() {
     location.pathname === path;
 
   const navigation = [
-    {
-      name: "Dashboard",
-      path: "/admin",
-      icon: LayoutDashboard,
-    },
-    {
-      name: "Postulaciones",
-      path: "/admin/postulaciones",
-      icon: FileText,
-    },
-    {
-      name: "Horarios",
-      path: "/admin/horarios",
-      icon: Calendar,
-    },
-    {
-      name: "Publicaciones",
-      path: "/admin/publicaciones",
-      icon: Newspaper,
-    },
-    {
-      name: "Configuración",
-      path: "/admin/configuracion",
-      icon: Settings,
-    },
-  ];
+  {
+    name: "Dashboard",
+    path: "/admin",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Postulaciones",
+    path: "/admin/postulaciones",
+    icon: FileText,
+  },
+  {
+    name: "Horarios",
+    path: "/admin/horarios",
+    icon: Calendar,
+  },
+  {
+    name: "Publicaciones",
+    path: "/admin/publicaciones",
+    icon: Newspaper,
+  },
+  {
+    name: "Runners",
+    path: "/admin/runners",
+    icon: Users,
+  },
+  {
+    name: "Configuración",
+    path: "/admin/configuracion",
+    icon: Settings,
+  },
+];
 
   useEffect(() => {
     loadNotifications();

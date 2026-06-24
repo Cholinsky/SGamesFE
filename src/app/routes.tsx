@@ -12,6 +12,7 @@ import AdminPostulaciones from "./pages/admin/AdminPostulaciones";
 import AdminHorarios from "./pages/admin/AdminHorarios";
 import AdminPublicaciones from "./pages/admin/AdminPublicaciones";
 import AdminConfiguracion from "./pages/admin/AdminConfiguracion";
+import AdminRunners from "./pages/admin/AdminRunners";
 import NotFound from "./pages/NotFound";
 
 export const router = createBrowserRouter([
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
           { path: "postulaciones", Component: AdminPostulaciones },
           { path: "horarios", Component: AdminHorarios },
           { path: "publicaciones", Component: AdminPublicaciones },
+          { path: "runners", Component: AdminRunners },
           { path: "configuracion", Component: AdminConfiguracion },
         ],
       },
