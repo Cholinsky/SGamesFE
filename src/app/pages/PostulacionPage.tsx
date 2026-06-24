@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { DateTime } from "luxon";
 import { useForm } from "react-hook-form";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -23,6 +24,7 @@ import {
   CalendarDays,
   Star,
   Lock,
+  Globe2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createApplication } from "../services/applicationService";
@@ -131,6 +133,198 @@ const aspectRatioOptions = [
   "Vertical",
 ];
 
+const MEXICO_TIMEZONE = "America/Mexico_City";
+
+const timezoneOptions = [
+  {
+    value: "America/Mexico_City",
+    label: "México Centro",
+  },
+  {
+    value: "America/Tijuana",
+    label: "México Pacífico / Tijuana",
+  },
+  {
+    value: "America/New_York",
+    label: "Estados Unidos Este",
+  },
+  {
+    value: "America/Chicago",
+    label: "Estados Unidos Centro",
+  },
+  {
+    value: "America/Denver",
+    label: "Estados Unidos Montaña",
+  },
+  {
+    value: "America/Los_Angeles",
+    label: "Estados Unidos Pacífico",
+  },
+  {
+    value: "America/Bogota",
+    label: "Colombia / Perú / Ecuador",
+  },
+  {
+    value: "America/Santiago",
+    label: "Chile",
+  },
+  {
+    value: "America/Argentina/Buenos_Aires",
+    label: "Argentina",
+  },
+  {
+    value: "Europe/Madrid",
+    label: "España",
+  },
+  {
+    value: "Europe/London",
+    label: "Reino Unido",
+  },
+  {
+    value: "Europe/Paris",
+    label: "Francia / Europa Central",
+  },
+  {
+    value: "Asia/Tokyo",
+    label: "Japón",
+  },
+];
+
+function getTimezoneLabel(value: string) {
+  return (
+    timezoneOptions.find(
+      (timezone) =>
+        timezone.value === value
+    )?.label ?? value
+  );
+}
+
+function toApiTime(value: string) {
+  return `${value}:00`;
+}
+
+function convertAvailabilityToMexico(
+  availability: Availability,
+  runnerTimezone: string
+) {
+  const localStart =
+    DateTime.fromISO(
+      `${availability.dayDate}T${availability.availableFrom}:00`,
+      { zone: runnerTimezone }
+    );
+
+  const localEnd =
+    DateTime.fromISO(
+      `${availability.dayDate}T${availability.availableTo}:00`,
+      { zone: runnerTimezone }
+    );
+
+  const mexicoStart =
+    localStart.setZone(
+      MEXICO_TIMEZONE
+    );
+
+  const mexicoEnd =
+    localEnd.setZone(
+      MEXICO_TIMEZONE
+    );
+
+  return {
+    dayDate:
+      mexicoStart.toFormat(
+        "yyyy-MM-dd"
+      ),
+    availableFrom:
+      mexicoStart.toFormat(
+        "HH:mm:ss"
+      ),
+    availableToDayDate:
+      mexicoEnd.toFormat(
+        "yyyy-MM-dd"
+      ),
+    availableTo:
+      mexicoEnd.toFormat(
+        "HH:mm:ss"
+      ),
+    localDayDate:
+      availability.dayDate,
+    localAvailableFrom:
+      toApiTime(
+        availability.availableFrom
+      ),
+    localAvailableTo:
+      toApiTime(
+        availability.availableTo
+      ),
+    isPreferred:
+      availability.isPreferred,
+    notes:
+      availability.notes.trim() || null,
+  };
+}
+
+function formatConvertedAvailability(
+  availability: Availability,
+  runnerTimezone: string
+) {
+  const localStart =
+    DateTime.fromISO(
+      `${availability.dayDate}T${availability.availableFrom}:00`,
+      { zone: runnerTimezone }
+    );
+
+  const localEnd =
+    DateTime.fromISO(
+      `${availability.dayDate}T${availability.availableTo}:00`,
+      { zone: runnerTimezone }
+    );
+
+  if (!localStart.isValid ||
+      !localEnd.isValid) {
+    return "Horario inválido";
+  }
+
+  const mexicoStart =
+    localStart.setZone(
+      MEXICO_TIMEZONE
+    );
+
+  const mexicoEnd =
+    localEnd.setZone(
+      MEXICO_TIMEZONE
+    );
+
+  const sameDay =
+    mexicoStart.toFormat(
+      "yyyy-MM-dd"
+    ) ===
+    mexicoEnd.toFormat(
+      "yyyy-MM-dd"
+    );
+
+  if (sameDay) {
+    return `${mexicoStart.setLocale(
+      "es-MX"
+    ).toFormat(
+      "cccc d 'de' LLLL"
+    )}, ${mexicoStart.toFormat(
+      "HH:mm"
+    )} - ${mexicoEnd.toFormat(
+      "HH:mm"
+    )}`;
+  }
+
+  return `${mexicoStart.setLocale(
+    "es-MX"
+  ).toFormat(
+    "cccc d 'de' LLLL HH:mm"
+  )} - ${mexicoEnd.setLocale(
+    "es-MX"
+  ).toFormat(
+    "cccc d 'de' LLLL HH:mm"
+  )}`;
+}
+
 export default function PostulacionPage() {
   const {
     register,
@@ -154,6 +348,9 @@ export default function PostulacionPage() {
 
   const [aspectRatio, setAspectRatio] =
     useState("");
+
+  const [runnerTimezone, setRunnerTimezone] =
+    useState(MEXICO_TIMEZONE);
 
   const [isSubmitting, setIsSubmitting] =
     useState(false);
@@ -367,11 +564,38 @@ async function loadActiveEventStatus() {
           .filter(Boolean)
           .join("\n\n");
 
+      const convertedAvailabilities =
+        selectedAvailabilities.map((item) =>
+          convertAvailabilityToMexico(
+            item,
+            runnerTimezone
+          )
+        );
+
+      const invalidConvertedAvailability =
+        convertedAvailabilities.some(
+          (item) =>
+            !item.dayDate ||
+            !item.availableFrom ||
+            !item.availableToDayDate ||
+            !item.availableTo
+        );
+
+      if (invalidConvertedAvailability) {
+        toast.error(
+          "No se pudo convertir correctamente la disponibilidad a horario de México Centro"
+        );
+
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload = {
         runnerName: data.runnerName.trim(),
         email: data.email.trim(),
         discordUser:
           data.discordUser?.trim() || null,
+        runnerTimezone,
         gameName: data.game.trim(),
         categoryName: data.category.trim(),
         platformName: data.platform,
@@ -387,17 +611,7 @@ async function loadActiveEventStatus() {
             url: x.url.trim(),
           })),
         availabilities:
-          selectedAvailabilities.map((item) => ({
-            dayDate: item.dayDate,
-            availableFrom:
-              `${item.availableFrom}:00`,
-            availableTo:
-              `${item.availableTo}:00`,
-            isPreferred:
-              item.isPreferred,
-            notes:
-              item.notes.trim() || null,
-          })),
+          convertedAvailabilities,
       };
 
       await createApplication(payload);
@@ -412,6 +626,7 @@ async function loadActiveEventStatus() {
 
       setPlatform("");
       setAspectRatio("");
+      setRunnerTimezone(MEXICO_TIMEZONE);
       setSocialNetworks([]);
       resetAvailability();
     } catch (error) {
@@ -853,10 +1068,46 @@ if (!applicationsOpen) {
                     </h3>
                   </div>
 
+                  <div className="mb-5 rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
+                    <Label className="flex items-center gap-2 text-gray-300">
+                      <Globe2 className="h-4 w-4 text-purple-300" />
+                      Zona horaria donde estás capturando tu disponibilidad
+                    </Label>
+
+                    <Select
+                      value={runnerTimezone}
+                      onValueChange={setRunnerTimezone}
+                    >
+                      <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                        <SelectValue placeholder="Selecciona tu zona horaria" />
+                      </SelectTrigger>
+
+                      <SelectContent className="border-gray-700 bg-gray-800">
+                        {timezoneOptions.map((timezone) => (
+                          <SelectItem
+                            key={timezone.value}
+                            value={timezone.value}
+                          >
+                            {timezone.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <p className="mt-2 text-sm text-purple-100/80">
+                      Escribe tus horas en tu horario local. El sistema las convertirá
+                      automáticamente a México Centro para el staff.
+                    </p>
+                  </div>
+
                   <p className="mb-4 text-sm text-gray-400">
                     Selecciona los días en los que puedes correr y el rango
-                    de horario aproximado. Esto ayuda al staff a organizar
-                    mejor el horario.
+                    de horario aproximado. Actualmente estás capturando en zona:
+                    <span className="font-semibold text-cyan-300">
+                      {" "}
+                      {getTimezoneLabel(runnerTimezone)}
+                    </span>
+                    .
                   </p>
 
                   <div className="space-y-4">
@@ -950,6 +1201,19 @@ if (!applicationsOpen) {
                                   className="mt-1.5 border-gray-700 bg-gray-800 text-white"
                                 />
                               </div>
+                            </div>
+
+                            <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                                Convertido a México Centro
+                              </p>
+
+                              <p className="mt-1 text-sm text-cyan-50">
+                                {formatConvertedAvailability(
+                                  item,
+                                  runnerTimezone
+                                )}
+                              </p>
                             </div>
 
                             <div>

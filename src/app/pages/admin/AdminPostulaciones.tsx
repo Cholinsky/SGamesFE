@@ -50,6 +50,7 @@ import {
   Clock3,
   Star,
   Trash2,
+  Globe2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,7 +80,11 @@ type AvailabilityDetail = {
   id: string;
   dayDate: string;
   availableFrom: string;
+  availableToDayDate?: string | null;
   availableTo: string;
+  localDayDate?: string | null;
+  localAvailableFrom?: string | null;
+  localAvailableTo?: string | null;
   isPreferred: boolean;
   notes?: string | null;
 };
@@ -90,6 +95,7 @@ type ApplicationDetail = {
   email: string;
   discordUser: string;
   country: string;
+  runnerTimezone?: string | null;
   game: string;
   category: string;
   platform: string;
@@ -161,6 +167,82 @@ function formatTimeValue(value: string) {
   }
 
   return value.substring(0, 5);
+}
+
+const timezoneOptions = [
+  { value: "America/Mexico_City", label: "México Centro" },
+  { value: "America/Tijuana", label: "México Pacífico / Tijuana" },
+  { value: "America/New_York", label: "Estados Unidos Este" },
+  { value: "America/Chicago", label: "Estados Unidos Centro" },
+  { value: "America/Denver", label: "Estados Unidos Montaña" },
+  { value: "America/Los_Angeles", label: "Estados Unidos Pacífico" },
+  { value: "America/Bogota", label: "Colombia / Perú / Ecuador" },
+  { value: "America/Santiago", label: "Chile" },
+  { value: "America/Argentina/Buenos_Aires", label: "Argentina" },
+  { value: "Europe/Madrid", label: "España" },
+  { value: "Europe/London", label: "Reino Unido" },
+  { value: "Europe/Paris", label: "Francia / Europa Central" },
+  { value: "Asia/Tokyo", label: "Japón" },
+];
+
+function getTimezoneLabel(
+  value?: string | null
+) {
+  if (!value) {
+    return "México Centro";
+  }
+
+  return (
+    timezoneOptions.find(
+      (timezone) =>
+        timezone.value === value
+    )?.label ?? value
+  );
+}
+
+function sameDate(
+  left?: string | null,
+  right?: string | null
+) {
+  if (!left || !right) {
+    return true;
+  }
+
+  return left.split("T")[0] ===
+    right.split("T")[0];
+}
+
+function formatAvailabilityRange(
+  dayDate?: string | null,
+  availableFrom?: string | null,
+  availableToDayDate?: string | null,
+  availableTo?: string | null
+) {
+  if (!dayDate) {
+    return "Sin fecha";
+  }
+
+  const startLabel =
+    formatScheduleDate(dayDate);
+
+  const startTime =
+    formatTimeValue(
+      availableFrom ?? ""
+    );
+
+  const endDate =
+    availableToDayDate ?? dayDate;
+
+  const endTime =
+    formatTimeValue(
+      availableTo ?? ""
+    );
+
+  if (sameDate(dayDate, endDate)) {
+    return `${startLabel}, ${startTime} - ${endTime}`;
+  }
+
+  return `${startLabel}, ${startTime} → ${formatScheduleDate(endDate)}, ${endTime}`;
 }
 
 export default function AdminPostulaciones() {
@@ -738,7 +820,6 @@ export default function AdminPostulaciones() {
               </div>
 
               <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                <h3 className="mb-3 fontrounded-lg border border-gray-800 bg-gray-800/50 p-4"/>
                 <h3 className="mb-3 font-semibold text-cyan-400">
                   Información del Runner
                 </h3>
@@ -783,6 +864,22 @@ export default function AdminPostulaciones() {
                       </p>
                     </div>
                   )}
+
+                  <div className="md:col-span-2">
+                    <span className="text-sm text-gray-400">
+                      Zona horaria del runner:
+                    </span>
+
+                    <p className="mt-1 flex items-center gap-2 break-words text-white">
+                      <Globe2 className="h-4 w-4 text-purple-300" />
+                      {getTimezoneLabel(
+                        selectedPostulacion.runnerTimezone
+                      )}
+                      <span className="text-sm text-gray-500">
+                        ({selectedPostulacion.runnerTimezone ?? "America/Mexico_City"})
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -866,20 +963,35 @@ export default function AdminPostulaciones() {
                         >
                           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                             <div>
-                              <p className="font-medium capitalize text-white">
-                                {formatScheduleDate(
-                                  availability.dayDate
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                                Convertido a México Centro
+                              </p>
+
+                              <p className="mt-1 flex items-center gap-2 text-sm text-white">
+                                <Clock3 className="h-4 w-4 text-cyan-400" />
+                                {formatAvailabilityRange(
+                                  availability.dayDate,
+                                  availability.availableFrom,
+                                  availability.availableToDayDate,
+                                  availability.availableTo
                                 )}
                               </p>
 
-                              <p className="mt-1 flex items-center gap-2 text-sm text-gray-400">
-                                <Clock3 className="h-4 w-4 text-cyan-400" />
-                                {formatTimeValue(
-                                  availability.availableFrom
-                                )}{" "}
-                                -{" "}
-                                {formatTimeValue(
-                                  availability.availableTo
+                              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-purple-300">
+                                Horario original del runner
+                              </p>
+
+                              <p className="mt-1 flex items-center gap-2 text-sm text-gray-300">
+                                <Globe2 className="h-4 w-4 text-purple-300" />
+                                {formatAvailabilityRange(
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableFrom ??
+                                    availability.availableFrom,
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableTo ??
+                                    availability.availableTo
                                 )}
                               </p>
                             </div>
@@ -893,7 +1005,7 @@ export default function AdminPostulaciones() {
                           </div>
 
                           {availability.notes && (
-                            <p className="mt-2 text-sm text-gray-400">
+                            <p className="mt-3 text-sm text-gray-400">
                               {availability.notes}
                             </p>
                           )}
@@ -1025,6 +1137,10 @@ export default function AdminPostulaciones() {
                     Disponibilidad declarada
                   </h3>
 
+                  <p className="mb-3 text-xs text-cyan-100/80">
+                    Programa usando el horario convertido a México Centro.
+                  </p>
+
                   <div className="space-y-2">
                     {scheduleApplication.availabilities.map(
                       (availability) => (
@@ -1033,11 +1149,35 @@ export default function AdminPostulaciones() {
                           className="rounded-md border border-cyan-500/20 bg-gray-900/50 p-3"
                         >
                           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                            <p className="font-medium capitalize text-white">
-                              {formatScheduleDate(
-                                availability.dayDate
-                              )}
-                            </p>
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                                México Centro
+                              </p>
+
+                              <p className="mt-1 text-sm text-white">
+                                {formatAvailabilityRange(
+                                  availability.dayDate,
+                                  availability.availableFrom,
+                                  availability.availableToDayDate,
+                                  availability.availableTo
+                                )}
+                              </p>
+
+                              <p className="mt-2 text-xs text-gray-400">
+                                Runner ({getTimezoneLabel(
+                                  scheduleApplication.runnerTimezone
+                                )}): {formatAvailabilityRange(
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableFrom ??
+                                    availability.availableFrom,
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableTo ??
+                                    availability.availableTo
+                                )}
+                              </p>
+                            </div>
 
                             {availability.isPreferred && (
                               <Badge className="w-fit bg-yellow-500/20 text-yellow-300">
@@ -1047,18 +1187,8 @@ export default function AdminPostulaciones() {
                             )}
                           </div>
 
-                          <p className="mt-1 text-sm text-gray-300">
-                            {formatTimeValue(
-                              availability.availableFrom
-                            )}{" "}
-                            -{" "}
-                            {formatTimeValue(
-                              availability.availableTo
-                            )}
-                          </p>
-
                           {availability.notes && (
-                            <p className="mt-1 text-xs text-gray-400">
+                            <p className="mt-2 text-xs text-gray-400">
                               {availability.notes}
                             </p>
                           )}
