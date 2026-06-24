@@ -25,6 +25,7 @@ import {
   Star,
   Lock,
   Globe2,
+  Gamepad2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createApplication } from "../services/applicationService";
@@ -53,10 +54,8 @@ type Availability = {
   notes: string;
 };
 
-type FormData = {
-  runnerName: string;
-  email: string;
-  discordUser: string;
+type RunForm = {
+  id: string;
   game: string;
   category: string;
   hours: string;
@@ -65,6 +64,13 @@ type FormData = {
   platform: string;
   aspectRatio: string;
   videoUrl: string;
+  notes: string;
+};
+
+type FormData = {
+  runnerName: string;
+  email: string;
+  discordUser: string;
   notes?: string;
   organizerComments?: string;
 };
@@ -199,8 +205,57 @@ function getTimezoneLabel(value: string) {
   );
 }
 
+function createId() {
+  if (
+    typeof crypto !== "undefined" &&
+    "randomUUID" in crypto
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random()}`;
+}
+
+function createEmptyRun(): RunForm {
+  return {
+    id: createId(),
+    game: "",
+    category: "",
+    hours: "",
+    minutes: "",
+    seconds: "",
+    platform: "",
+    aspectRatio: "",
+    videoUrl: "",
+    notes: "",
+  };
+}
+
 function toApiTime(value: string) {
   return `${value}:00`;
+}
+
+function getRunTotalSeconds(run: RunForm) {
+  return (
+    Number(run.hours || 0) * 3600 +
+    Number(run.minutes || 0) * 60 +
+    Number(run.seconds || 0)
+  );
+}
+
+function getRunEstimatedMinutes(run: RunForm) {
+  const totalSeconds =
+    getRunTotalSeconds(run);
+
+  return Math.ceil(
+    totalSeconds / 60
+  );
+}
+
+function isValidYoutubeUrl(value: string) {
+  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(
+    value
+  );
 }
 
 function convertAvailabilityToMexico(
@@ -261,6 +316,28 @@ function convertAvailabilityToMexico(
     notes:
       availability.notes.trim() || null,
   };
+}
+
+function isAvailabilityConversionValid(
+  availability: Availability,
+  runnerTimezone: string
+) {
+  const localStart =
+    DateTime.fromISO(
+      `${availability.dayDate}T${availability.availableFrom}:00`,
+      { zone: runnerTimezone }
+    );
+
+  const localEnd =
+    DateTime.fromISO(
+      `${availability.dayDate}T${availability.availableTo}:00`,
+      { zone: runnerTimezone }
+    );
+
+  return (
+    localStart.isValid &&
+    localEnd.isValid
+  );
 }
 
 function formatConvertedAvailability(
@@ -331,7 +408,6 @@ export default function PostulacionPage() {
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<FormData>();
 
   const [socialNetworks, setSocialNetworks] =
@@ -340,14 +416,13 @@ export default function PostulacionPage() {
   const [catalog, setCatalog] =
     useState<SocialNetworkCatalog[]>([]);
 
+  const [runs, setRuns] =
+    useState<RunForm[]>([
+      createEmptyRun(),
+    ]);
+
   const [availabilities, setAvailabilities] =
     useState<Availability[]>(eventDays);
-
-  const [platform, setPlatform] =
-    useState("");
-
-  const [aspectRatio, setAspectRatio] =
-    useState("");
 
   const [runnerTimezone, setRunnerTimezone] =
     useState(MEXICO_TIMEZONE);
@@ -357,43 +432,44 @@ export default function PostulacionPage() {
 
   const [submitSuccess, setSubmitSuccess] =
     useState(false);
-    const [loadingEventStatus, setLoadingEventStatus] =
-  useState(true);
 
-const [applicationsOpen, setApplicationsOpen] =
-  useState(true);
+  const [loadingEventStatus, setLoadingEventStatus] =
+    useState(true);
+
+  const [applicationsOpen, setApplicationsOpen] =
+    useState(true);
 
   useEffect(() => {
-  loadInitialData();
-}, []);
+    loadInitialData();
+  }, []);
 
-async function loadInitialData() {
-  await loadSocialNetworks();
-  await loadActiveEventStatus();
-}
-
-async function loadActiveEventStatus() {
-  try {
-    setLoadingEventStatus(true);
-
-    const activeEvent =
-      await getActivePublicEvent();
-
-    setApplicationsOpen(
-      activeEvent.applicationsOpen ?? true
-    );
-  } catch (error) {
-    console.error(error);
-
-    setApplicationsOpen(false);
-
-    toast.error(
-      "No fue posible validar si las postulaciones están abiertas"
-    );
-  } finally {
-    setLoadingEventStatus(false);
+  async function loadInitialData() {
+    await loadSocialNetworks();
+    await loadActiveEventStatus();
   }
-}
+
+  async function loadActiveEventStatus() {
+    try {
+      setLoadingEventStatus(true);
+
+      const activeEvent =
+        await getActivePublicEvent();
+
+      setApplicationsOpen(
+        activeEvent.applicationsOpen ?? true
+      );
+    } catch (error) {
+      console.error(error);
+
+      setApplicationsOpen(false);
+
+      toast.error(
+        "No fue posible validar si las postulaciones están abiertas"
+      );
+    } finally {
+      setLoadingEventStatus(false);
+    }
+  }
 
   async function loadSocialNetworks() {
     try {
@@ -410,11 +486,53 @@ async function loadActiveEventStatus() {
     }
   }
 
+  const addRun = () => {
+    setRuns((current) => [
+      ...current,
+      createEmptyRun(),
+    ]);
+  };
+
+  const removeRun = (
+    id: string
+  ) => {
+    setRuns((current) => {
+      if (current.length === 1) {
+        toast.error(
+          "Debe existir al menos una run"
+        );
+
+        return current;
+      }
+
+      return current.filter(
+        (run) => run.id !== id
+      );
+    });
+  };
+
+  const updateRun = (
+    id: string,
+    field: keyof RunForm,
+    value: string
+  ) => {
+    setRuns((current) =>
+      current.map((run) =>
+        run.id === id
+          ? {
+              ...run,
+              [field]: value,
+            }
+          : run
+      )
+    );
+  };
+
   const addSocialNetwork = () => {
     setSocialNetworks([
       ...socialNetworks,
       {
-        id: crypto.randomUUID(),
+        id: createId(),
         socialNetworkId: "",
         url: "",
       },
@@ -469,31 +587,107 @@ async function loadActiveEventStatus() {
     setAvailabilities(eventDays);
   };
 
+  const resetRuns = () => {
+    setRuns([
+      createEmptyRun(),
+    ]);
+  };
+
+  const validateRuns = () => {
+    if (!runs.length) {
+      toast.error(
+        "Agrega al menos una run"
+      );
+
+      return false;
+    }
+
+    for (let index = 0; index < runs.length; index++) {
+      const run =
+        runs[index];
+
+      const runNumber =
+        index + 1;
+
+      if (!run.game.trim()) {
+        toast.error(
+          `La run #${runNumber} necesita juego`
+        );
+
+        return false;
+      }
+
+      if (!run.category.trim()) {
+        toast.error(
+          `La run #${runNumber} necesita categoría`
+        );
+
+        return false;
+      }
+
+      if (!run.platform.trim()) {
+        toast.error(
+          `La run #${runNumber} necesita plataforma`
+        );
+
+        return false;
+      }
+
+      if (!run.aspectRatio.trim()) {
+        toast.error(
+          `La run #${runNumber} necesita relación de pantalla`
+        );
+
+        return false;
+      }
+
+      if (getRunTotalSeconds(run) <= 0) {
+        toast.error(
+          `La run #${runNumber} necesita un tiempo estimado mayor a 0`
+        );
+
+        return false;
+      }
+
+      if (!run.videoUrl.trim()) {
+        toast.error(
+          `La run #${runNumber} necesita video demostrativo`
+        );
+
+        return false;
+      }
+
+      if (!isValidYoutubeUrl(
+          run.videoUrl.trim()
+      )) {
+        toast.error(
+          `La run #${runNumber} tiene una URL de YouTube inválida`
+        );
+
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const onSubmit = async (
     data: FormData
   ) => {
     try {
       setIsSubmitting(true);
       setSubmitSuccess(false);
+
       if (!applicationsOpen) {
         toast.error(
           "Las postulaciones están cerradas"
         );
-      
+
         setIsSubmitting(false);
         return;
       }
-      
-      const totalSeconds =
-        Number(data.hours || 0) * 3600 +
-        Number(data.minutes || 0) * 60 +
-        Number(data.seconds || 0);
 
-      if (totalSeconds <= 0) {
-        toast.error(
-          "El tiempo estimado debe ser mayor a 0"
-        );
-
+      if (!validateRuns()) {
         setIsSubmitting(false);
         return;
       }
@@ -523,6 +717,24 @@ async function loadActiveEventStatus() {
       if (invalidAvailability) {
         toast.error(
           "Revisa tus horarios disponibles. La hora inicial debe ser menor que la hora final"
+        );
+
+        setIsSubmitting(false);
+        return;
+      }
+
+      const invalidTimezoneConversion =
+        selectedAvailabilities.some(
+          (item) =>
+            !isAvailabilityConversionValid(
+              item,
+              runnerTimezone
+            )
+        );
+
+      if (invalidTimezoneConversion) {
+        toast.error(
+          "No se pudo convertir correctamente la disponibilidad a México Centro"
         );
 
         setIsSubmitting(false);
@@ -572,60 +784,98 @@ async function loadActiveEventStatus() {
           )
         );
 
-      const invalidConvertedAvailability =
-        convertedAvailabilities.some(
-          (item) =>
-            !item.dayDate ||
-            !item.availableFrom ||
-            !item.availableToDayDate ||
-            !item.availableTo
-        );
+      const applicationRuns =
+        runs.map((run) => ({
+          gameName:
+            run.game.trim(),
 
-      if (invalidConvertedAvailability) {
-        toast.error(
-          "No se pudo convertir correctamente la disponibilidad a horario de México Centro"
-        );
+          categoryName:
+            run.category.trim(),
 
-        setIsSubmitting(false);
-        return;
-      }
+          platformName:
+            run.platform,
+
+          estimatedTimeMinutes:
+            getRunEstimatedMinutes(run),
+
+          aspectRatio:
+            run.aspectRatio,
+
+          youtubeUrl:
+            run.videoUrl.trim(),
+
+          notes:
+            run.notes.trim() || null,
+        }));
+
+      const firstRun =
+        applicationRuns[0];
 
       const payload = {
-        runnerName: data.runnerName.trim(),
-        email: data.email.trim(),
+        runnerName:
+          data.runnerName.trim(),
+
+        email:
+          data.email.trim(),
+
         discordUser:
           data.discordUser?.trim() || null,
+
         runnerTimezone,
-        gameName: data.game.trim(),
-        categoryName: data.category.trim(),
-        platformName: data.platform,
-        estimatedTimeMinutes:
-          Math.ceil(totalSeconds / 60),
-        aspectRatio: data.aspectRatio,
-        youtubeUrl: data.videoUrl.trim(),
-        notes: combinedNotes || null,
+
+        notes:
+          combinedNotes || null,
+
         socialNetworks:
           validSocialNetworks.map((x) => ({
             socialNetworkId:
               x.socialNetworkId,
             url: x.url.trim(),
           })),
+
         availabilities:
           convertedAvailabilities,
+
+        runs:
+          applicationRuns,
+
+        // Compatibilidad con backend anterior
+        gameName:
+          firstRun.gameName,
+
+        categoryName:
+          firstRun.categoryName,
+
+        platformName:
+          firstRun.platformName,
+
+        estimatedTimeMinutes:
+          firstRun.estimatedTimeMinutes,
+
+        aspectRatio:
+          firstRun.aspectRatio,
+
+        youtubeUrl:
+          firstRun.youtubeUrl,
       };
 
-      await createApplication(payload);
+      const result =
+        await createApplication(payload);
+
+      const totalApplications =
+        result?.totalApplications ??
+        applicationRuns.length;
 
       toast.success(
-        "¡Postulación enviada con éxito!"
+        totalApplications > 1
+          ? `¡${totalApplications} postulaciones enviadas con éxito!`
+          : "¡Postulación enviada con éxito!"
       );
 
       setSubmitSuccess(true);
 
       reset();
-
-      setPlatform("");
-      setAspectRatio("");
+      resetRuns();
       setRunnerTimezone(MEXICO_TIMEZONE);
       setSocialNetworks([]);
       resetAvailability();
@@ -639,56 +889,58 @@ async function loadActiveEventStatus() {
       setIsSubmitting(false);
     }
   };
-if (loadingEventStatus) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl">
-          <Card className="border-gray-800 bg-gray-900/50">
-            <CardContent className="p-8 text-center text-gray-400">
-              Verificando estado de postulaciones...
-            </CardContent>
-          </Card>
+
+  if (loadingEventStatus) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <Card className="border-gray-800 bg-gray-900/50">
+              <CardContent className="p-8 text-center text-gray-400">
+                Verificando estado de postulaciones...
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-if (!applicationsOpen) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl">
-          <Card className="border-yellow-500/30 bg-yellow-500/10">
-            <CardContent className="p-8 text-center">
-              <Lock className="mx-auto mb-5 h-14 w-14 text-yellow-300" />
+  if (!applicationsOpen) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <Card className="border-yellow-500/30 bg-yellow-500/10">
+              <CardContent className="p-8 text-center">
+                <Lock className="mx-auto mb-5 h-14 w-14 text-yellow-300" />
 
-              <h1 className="mb-3 text-3xl font-bold text-white">
-                Postulaciones cerradas
-              </h1>
+                <h1 className="mb-3 text-3xl font-bold text-white">
+                  Postulaciones cerradas
+                </h1>
 
-              <p className="mx-auto mb-6 max-w-xl text-gray-300">
-                Las postulaciones para esta edición de SGames ya fueron cerradas.
-                El staff está revisando las propuestas recibidas y preparando el
-                horario oficial.
-              </p>
+                <p className="mx-auto mb-6 max-w-xl text-gray-300">
+                  Las postulaciones para esta edición de SGames ya fueron cerradas.
+                  El staff está revisando las propuestas recibidas y preparando el
+                  horario oficial.
+                </p>
 
-              <Link to="/">
-                <Button
-                  variant="outline"
-                  className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
-                >
-                  Volver al inicio
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+                <Link to="/">
+                  <Button
+                    variant="outline"
+                    className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+                  >
+                    Volver al inicio
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
       <div className="container mx-auto px-4">
@@ -700,7 +952,7 @@ if (!applicationsOpen) {
             </h1>
 
             <p className="text-gray-400">
-              Completa el formulario para postular tu speedrun a SGames
+              Completa el formulario para postular una o varias runs a SGames
             </p>
           </div>
 
@@ -715,7 +967,7 @@ if (!applicationsOpen) {
                 </p>
 
                 <p className="text-sm text-green-400/80">
-                  Revisaremos tu solicitud y te contactaremos pronto.
+                  Revisaremos tus propuestas y te contactaremos pronto.
                 </p>
               </div>
             </div>
@@ -822,239 +1074,293 @@ if (!applicationsOpen) {
                   </div>
                 </div>
 
-                {/* Información del Speedrun */}
+                {/* Runs */}
                 <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
-                    Información del Speedrun
-                  </h3>
-
-                  <div className="space-y-4">
+                  <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <Label
-                        htmlFor="game"
-                        className="text-gray-300"
-                      >
-                        Juego{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
+                      <h3 className="flex items-center gap-2 text-xl font-semibold text-cyan-400">
+                        <Gamepad2 className="h-5 w-5" />
+                        Runs a postular
+                      </h3>
 
-                      <Input
-                        id="game"
-                        {...register("game", {
-                          required:
-                            "Este campo es requerido",
-                        })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                        placeholder="Nombre del juego"
-                      />
-
-                      {errors.game && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.game.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label
-                        htmlFor="category"
-                        className="text-gray-300"
-                      >
-                        Categoría{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <Input
-                        id="category"
-                        {...register("category", {
-                          required:
-                            "Este campo es requerido",
-                        })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                        placeholder="Ej: Any%, 100%, Glitchless"
-                      />
-
-                      {errors.category && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.category.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-300">
-                        Tiempo estimado{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <div className="mt-1.5 grid grid-cols-3 gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="99"
-                          placeholder="HH"
-                          className="border-gray-700 bg-gray-800 text-white"
-                          {...register("hours", {
-                            required:
-                              "Horas requeridas",
-                          })}
-                        />
-
-                        <Input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="MM"
-                          className="border-gray-700 bg-gray-800 text-white"
-                          {...register("minutes", {
-                            required:
-                              "Minutos requeridos",
-                          })}
-                        />
-
-                        <Input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="SS"
-                          className="border-gray-700 bg-gray-800 text-white"
-                          {...register("seconds", {
-                            required:
-                              "Segundos requeridos",
-                          })}
-                        />
-                      </div>
-
-                      <p className="mt-2 text-sm text-gray-500">
-                        Formato HH:MM:SS
+                      <p className="mt-1 text-sm text-gray-400">
+                        Puedes agregar varios juegos. El staff recibirá cada run como una postulación separada.
                       </p>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <Label
-                          htmlFor="platform"
-                          className="text-gray-300"
-                        >
-                          Plataforma{" "}
-                          <span className="text-red-400">
-                            *
-                          </span>
-                        </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addRun}
+                      className="w-fit border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Agregar otra run
+                    </Button>
+                  </div>
 
-                        <Select
-                          value={platform}
-                          onValueChange={(value) => {
-                            setPlatform(value);
-                            setValue(
-                              "platform",
-                              value,
-                              {
-                                shouldValidate: true,
+                  <div className="space-y-5">
+                    {runs.map((run, index) => (
+                      <div
+                        key={run.id}
+                        className="rounded-xl border border-cyan-500/20 bg-gray-800/40 p-4"
+                      >
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm uppercase tracking-[0.18em] text-cyan-300">
+                              Run #{index + 1}
+                            </p>
+
+                            <h4 className="font-semibold text-white">
+                              {run.game.trim()
+                                ? run.game
+                                : "Nueva run"}
+                            </h4>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={runs.length === 1}
+                            onClick={() =>
+                              removeRun(run.id)
+                            }
+                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                            title="Eliminar run"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <Label className="text-gray-300">
+                              Juego{" "}
+                              <span className="text-red-400">
+                                *
+                              </span>
+                            </Label>
+
+                            <Input
+                              value={run.game}
+                              onChange={(event) =>
+                                updateRun(
+                                  run.id,
+                                  "game",
+                                  event.target.value
+                                )
                               }
-                            );
-                          }}
-                        >
-                          <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
-                            <SelectValue placeholder="Selecciona plataforma" />
-                          </SelectTrigger>
+                              className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                              placeholder="Nombre del juego"
+                            />
+                          </div>
 
-                          <SelectContent className="border-gray-700 bg-gray-800">
-                            {platformOptions.map(
-                              (option) => (
-                                <SelectItem
-                                  key={option}
-                                  value={option}
-                                >
-                                  {option}
-                                </SelectItem>
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
+                          <div>
+                            <Label className="text-gray-300">
+                              Categoría{" "}
+                              <span className="text-red-400">
+                                *
+                              </span>
+                            </Label>
 
-                        <input
-                          type="hidden"
-                          {...register("platform", {
-                            required:
-                              "Este campo es requerido",
-                          })}
-                        />
-
-                        {errors.platform && (
-                          <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                            <AlertCircle className="h-3 w-3" />
-                            {errors.platform.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="aspectRatio"
-                          className="text-gray-300"
-                        >
-                          Relación de pantalla{" "}
-                          <span className="text-red-400">
-                            *
-                          </span>
-                        </Label>
-
-                        <Select
-                          value={aspectRatio}
-                          onValueChange={(value) => {
-                            setAspectRatio(value);
-                            setValue(
-                              "aspectRatio",
-                              value,
-                              {
-                                shouldValidate: true,
+                            <Input
+                              value={run.category}
+                              onChange={(event) =>
+                                updateRun(
+                                  run.id,
+                                  "category",
+                                  event.target.value
+                                )
                               }
-                            );
-                          }}
-                        >
-                          <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
-                            <SelectValue placeholder="Selecciona ratio" />
-                          </SelectTrigger>
+                              className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                              placeholder="Ej: Any%, 100%, Glitchless"
+                            />
+                          </div>
 
-                          <SelectContent className="border-gray-700 bg-gray-800">
-                            {aspectRatioOptions.map(
-                              (option) => (
-                                <SelectItem
-                                  key={option}
-                                  value={option}
-                                >
-                                  {option}
-                                </SelectItem>
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
+                          <div>
+                            <Label className="text-gray-300">
+                              Tiempo estimado{" "}
+                              <span className="text-red-400">
+                                *
+                              </span>
+                            </Label>
 
-                        <input
-                          type="hidden"
-                          {...register("aspectRatio", {
-                            required:
-                              "Este campo es requerido",
-                          })}
-                        />
+                            <div className="mt-1.5 grid grid-cols-3 gap-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="99"
+                                placeholder="HH"
+                                value={run.hours}
+                                onChange={(event) =>
+                                  updateRun(
+                                    run.id,
+                                    "hours",
+                                    event.target.value
+                                  )
+                                }
+                                className="border-gray-700 bg-gray-800 text-white"
+                              />
 
-                        {errors.aspectRatio && (
-                          <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                            <AlertCircle className="h-3 w-3" />
-                            {errors.aspectRatio.message}
-                          </p>
-                        )}
+                              <Input
+                                type="number"
+                                min="0"
+                                max="59"
+                                placeholder="MM"
+                                value={run.minutes}
+                                onChange={(event) =>
+                                  updateRun(
+                                    run.id,
+                                    "minutes",
+                                    event.target.value
+                                  )
+                                }
+                                className="border-gray-700 bg-gray-800 text-white"
+                              />
+
+                              <Input
+                                type="number"
+                                min="0"
+                                max="59"
+                                placeholder="SS"
+                                value={run.seconds}
+                                onChange={(event) =>
+                                  updateRun(
+                                    run.id,
+                                    "seconds",
+                                    event.target.value
+                                  )
+                                }
+                                className="border-gray-700 bg-gray-800 text-white"
+                              />
+                            </div>
+
+                            <p className="mt-2 text-sm text-gray-500">
+                              Formato HH:MM:SS
+                            </p>
+                          </div>
+
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                              <Label className="text-gray-300">
+                                Plataforma{" "}
+                                <span className="text-red-400">
+                                  *
+                                </span>
+                              </Label>
+
+                              <Select
+                                value={run.platform}
+                                onValueChange={(value) =>
+                                  updateRun(
+                                    run.id,
+                                    "platform",
+                                    value
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                                  <SelectValue placeholder="Selecciona plataforma" />
+                                </SelectTrigger>
+
+                                <SelectContent className="border-gray-700 bg-gray-800">
+                                  {platformOptions.map(
+                                    (option) => (
+                                      <SelectItem
+                                        key={option}
+                                        value={option}
+                                      >
+                                        {option}
+                                      </SelectItem>
+                                    )
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label className="text-gray-300">
+                                Relación de pantalla{" "}
+                                <span className="text-red-400">
+                                  *
+                                </span>
+                              </Label>
+
+                              <Select
+                                value={run.aspectRatio}
+                                onValueChange={(value) =>
+                                  updateRun(
+                                    run.id,
+                                    "aspectRatio",
+                                    value
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                                  <SelectValue placeholder="Selecciona ratio" />
+                                </SelectTrigger>
+
+                                <SelectContent className="border-gray-700 bg-gray-800">
+                                  {aspectRatioOptions.map(
+                                    (option) => (
+                                      <SelectItem
+                                        key={option}
+                                        value={option}
+                                      >
+                                        {option}
+                                      </SelectItem>
+                                    )
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label className="text-gray-300">
+                              URL de YouTube{" "}
+                              <span className="text-red-400">
+                                *
+                              </span>
+                            </Label>
+
+                            <Input
+                              value={run.videoUrl}
+                              onChange={(event) =>
+                                updateRun(
+                                  run.id,
+                                  "videoUrl",
+                                  event.target.value
+                                )
+                              }
+                              className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                              placeholder="https://youtube.com/watch?v=..."
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-gray-300">
+                              Notas de esta run (opcional)
+                            </Label>
+
+                            <Textarea
+                              value={run.notes}
+                              onChange={(event) =>
+                                updateRun(
+                                  run.id,
+                                  "notes",
+                                  event.target.value
+                                )
+                              }
+                              className="mt-1.5 min-h-[90px] border-gray-700 bg-gray-800 text-white"
+                              placeholder="Información específica de esta run..."
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1241,48 +1547,6 @@ if (!applicationsOpen) {
                   </div>
                 </div>
 
-                {/* Video Demostrativo */}
-                <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
-                    Video Demostrativo
-                  </h3>
-
-                  <div>
-                    <Label
-                      htmlFor="videoUrl"
-                      className="text-gray-300"
-                    >
-                      URL de YouTube{" "}
-                      <span className="text-red-400">
-                        *
-                      </span>
-                    </Label>
-
-                    <Input
-                      id="videoUrl"
-                      {...register("videoUrl", {
-                        required:
-                          "Este campo es requerido",
-                        pattern: {
-                          value:
-                            /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/,
-                          message:
-                            "URL de YouTube inválida",
-                        },
-                      })}
-                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
-
-                    {errors.videoUrl && (
-                      <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                        <AlertCircle className="h-3 w-3" />
-                        {errors.videoUrl.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
                 {/* Redes Sociales */}
                 <div>
                   <div className="mb-4 flex items-center justify-between">
@@ -1384,14 +1648,14 @@ if (!applicationsOpen) {
                     htmlFor="notes"
                     className="text-gray-300"
                   >
-                    Notas adicionales (opcional)
+                    Notas generales (opcional)
                   </Label>
 
                   <Textarea
                     id="notes"
                     {...register("notes")}
                     className="mt-1.5 min-h-[100px] border-gray-700 bg-gray-800 text-white"
-                    placeholder="Información adicional que quieras compartir..."
+                    placeholder="Información general que aplique a todas tus runs..."
                   />
                 </div>
 
@@ -1434,7 +1698,10 @@ if (!applicationsOpen) {
                   ) : (
                     <>
                       <Send className="mr-2 h-5 w-5" />
-                      Enviar Postulación
+                      Enviar{" "}
+                      {runs.length > 1
+                        ? `${runs.length} postulaciones`
+                        : "Postulación"}
                     </>
                   )}
                 </Button>
