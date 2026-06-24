@@ -539,13 +539,13 @@ export default function AdminRunners() {
               key={runner.id}
               className="overflow-hidden border-gray-800 bg-gray-900/50"
             >
-              <div className="relative aspect-[4/5] bg-gray-950">
+              <div className="relative aspect-square bg-gray-950">
                 {runner.photoUrl ? (
                   <img
                       src={runner.photoUrl}
                       alt={runner.displayName}
-                      className="h-full w-full object-cover"
-                    />
+                      className="h-full w-full object-cover object-center"
+                  />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <ImageIcon className="h-12 w-12 text-gray-700" />

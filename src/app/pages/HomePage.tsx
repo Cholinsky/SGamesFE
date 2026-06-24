@@ -110,7 +110,16 @@ function openPost(post: PublicPost) {
   setSelectedPost(post);
   setPostDialogOpen(true);
 }
+const [selectedRunner, setSelectedRunner] =
+  useState<PublicRunnerProfile | null>(null);
 
+const [runnerDialogOpen, setRunnerDialogOpen] =
+  useState(false);
+
+function openRunner(runner: PublicRunnerProfile) {
+  setSelectedRunner(runner);
+  setRunnerDialogOpen(true);
+}
   useEffect(() => {
     loadHomeData();
   }, []);
@@ -479,70 +488,60 @@ async function loadPublicRunners() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {publicRunners.map((runner) => (
           <Card
-            key={runner.id}
-            className="group overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
-          >
-            <div className="aspect-[4/5] bg-[#070817]">
-              {runner.photoUrl ? (
-                <img
-                  src={runner.photoUrl}
-                  alt={runner.displayName}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Users className="h-12 w-12 text-slate-700" />
-                </div>
-              )}
-            </div>
+  key={runner.id}
+  role="button"
+  tabIndex={0}
+  onClick={() => openRunner(runner)}
+  onKeyDown={(event) => {
+    if (
+      event.key === "Enter" ||
+      event.key === " "
+    ) {
+      openRunner(runner);
+    }
+  }}
+  className="group cursor-pointer overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
+>
+  <div className="aspect-square bg-[#070817]">
+    {runner.photoUrl ? (
+      <img
+        src={runner.photoUrl}
+        alt={runner.displayName}
+        className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+      />
+    ) : (
+      <div className="flex h-full w-full items-center justify-center">
+        <Users className="h-12 w-12 text-slate-700" />
+      </div>
+    )}
+  </div>
 
-            <CardContent className="p-6">
-              <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300">
-                Runner
-              </p>
+  <CardContent className="p-6">
+    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300">
+      Runner
+    </p>
 
-              <h3 className="text-2xl font-black text-white">
-                {runner.displayName}
-              </h3>
+    <h3 className="text-2xl font-black text-white">
+      {runner.displayName}
+    </h3>
 
-              {runner.country && (
-                <p className="mt-1 text-sm text-slate-400">
-                  {runner.country}
-                </p>
-              )}
+    {runner.country && (
+      <p className="mt-1 text-sm text-slate-400">
+        {runner.country}
+      </p>
+    )}
 
-              {runner.bio && (
-                <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-slate-400">
-                  {runner.bio}
-                </p>
-              )}
+    {runner.bio && (
+      <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-slate-400">
+        {runner.bio}
+      </p>
+    )}
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                {runner.presentationVideoUrl && (
-                  <a
-                    href={runner.presentationVideoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-200 hover:bg-pink-500/20"
-                  >
-                    Ver presentación
-                  </a>
-                )}
-
-                {runner.socialLinks?.map((link) => (
-                  <a
-                    key={`${runner.id}-${link.socialNetworkId}-${link.url}`}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
-                  >
-                    {link.name}
-                  </a>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+    <p className="mt-5 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
+      Ver perfil completo
+    </p>
+  </CardContent>
+</Card>
         ))}
       </div>
     </div>
@@ -685,6 +684,108 @@ async function loadPublicRunners() {
     </DialogFooter>
   </DialogContent>
 </Dialog>
+<Dialog
+  open={runnerDialogOpen}
+  onOpenChange={setRunnerDialogOpen}
+>
+  <DialogContent className="max-h-[92vh] w-[95vw] max-w-5xl overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white">
+    <DialogHeader className="border-b border-violet-500/20 px-6 py-5">
+      <DialogTitle className="text-2xl font-black text-white">
+        {selectedRunner?.displayName}
+      </DialogTitle>
+
+      {selectedRunner?.country && (
+        <p className="text-sm text-slate-400">
+          {selectedRunner.country}
+        </p>
+      )}
+    </DialogHeader>
+
+    <div className="grid max-h-[72vh] overflow-y-auto md:grid-cols-[minmax(0,420px)_1fr]">
+      <div className="bg-[#070817] p-4">
+        <div className="mx-auto aspect-[4/5] max-h-[70vh] overflow-hidden rounded-2xl border border-violet-500/20 bg-black/40">
+          {selectedRunner?.photoUrl ? (
+            <img
+              src={selectedRunner.photoUrl}
+              alt={selectedRunner.displayName}
+              className="h-full w-full object-contain object-center"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <Users className="h-16 w-16 text-slate-700" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-6 p-6">
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-[0.22em] text-cyan-300">
+            Perfil del runner
+          </p>
+
+          <h3 className="text-3xl font-black text-white">
+            {selectedRunner?.displayName}
+          </h3>
+
+          {selectedRunner?.bio ? (
+            <p className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-slate-300">
+              {selectedRunner.bio}
+            </p>
+          ) : (
+            <p className="mt-4 text-slate-500">
+              Este runner todavía no tiene presentación escrita.
+            </p>
+          )}
+        </div>
+
+        {selectedRunner?.presentationVideoUrl && (
+          <a
+            href={selectedRunner.presentationVideoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex rounded-full border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm font-semibold text-pink-200 hover:bg-pink-500/20"
+          >
+            Ver video de presentación
+          </a>
+        )}
+
+        {selectedRunner?.socialLinks?.length ? (
+          <div>
+            <p className="mb-3 text-sm font-semibold text-cyan-300">
+              Redes sociales
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {selectedRunner.socialLinks.map((link) => (
+                <a
+                  key={`${selectedRunner.id}-${link.socialNetworkId}-${link.url}`}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                >
+                  {link.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+
+    <DialogFooter className="border-t border-violet-500/20 px-6 py-4">
+      <Button
+        variant="outline"
+        onClick={() => setRunnerDialogOpen(false)}
+        className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+      >
+        Cerrar
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
 
       {/* FAQ Section */}
       <section
