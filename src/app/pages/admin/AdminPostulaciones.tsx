@@ -1,196 +1,197 @@
 import { useState, useEffect } from "react";
-import { DateTime } from "luxon";
-import { useForm } from "react-hook-form";
-import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Link } from "react-router";
-import { getActivePublicEvent } from "../services/eventService";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Badge } from "../../components/ui/badge";
+import { Label } from "../../components/ui/label";
+import {
+  getScheduleDays,
+  createScheduleEntry,
+} from "../../services/scheduleService";
+import {
+  getApplications,
+  getApplicationById,
+  approveApplication,
+  rejectApplication,
+  deleteApplication,
+} from "../../services/applicationService";
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/select";
-import { Textarea } from "../components/ui/textarea";
+} from "../../components/ui/select";
 import {
-  Plus,
-  Trash2,
-  Send,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
+import {
+  Search,
+  Filter,
+  Eye,
   CheckCircle,
-  AlertCircle,
+  XCircle,
+  Calendar,
+  ExternalLink,
   CalendarDays,
+  Clock3,
   Star,
-  Lock,
+  Trash2,
   Globe2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { createApplication } from "../services/applicationService";
-import { getSocialNetworks } from "../services/socialNetworkService";
 
-type SocialNetworkCatalog = {
+type ScheduleDay = {
   id: string;
-  name: string;
-  iconName?: string;
-  baseUrl?: string;
+  event: string;
+  dayDate: string;
 };
 
-type SocialNetwork = {
+type Postulacion = {
   id: string;
+  runnerName: string;
+  game: string;
+  category: string;
+  platform: string;
+  status: string;
+  submittedAt: string;
+};
+
+type SocialNetworkDetail = {
   socialNetworkId: string;
+  name: string;
   url: string;
 };
 
-type Availability = {
+type AvailabilityDetail = {
+  id: string;
   dayDate: string;
-  label: string;
-  selected: boolean;
   availableFrom: string;
+  availableToDayDate?: string | null;
   availableTo: string;
+  localDayDate?: string | null;
+  localAvailableFrom?: string | null;
+  localAvailableTo?: string | null;
   isPreferred: boolean;
-  notes: string;
+  notes?: string | null;
 };
 
-type FormData = {
+type ApplicationDetail = {
+  id: string;
   runnerName: string;
   email: string;
   discordUser: string;
+  country: string;
+  runnerTimezone?: string | null;
   game: string;
   category: string;
-  hours: string;
-  minutes: string;
-  seconds: string;
   platform: string;
+  estimatedTimeMinutes: number;
   aspectRatio: string;
-  videoUrl: string;
-  notes?: string;
-  organizerComments?: string;
+  youtubeUrl: string;
+  notes: string;
+  status: string;
+  priority: string;
+  event: string;
+  submittedAt: string;
+  socialNetworks: SocialNetworkDetail[];
+  availabilities: AvailabilityDetail[];
 };
 
-const eventDays: Availability[] = [
-  {
-    dayDate: "2026-07-31",
-    label: "Viernes 31 de julio",
-    selected: false,
-    availableFrom: "10:00",
-    availableTo: "23:59",
-    isPreferred: false,
-    notes: "",
-  },
-  {
-    dayDate: "2026-08-01",
-    label: "Sábado 1 de agosto",
-    selected: false,
-    availableFrom: "10:00",
-    availableTo: "23:59",
-    isPreferred: false,
-    notes: "",
-  },
-  {
-    dayDate: "2026-08-02",
-    label: "Domingo 2 de agosto",
-    selected: false,
-    availableFrom: "10:00",
-    availableTo: "23:59",
-    isPreferred: false,
-    notes: "",
-  },
-];
+function parseLocalDate(dayDate: string) {
+  const cleanDate =
+    dayDate.split("T")[0];
 
-const platformOptions = [
-  "PC",
-  "PlayStation 5",
-  "PlayStation 4",
-  "PlayStation 3",
-  "PlayStation 2",
-  "PlayStation 1",
-  "Xbox Series X/S",
-  "Xbox One",
-  "Xbox 360",
-  "Nintendo Switch",
-  "Nintendo Wii U",
-  "Nintendo Wii",
-  "Nintendo 64",
-  "GameCube",
-  "SNES",
-  "NES",
-  "Game Boy",
-  "Game Boy Advance",
-  "Nintendo DS",
-  "Nintendo 3DS",
-  "Sega Genesis",
-  "Dreamcast",
-  "Móvil",
-  "Otro",
-];
+  const [year, month, day] =
+    cleanDate.split("-").map(Number);
 
-const aspectRatioOptions = [
-  "16:9",
-  "4:3",
-  "21:9",
-  "Vertical",
-];
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+}
 
-const MEXICO_TIMEZONE = "America/Mexico_City";
+function formatScheduleDate(dayDate: string) {
+  const date =
+    parseLocalDate(dayDate);
+
+  return date.toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function formatSubmittedDate(dateValue: string) {
+  return new Date(dateValue).toLocaleDateString(
+    "es-MX",
+    {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }
+  );
+}
+
+function formatEstimatedTime(totalMinutes: number) {
+  const hours =
+    Math.floor(totalMinutes / 60);
+
+  const minutes =
+    totalMinutes % 60;
+
+  return `${hours
+    .toString()
+    .padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:00`;
+}
+
+function formatTimeValue(value: string) {
+  if (!value) {
+    return "--:--";
+  }
+
+  return value.substring(0, 5);
+}
 
 const timezoneOptions = [
-  {
-    value: "America/Mexico_City",
-    label: "México Centro",
-  },
-  {
-    value: "America/Tijuana",
-    label: "México Pacífico / Tijuana",
-  },
-  {
-    value: "America/New_York",
-    label: "Estados Unidos Este",
-  },
-  {
-    value: "America/Chicago",
-    label: "Estados Unidos Centro",
-  },
-  {
-    value: "America/Denver",
-    label: "Estados Unidos Montaña",
-  },
-  {
-    value: "America/Los_Angeles",
-    label: "Estados Unidos Pacífico",
-  },
-  {
-    value: "America/Bogota",
-    label: "Colombia / Perú / Ecuador",
-  },
-  {
-    value: "America/Santiago",
-    label: "Chile",
-  },
-  {
-    value: "America/Argentina/Buenos_Aires",
-    label: "Argentina",
-  },
-  {
-    value: "Europe/Madrid",
-    label: "España",
-  },
-  {
-    value: "Europe/London",
-    label: "Reino Unido",
-  },
-  {
-    value: "Europe/Paris",
-    label: "Francia / Europa Central",
-  },
-  {
-    value: "Asia/Tokyo",
-    label: "Japón",
-  },
+  { value: "America/Mexico_City", label: "México Centro" },
+  { value: "America/Tijuana", label: "México Pacífico / Tijuana" },
+  { value: "America/New_York", label: "Estados Unidos Este" },
+  { value: "America/Chicago", label: "Estados Unidos Centro" },
+  { value: "America/Denver", label: "Estados Unidos Montaña" },
+  { value: "America/Los_Angeles", label: "Estados Unidos Pacífico" },
+  { value: "America/Bogota", label: "Colombia / Perú / Ecuador" },
+  { value: "America/Santiago", label: "Chile" },
+  { value: "America/Argentina/Buenos_Aires", label: "Argentina" },
+  { value: "Europe/Madrid", label: "España" },
+  { value: "Europe/London", label: "Reino Unido" },
+  { value: "Europe/Paris", label: "Francia / Europa Central" },
+  { value: "Asia/Tokyo", label: "Japón" },
 ];
 
-function getTimezoneLabel(value: string) {
+function getTimezoneLabel(
+  value?: string | null
+) {
+  if (!value) {
+    return "México Centro";
+  }
+
   return (
     timezoneOptions.find(
       (timezone) =>
@@ -199,1250 +200,1077 @@ function getTimezoneLabel(value: string) {
   );
 }
 
-function toApiTime(value: string) {
-  return `${value}:00`;
-}
-
-function convertAvailabilityToMexico(
-  availability: Availability,
-  runnerTimezone: string
+function sameDate(
+  left?: string | null,
+  right?: string | null
 ) {
-  const localStart =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableFrom}:00`,
-      { zone: runnerTimezone }
-    );
-
-  const localEnd =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableTo}:00`,
-      { zone: runnerTimezone }
-    );
-
-  const mexicoStart =
-    localStart.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  const mexicoEnd =
-    localEnd.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  return {
-    dayDate:
-      mexicoStart.toFormat(
-        "yyyy-MM-dd"
-      ),
-    availableFrom:
-      mexicoStart.toFormat(
-        "HH:mm:ss"
-      ),
-    availableToDayDate:
-      mexicoEnd.toFormat(
-        "yyyy-MM-dd"
-      ),
-    availableTo:
-      mexicoEnd.toFormat(
-        "HH:mm:ss"
-      ),
-    localDayDate:
-      availability.dayDate,
-    localAvailableFrom:
-      toApiTime(
-        availability.availableFrom
-      ),
-    localAvailableTo:
-      toApiTime(
-        availability.availableTo
-      ),
-    isPreferred:
-      availability.isPreferred,
-    notes:
-      availability.notes.trim() || null,
-  };
-}
-
-function formatConvertedAvailability(
-  availability: Availability,
-  runnerTimezone: string
-) {
-  const localStart =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableFrom}:00`,
-      { zone: runnerTimezone }
-    );
-
-  const localEnd =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableTo}:00`,
-      { zone: runnerTimezone }
-    );
-
-  if (!localStart.isValid ||
-      !localEnd.isValid) {
-    return "Horario inválido";
+  if (!left || !right) {
+    return true;
   }
 
-  const mexicoStart =
-    localStart.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  const mexicoEnd =
-    localEnd.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  const sameDay =
-    mexicoStart.toFormat(
-      "yyyy-MM-dd"
-    ) ===
-    mexicoEnd.toFormat(
-      "yyyy-MM-dd"
-    );
-
-  if (sameDay) {
-    return `${mexicoStart.setLocale(
-      "es-MX"
-    ).toFormat(
-      "cccc d 'de' LLLL"
-    )}, ${mexicoStart.toFormat(
-      "HH:mm"
-    )} - ${mexicoEnd.toFormat(
-      "HH:mm"
-    )}`;
-  }
-
-  return `${mexicoStart.setLocale(
-    "es-MX"
-  ).toFormat(
-    "cccc d 'de' LLLL HH:mm"
-  )} - ${mexicoEnd.setLocale(
-    "es-MX"
-  ).toFormat(
-    "cccc d 'de' LLLL HH:mm"
-  )}`;
+  return left.split("T")[0] ===
+    right.split("T")[0];
 }
 
-export default function PostulacionPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-  } = useForm<FormData>();
+function formatAvailabilityRange(
+  dayDate?: string | null,
+  availableFrom?: string | null,
+  availableToDayDate?: string | null,
+  availableTo?: string | null
+) {
+  if (!dayDate) {
+    return "Sin fecha";
+  }
 
-  const [socialNetworks, setSocialNetworks] =
-    useState<SocialNetwork[]>([]);
+  const startLabel =
+    formatScheduleDate(dayDate);
 
-  const [catalog, setCatalog] =
-    useState<SocialNetworkCatalog[]>([]);
+  const startTime =
+    formatTimeValue(
+      availableFrom ?? ""
+    );
 
-  const [availabilities, setAvailabilities] =
-    useState<Availability[]>(eventDays);
+  const endDate =
+    availableToDayDate ?? dayDate;
 
-  const [platform, setPlatform] =
-    useState("");
+  const endTime =
+    formatTimeValue(
+      availableTo ?? ""
+    );
 
-  const [aspectRatio, setAspectRatio] =
-    useState("");
+  if (sameDate(dayDate, endDate)) {
+    return `${startLabel}, ${startTime} - ${endTime}`;
+  }
 
-  const [runnerTimezone, setRunnerTimezone] =
-    useState(MEXICO_TIMEZONE);
+  return `${startLabel}, ${startTime} → ${formatScheduleDate(endDate)}, ${endTime}`;
+}
 
-  const [isSubmitting, setIsSubmitting] =
+export default function AdminPostulaciones() {
+  const [scheduleDays, setScheduleDays] =
+    useState<ScheduleDay[]>([]);
+
+  const [scheduleDialogOpen, setScheduleDialogOpen] =
     useState(false);
 
-  const [submitSuccess, setSubmitSuccess] =
-    useState(false);
-    const [loadingEventStatus, setLoadingEventStatus] =
-  useState(true);
+  const [scheduleApplication, setScheduleApplication] =
+    useState<ApplicationDetail | null>(null);
 
-const [applicationsOpen, setApplicationsOpen] =
-  useState(true);
+  const [selectedScheduleDayId, setSelectedScheduleDayId] =
+    useState("");
+
+  const [scheduleStartTime, setScheduleStartTime] =
+    useState("");
+
+  const [postulaciones, setPostulaciones] =
+    useState<Postulacion[]>([]);
+
+  const [searchTerm, setSearchTerm] =
+    useState("");
+
+  const [statusFilter, setStatusFilter] =
+    useState("todos");
+
+  const [platformFilter, setPlatformFilter] =
+    useState("todos");
+
+  const [selectedPostulacion, setSelectedPostulacion] =
+    useState<ApplicationDetail | null>(null);
+
+  const [detailDialogOpen, setDetailDialogOpen] =
+    useState(false);
+
+  const [deletingApplicationId, setDeletingApplicationId] =
+    useState<string | null>(null);
 
   useEffect(() => {
-  loadInitialData();
-}, []);
+    loadApplications();
+  }, []);
 
-async function loadInitialData() {
-  await loadSocialNetworks();
-  await loadActiveEventStatus();
-}
-
-async function loadActiveEventStatus() {
-  try {
-    setLoadingEventStatus(true);
-
-    const activeEvent =
-      await getActivePublicEvent();
-
-    setApplicationsOpen(
-      activeEvent.applicationsOpen ?? true
-    );
-  } catch (error) {
-    console.error(error);
-
-    setApplicationsOpen(false);
-
-    toast.error(
-      "No fue posible validar si las postulaciones están abiertas"
-    );
-  } finally {
-    setLoadingEventStatus(false);
-  }
-}
-
-  async function loadSocialNetworks() {
+  async function loadApplications() {
     try {
       const data =
-        await getSocialNetworks();
+        await getApplications();
 
-      setCatalog(data);
-    } catch (error) {
-      console.error(error);
-
+      setPostulaciones(data);
+    } catch {
       toast.error(
-        "No fue posible cargar las redes sociales"
+        "No se pudieron cargar las postulaciones"
       );
     }
   }
 
-  const addSocialNetwork = () => {
-    setSocialNetworks([
-      ...socialNetworks,
-      {
-        id: crypto.randomUUID(),
-        socialNetworkId: "",
-        url: "",
-      },
-    ]);
-  };
+  const filteredPostulaciones =
+    postulaciones.filter((p) => {
+      const matchesSearch =
+        p.runnerName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        p.game
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        p.category
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
-  const removeSocialNetwork = (
-    id: string
-  ) => {
-    setSocialNetworks(
-      socialNetworks.filter(
-        (sn) => sn.id !== id
-      )
-    );
-  };
+      const matchesStatus =
+        statusFilter === "todos" ||
+        p.status === statusFilter;
 
-  const updateSocialNetwork = (
+      const matchesPlatform =
+        platformFilter === "todos" ||
+        p.platform === platformFilter;
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesPlatform
+      );
+    });
+
+  const handleStatusChange = async (
     id: string,
-    field: "socialNetworkId" | "url",
-    value: string
-  ) => {
-    setSocialNetworks(
-      socialNetworks.map((sn) =>
-        sn.id === id
-          ? {
-              ...sn,
-              [field]: value,
-            }
-          : sn
-      )
-    );
-  };
-
-  const updateAvailability = (
-    dayDate: string,
-    field: keyof Availability,
-    value: string | boolean
-  ) => {
-    setAvailabilities((current) =>
-      current.map((item) =>
-        item.dayDate === dayDate
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item
-      )
-    );
-  };
-
-  const resetAvailability = () => {
-    setAvailabilities(eventDays);
-  };
-
-  const onSubmit = async (
-    data: FormData
+    newStatus: "approved" | "rejected"
   ) => {
     try {
-      setIsSubmitting(true);
-      setSubmitSuccess(false);
-      if (!applicationsOpen) {
-        toast.error(
-          "Las postulaciones están cerradas"
-        );
-      
-        setIsSubmitting(false);
-        return;
-      }
-      
-      const totalSeconds =
-        Number(data.hours || 0) * 3600 +
-        Number(data.minutes || 0) * 60 +
-        Number(data.seconds || 0);
-
-      if (totalSeconds <= 0) {
-        toast.error(
-          "El tiempo estimado debe ser mayor a 0"
-        );
-
-        setIsSubmitting(false);
-        return;
+      if (newStatus === "approved") {
+        await approveApplication(id);
+      } else {
+        await rejectApplication(id);
       }
 
-      const selectedAvailabilities =
-        availabilities.filter(
-          (item) => item.selected
-        );
-
-      if (selectedAvailabilities.length === 0) {
-        toast.error(
-          "Selecciona al menos un día disponible para correr"
-        );
-
-        setIsSubmitting(false);
-        return;
-      }
-
-      const invalidAvailability =
-        selectedAvailabilities.some(
-          (item) =>
-            !item.availableFrom ||
-            !item.availableTo ||
-            item.availableFrom >= item.availableTo
-        );
-
-      if (invalidAvailability) {
-        toast.error(
-          "Revisa tus horarios disponibles. La hora inicial debe ser menor que la hora final"
-        );
-
-        setIsSubmitting(false);
-        return;
-      }
-
-      const validSocialNetworks =
-        socialNetworks.filter(
-          (x) =>
-            x.socialNetworkId.trim() !== "" &&
-            x.url.trim() !== ""
-        );
-
-      const invalidSocialNetwork =
-        socialNetworks.some(
-          (x) =>
-            (x.socialNetworkId.trim() !== "" &&
-              x.url.trim() === "") ||
-            (x.socialNetworkId.trim() === "" &&
-              x.url.trim() !== "")
-        );
-
-      if (invalidSocialNetwork) {
-        toast.error(
-          "Completa o elimina las redes sociales incompletas"
-        );
-
-        setIsSubmitting(false);
-        return;
-      }
-
-      const combinedNotes =
-        [
-          data.notes,
-          data.organizerComments
-            ? `Comentarios para organizadores: ${data.organizerComments}`
-            : null,
-        ]
-          .filter(Boolean)
-          .join("\n\n");
-
-      const convertedAvailabilities =
-        selectedAvailabilities.map((item) =>
-          convertAvailabilityToMexico(
-            item,
-            runnerTimezone
-          )
-        );
-
-      const invalidConvertedAvailability =
-        convertedAvailabilities.some(
-          (item) =>
-            !item.dayDate ||
-            !item.availableFrom ||
-            !item.availableToDayDate ||
-            !item.availableTo
-        );
-
-      if (invalidConvertedAvailability) {
-        toast.error(
-          "No se pudo convertir correctamente la disponibilidad a horario de México Centro"
-        );
-
-        setIsSubmitting(false);
-        return;
-      }
-
-      const payload = {
-        runnerName: data.runnerName.trim(),
-        email: data.email.trim(),
-        discordUser:
-          data.discordUser?.trim() || null,
-        runnerTimezone,
-        gameName: data.game.trim(),
-        categoryName: data.category.trim(),
-        platformName: data.platform,
-        estimatedTimeMinutes:
-          Math.ceil(totalSeconds / 60),
-        aspectRatio: data.aspectRatio,
-        youtubeUrl: data.videoUrl.trim(),
-        notes: combinedNotes || null,
-        socialNetworks:
-          validSocialNetworks.map((x) => ({
-            socialNetworkId:
-              x.socialNetworkId,
-            url: x.url.trim(),
-          })),
-        availabilities:
-          convertedAvailabilities,
-      };
-
-      await createApplication(payload);
+      await loadApplications();
 
       toast.success(
-        "¡Postulación enviada con éxito!"
+        `Postulación ${
+          newStatus === "approved"
+            ? "aprobada"
+            : "rechazada"
+        }`
+      );
+    } catch {
+      toast.error(
+        "No se pudo actualizar"
+      );
+    }
+  };
+
+  const handleDeleteApplication = async (
+    postulacion: Postulacion
+  ) => {
+    const confirmDelete =
+      window.confirm(
+        `¿Seguro que quieres eliminar la postulación de ${postulacion.runnerName}?\n\nEsta acción eliminará la postulación sin importar su estado. También puede eliminar sus redes sociales, notas, disponibilidad y entradas relacionadas en el horario.`
       );
 
-      setSubmitSuccess(true);
+    if (!confirmDelete) {
+      return;
+    }
 
-      reset();
+    try {
+      setDeletingApplicationId(
+        postulacion.id
+      );
 
-      setPlatform("");
-      setAspectRatio("");
-      setRunnerTimezone(MEXICO_TIMEZONE);
-      setSocialNetworks([]);
-      resetAvailability();
+      await deleteApplication(
+        postulacion.id
+      );
+
+      await loadApplications();
+
+      if (
+        selectedPostulacion?.id ===
+        postulacion.id
+      ) {
+        setSelectedPostulacion(null);
+        setDetailDialogOpen(false);
+      }
+
+      if (
+        scheduleApplication?.id ===
+        postulacion.id
+      ) {
+        setScheduleApplication(null);
+        setScheduleDialogOpen(false);
+        setSelectedScheduleDayId("");
+        setScheduleStartTime("");
+      }
+
+      toast.success(
+        "Postulación eliminada correctamente"
+      );
     } catch (error) {
       console.error(error);
 
       toast.error(
-        "No se pudo enviar la postulación"
+        "No se pudo eliminar la postulación"
       );
     } finally {
-      setIsSubmitting(false);
+      setDeletingApplicationId(null);
     }
   };
-if (loadingEventStatus) {
+
+  const handleViewDetail = async (
+    postulacion: Postulacion
+  ) => {
+    try {
+      const detail =
+        await getApplicationById(
+          postulacion.id
+        );
+
+      setSelectedPostulacion(detail);
+      setDetailDialogOpen(true);
+    } catch {
+      toast.error(
+        "No se pudo cargar el detalle"
+      );
+    }
+  };
+
+  const handleOpenScheduleDialog = async (
+    postulacion: Postulacion
+  ) => {
+    try {
+      const detail =
+        await getApplicationById(
+          postulacion.id
+        );
+
+      const days =
+        await getScheduleDays();
+
+      setScheduleApplication(detail);
+      setScheduleDays(days);
+      setSelectedScheduleDayId("");
+      setScheduleStartTime("");
+      setScheduleDialogOpen(true);
+    } catch {
+      toast.error(
+        "No se pudo abrir el programador"
+      );
+    }
+  };
+
+  const handleAddToSchedule = async () => {
+    if (!scheduleApplication) {
+      return;
+    }
+
+    if (
+      !selectedScheduleDayId ||
+      !scheduleStartTime
+    ) {
+      toast.error(
+        "Selecciona un día y una hora de inicio"
+      );
+      return;
+    }
+
+    try {
+      await createScheduleEntry({
+        scheduleDayId: selectedScheduleDayId,
+        applicationId: scheduleApplication.id,
+        entryType: "Run",
+        startTime: `${scheduleStartTime}:00`,
+        durationMinutes:
+          scheduleApplication.estimatedTimeMinutes,
+        positionOrder: 999,
+      });
+
+      toast.success(
+        "Run agregado al horario"
+      );
+
+      setScheduleDialogOpen(false);
+      setScheduleApplication(null);
+      setSelectedScheduleDayId("");
+      setScheduleStartTime("");
+    } catch {
+      toast.error(
+        "No se pudo agregar al horario"
+      );
+    }
+  };
+
+  const getStatusBadge = (
+    status: string
+  ) => {
+    switch (status) {
+      case "Pending":
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400">
+            Pendiente
+          </Badge>
+        );
+
+      case "Approved":
+        return (
+          <Badge className="bg-green-500/20 text-green-400">
+            Aprobada
+          </Badge>
+        );
+
+      case "Rejected":
+        return (
+          <Badge className="bg-red-500/20 text-red-400">
+            Rechazada
+          </Badge>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const platforms =
+    Array.from(
+      new Set(
+        postulaciones
+          .map((p) => p.platform)
+          .filter(Boolean)
+      )
+    ).sort();
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl">
-          <Card className="border-gray-800 bg-gray-900/50">
-            <CardContent className="p-8 text-center text-gray-400">
-              Verificando estado de postulaciones...
-            </CardContent>
-          </Card>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="mb-2 text-3xl font-bold text-white">
+          Gestión de Postulaciones
+        </h1>
+
+        <p className="text-gray-400">
+          Administra todas las postulaciones del evento
+        </p>
       </div>
-    </div>
-  );
-}
 
-if (!applicationsOpen) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl">
-          <Card className="border-yellow-500/30 bg-yellow-500/10">
-            <CardContent className="p-8 text-center">
-              <Lock className="mx-auto mb-5 h-14 w-14 text-yellow-300" />
+      {/* Filters */}
+      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-cyan-400" />
 
-              <h1 className="mb-3 text-3xl font-bold text-white">
-                Postulaciones cerradas
-              </h1>
-
-              <p className="mx-auto mb-6 max-w-xl text-gray-300">
-                Las postulaciones para esta edición de SGames ya fueron cerradas.
-                El staff está revisando las propuestas recibidas y preparando el
-                horario oficial.
-              </p>
-
-              <Link to="/">
-                <Button
-                  variant="outline"
-                  className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
-                >
-                  Volver al inicio
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl">
-          {/* Header */}
-          <div className="mb-8 text-center">
-            <h1 className="mb-4 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-4xl font-bold text-transparent">
-              Enviar Postulación
-            </h1>
-
-            <p className="text-gray-400">
-              Completa el formulario para postular tu speedrun a SGames
-            </p>
-          </div>
-
-          {/* Success Message */}
-          {submitSuccess && (
-            <div className="mb-6 flex items-center gap-3 rounded-lg border border-green-500/50 bg-green-500/10 p-4">
-              <CheckCircle className="h-6 w-6 text-green-400" />
-
-              <div>
-                <p className="font-semibold text-green-400">
-                  ¡Postulación enviada con éxito!
-                </p>
-
-                <p className="text-sm text-green-400/80">
-                  Revisaremos tu solicitud y te contactaremos pronto.
-                </p>
-              </div>
+              <span className="font-semibold text-white">
+                Filtros y búsqueda:
+              </span>
             </div>
-          )}
 
-          {/* Form Card */}
-          <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="space-y-8"
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+
+                <Input
+                  placeholder="Buscar por runner, juego o categoría..."
+                  value={searchTerm}
+                  onChange={(e) =>
+                    setSearchTerm(e.target.value)
+                  }
+                  className="border-gray-700 bg-gray-800 pl-10 text-white"
+                />
+              </div>
+
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
               >
-                {/* Información Personal */}
-                <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
-                    Información Personal
-                  </h3>
+                <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
 
-                  <div className="space-y-4">
-                    <div>
-                      <Label
-                        htmlFor="runnerName"
-                        className="text-gray-300"
-                      >
-                        Nombre del runner{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
+                <SelectContent className="border-gray-700 bg-gray-800">
+                  <SelectItem value="todos">
+                    Todos los estados
+                  </SelectItem>
+                  <SelectItem value="Pending">
+                    Pendiente
+                  </SelectItem>
+                  <SelectItem value="Approved">
+                    Aprobada
+                  </SelectItem>
+                  <SelectItem value="Rejected">
+                    Rechazada
+                  </SelectItem>
+                </SelectContent>
+              </Select>
 
-                      <Input
-                        id="runnerName"
-                        {...register("runnerName", {
-                          required:
-                            "Este campo es requerido",
-                        })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                        placeholder="Tu nombre o alias"
-                      />
+              <Select
+                value={platformFilter}
+                onValueChange={setPlatformFilter}
+              >
+                <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                  <SelectValue placeholder="Plataforma" />
+                </SelectTrigger>
 
-                      {errors.runnerName && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.runnerName.message}
-                        </p>
-                      )}
-                    </div>
+                <SelectContent className="border-gray-700 bg-gray-800">
+                  <SelectItem value="todos">
+                    Todas las plataformas
+                  </SelectItem>
 
-                    <div>
-                      <Label
-                        htmlFor="email"
-                        className="text-gray-300"
-                      >
-                        Correo electrónico{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <Input
-                        id="email"
-                        type="email"
-                        {...register("email", {
-                          required:
-                            "Este campo es requerido",
-                          pattern: {
-                            value:
-                              /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                            message:
-                              "Correo electrónico inválido",
-                          },
-                        })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                        placeholder="correo@ejemplo.com"
-                      />
-
-                      {errors.email && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.email.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label
-                        htmlFor="discordUser"
-                        className="text-gray-300"
-                      >
-                        Usuario de Discord
-                      </Label>
-
-                      <Input
-                        id="discordUser"
-                        {...register("discordUser")}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                        placeholder="Ej: Ch0linsky#1234 o ch0linsky"
-                      />
-
-                      <p className="mt-1 text-xs text-gray-500">
-                        Opcional. Nos ayuda a contactarte más fácilmente.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información del Speedrun */}
-                <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
-                    Información del Speedrun
-                  </h3>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label
-                        htmlFor="game"
-                        className="text-gray-300"
-                      >
-                        Juego{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <Input
-                        id="game"
-                        {...register("game", {
-                          required:
-                            "Este campo es requerido",
-                        })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                        placeholder="Nombre del juego"
-                      />
-
-                      {errors.game && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.game.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label
-                        htmlFor="category"
-                        className="text-gray-300"
-                      >
-                        Categoría{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <Input
-                        id="category"
-                        {...register("category", {
-                          required:
-                            "Este campo es requerido",
-                        })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                        placeholder="Ej: Any%, 100%, Glitchless"
-                      />
-
-                      {errors.category && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.category.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-300">
-                        Tiempo estimado{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <div className="mt-1.5 grid grid-cols-3 gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="99"
-                          placeholder="HH"
-                          className="border-gray-700 bg-gray-800 text-white"
-                          {...register("hours", {
-                            required:
-                              "Horas requeridas",
-                          })}
-                        />
-
-                        <Input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="MM"
-                          className="border-gray-700 bg-gray-800 text-white"
-                          {...register("minutes", {
-                            required:
-                              "Minutos requeridos",
-                          })}
-                        />
-
-                        <Input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="SS"
-                          className="border-gray-700 bg-gray-800 text-white"
-                          {...register("seconds", {
-                            required:
-                              "Segundos requeridos",
-                          })}
-                        />
-                      </div>
-
-                      <p className="mt-2 text-sm text-gray-500">
-                        Formato HH:MM:SS
-                      </p>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <Label
-                          htmlFor="platform"
-                          className="text-gray-300"
-                        >
-                          Plataforma{" "}
-                          <span className="text-red-400">
-                            *
-                          </span>
-                        </Label>
-
-                        <Select
-                          value={platform}
-                          onValueChange={(value) => {
-                            setPlatform(value);
-                            setValue(
-                              "platform",
-                              value,
-                              {
-                                shouldValidate: true,
-                              }
-                            );
-                          }}
-                        >
-                          <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
-                            <SelectValue placeholder="Selecciona plataforma" />
-                          </SelectTrigger>
-
-                          <SelectContent className="border-gray-700 bg-gray-800">
-                            {platformOptions.map(
-                              (option) => (
-                                <SelectItem
-                                  key={option}
-                                  value={option}
-                                >
-                                  {option}
-                                </SelectItem>
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
-
-                        <input
-                          type="hidden"
-                          {...register("platform", {
-                            required:
-                              "Este campo es requerido",
-                          })}
-                        />
-
-                        {errors.platform && (
-                          <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                            <AlertCircle className="h-3 w-3" />
-                            {errors.platform.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="aspectRatio"
-                          className="text-gray-300"
-                        >
-                          Relación de pantalla{" "}
-                          <span className="text-red-400">
-                            *
-                          </span>
-                        </Label>
-
-                        <Select
-                          value={aspectRatio}
-                          onValueChange={(value) => {
-                            setAspectRatio(value);
-                            setValue(
-                              "aspectRatio",
-                              value,
-                              {
-                                shouldValidate: true,
-                              }
-                            );
-                          }}
-                        >
-                          <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
-                            <SelectValue placeholder="Selecciona ratio" />
-                          </SelectTrigger>
-
-                          <SelectContent className="border-gray-700 bg-gray-800">
-                            {aspectRatioOptions.map(
-                              (option) => (
-                                <SelectItem
-                                  key={option}
-                                  value={option}
-                                >
-                                  {option}
-                                </SelectItem>
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
-
-                        <input
-                          type="hidden"
-                          {...register("aspectRatio", {
-                            required:
-                              "Este campo es requerido",
-                          })}
-                        />
-
-                        {errors.aspectRatio && (
-                          <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                            <AlertCircle className="h-3 w-3" />
-                            {errors.aspectRatio.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Disponibilidad */}
-                <div>
-                  <div className="mb-4 flex items-center gap-2">
-                    <CalendarDays className="h-5 w-5 text-cyan-400" />
-
-                    <h3 className="text-xl font-semibold text-cyan-400">
-                      Disponibilidad para el evento
-                    </h3>
-                  </div>
-
-                  <div className="mb-5 rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
-                    <Label className="flex items-center gap-2 text-gray-300">
-                      <Globe2 className="h-4 w-4 text-purple-300" />
-                      Zona horaria donde estás capturando tu disponibilidad
-                    </Label>
-
-                    <Select
-                      value={runnerTimezone}
-                      onValueChange={setRunnerTimezone}
+                  {platforms.map((platform) => (
+                    <SelectItem
+                      key={platform}
+                      value={platform}
                     >
-                      <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
-                        <SelectValue placeholder="Selecciona tu zona horaria" />
-                      </SelectTrigger>
+                      {platform}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-                      <SelectContent className="border-gray-700 bg-gray-800">
-                        {timezoneOptions.map((timezone) => (
-                          <SelectItem
-                            key={timezone.value}
-                            value={timezone.value}
-                          >
-                            {timezone.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+      {/* Table */}
+      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-800 hover:bg-gray-800/50">
+                  <TableHead className="text-gray-400">
+                    Runner
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Juego
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Categoría
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Plataforma
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Estado
+                  </TableHead>
+                  <TableHead className="text-gray-400">
+                    Fecha
+                  </TableHead>
+                  <TableHead className="text-right text-gray-400">
+                    Acciones
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
 
-                    <p className="mt-2 text-sm text-purple-100/80">
-                      Escribe tus horas en tu horario local. El sistema las convertirá
-                      automáticamente a México Centro para el staff.
+              <TableBody>
+                {filteredPostulaciones.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center text-gray-500"
+                    >
+                      No se encontraron postulaciones
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredPostulaciones.map(
+                    (postulacion) => (
+                      <TableRow
+                        key={postulacion.id}
+                        className="border-gray-800 hover:bg-gray-800/50"
+                      >
+                        <TableCell className="font-medium text-white">
+                          {postulacion.runnerName}
+                        </TableCell>
+
+                        <TableCell className="text-gray-300">
+                          {postulacion.game}
+                        </TableCell>
+
+                        <TableCell className="text-gray-400">
+                          {postulacion.category}
+                        </TableCell>
+
+                        <TableCell className="text-gray-400">
+                          {postulacion.platform || "-"}
+                        </TableCell>
+
+                        <TableCell>
+                          {getStatusBadge(
+                            postulacion.status
+                          )}
+                        </TableCell>
+
+                        <TableCell className="text-gray-400">
+                          {formatSubmittedDate(
+                            postulacion.submittedAt
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                handleViewDetail(
+                                  postulacion
+                                )
+                              }
+                              className="text-cyan-400 hover:bg-cyan-500/10"
+                              title="Ver detalle"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={
+                                deletingApplicationId ===
+                                postulacion.id
+                              }
+                              onClick={() =>
+                                handleDeleteApplication(
+                                  postulacion
+                                )
+                              }
+                              className="text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              title="Eliminar postulación"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+
+                            {postulacion.status === "Pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleStatusChange(
+                                      postulacion.id,
+                                      "approved"
+                                    )
+                                  }
+                                  className="text-green-400 hover:bg-green-500/10"
+                                  title="Aprobar"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleStatusChange(
+                                      postulacion.id,
+                                      "rejected"
+                                    )
+                                  }
+                                  className="text-red-400 hover:bg-red-500/10"
+                                  title="Rechazar"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+
+                            {postulacion.status === "Approved" && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleOpenScheduleDialog(
+                                    postulacion
+                                  )
+                                }
+                                className="text-purple-400 hover:bg-purple-500/10"
+                                title="Agregar al horario"
+                              >
+                                <Calendar className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detail Dialog */}
+      <Dialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      >
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-3xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
+          <DialogHeader className="shrink-0 border-b border-gray-800 px-6 py-4">
+            <DialogTitle className="text-2xl">
+              Detalle de Postulación
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedPostulacion && (
+            <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {getStatusBadge(
+                  selectedPostulacion.status
+                )}
+
+                <span className="text-sm text-gray-400">
+                  {formatSubmittedDate(
+                    selectedPostulacion.submittedAt
+                  )}
+                </span>
+              </div>
+
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 font-semibold text-cyan-400">
+                  Información del Runner
+                </h3>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Nombre:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.runnerName}
                     </p>
                   </div>
 
-                  <p className="mb-4 text-sm text-gray-400">
-                    Selecciona los días en los que puedes correr y el rango
-                    de horario aproximado. Actualmente estás capturando en zona:
-                    <span className="font-semibold text-cyan-300">
-                      {" "}
-                      {getTimezoneLabel(runnerTimezone)}
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Correo:
                     </span>
-                    .
-                  </p>
+                    <p className="break-all text-white">
+                      {selectedPostulacion.email}
+                    </p>
+                  </div>
 
-                  <div className="space-y-4">
-                    {availabilities.map((item) => (
-                      <div
-                        key={item.dayDate}
-                        className={`rounded-lg border p-4 transition-colors ${
-                          item.selected
-                            ? "border-cyan-500/50 bg-cyan-500/10"
-                            : "border-gray-800 bg-gray-800/40"
-                        }`}
-                      >
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                          <label className="flex cursor-pointer items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={item.selected}
-                              onChange={(event) =>
-                                updateAvailability(
-                                  item.dayDate,
-                                  "selected",
-                                  event.target.checked
-                                )
-                              }
-                              className="h-4 w-4 accent-cyan-500"
-                            />
+                  {selectedPostulacion.discordUser && (
+                    <div>
+                      <span className="text-sm text-gray-400">
+                        Discord:
+                      </span>
+                      <p className="break-words text-white">
+                        {selectedPostulacion.discordUser}
+                      </p>
+                    </div>
+                  )}
 
-                            <span className="font-semibold text-white">
-                              {item.label}
-                            </span>
-                          </label>
+                  {selectedPostulacion.country && (
+                    <div>
+                      <span className="text-sm text-gray-400">
+                        País:
+                      </span>
+                      <p className="break-words text-white">
+                        {selectedPostulacion.country}
+                      </p>
+                    </div>
+                  )}
 
-                          {item.selected && (
-                            <label className="flex cursor-pointer items-center gap-2 text-sm text-yellow-300">
-                              <input
-                                type="checkbox"
-                                checked={item.isPreferred}
-                                onChange={(event) =>
-                                  updateAvailability(
-                                    item.dayDate,
-                                    "isPreferred",
-                                    event.target.checked
-                                  )
-                                }
-                                className="h-4 w-4 accent-yellow-400"
-                              />
+                  <div className="md:col-span-2">
+                    <span className="text-sm text-gray-400">
+                      Zona horaria del runner:
+                    </span>
 
-                              <Star className="h-4 w-4" />
-                              Día preferido
-                            </label>
-                          )}
-                        </div>
+                    <p className="mt-1 flex items-center gap-2 break-words text-white">
+                      <Globe2 className="h-4 w-4 text-purple-300" />
+                      {getTimezoneLabel(
+                        selectedPostulacion.runnerTimezone
+                      )}
+                      <span className="text-sm text-gray-500">
+                        ({selectedPostulacion.runnerTimezone ?? "America/Mexico_City"})
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                        {item.selected && (
-                          <div className="mt-4 space-y-3">
-                            <div className="grid gap-3 md:grid-cols-2">
-                              <div>
-                                <Label className="text-gray-300">
-                                  Disponible desde
-                                </Label>
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 font-semibold text-cyan-400">
+                  Información del Speedrun
+                </h3>
 
-                                <Input
-                                  type="time"
-                                  value={item.availableFrom}
-                                  onChange={(event) =>
-                                    updateAvailability(
-                                      item.dayDate,
-                                      "availableFrom",
-                                      event.target.value
-                                    )
-                                  }
-                                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                                />
-                              </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Evento:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.event}
+                    </p>
+                  </div>
 
-                              <div>
-                                <Label className="text-gray-300">
-                                  Disponible hasta
-                                </Label>
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Juego:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.game}
+                    </p>
+                  </div>
 
-                                <Input
-                                  type="time"
-                                  value={item.availableTo}
-                                  onChange={(event) =>
-                                    updateAvailability(
-                                      item.dayDate,
-                                      "availableTo",
-                                      event.target.value
-                                    )
-                                  }
-                                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                                />
-                              </div>
-                            </div>
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Categoría:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.category}
+                    </p>
+                  </div>
 
-                            <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Plataforma:
+                    </span>
+                    <p className="break-words text-white">
+                      {selectedPostulacion.platform}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Tiempo estimado:
+                    </span>
+                    <p className="text-white">
+                      {formatEstimatedTime(
+                        selectedPostulacion.estimatedTimeMinutes
+                      )}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
+                      Relación de pantalla:
+                    </span>
+                    <p className="text-white">
+                      {selectedPostulacion.aspectRatio}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-400">
+                  <CalendarDays className="h-5 w-5" />
+                  Disponibilidad del Runner
+                </h3>
+
+                {selectedPostulacion.availabilities?.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedPostulacion.availabilities.map(
+                      (availability) => (
+                        <div
+                          key={availability.id}
+                          className="rounded-lg border border-gray-700 bg-gray-900/60 p-3"
+                        >
+                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div>
                               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
                                 Convertido a México Centro
                               </p>
 
-                              <p className="mt-1 text-sm text-cyan-50">
-                                {formatConvertedAvailability(
-                                  item,
-                                  runnerTimezone
+                              <p className="mt-1 flex items-center gap-2 text-sm text-white">
+                                <Clock3 className="h-4 w-4 text-cyan-400" />
+                                {formatAvailabilityRange(
+                                  availability.dayDate,
+                                  availability.availableFrom,
+                                  availability.availableToDayDate,
+                                  availability.availableTo
+                                )}
+                              </p>
+
+                              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-purple-300">
+                                Horario original del runner
+                              </p>
+
+                              <p className="mt-1 flex items-center gap-2 text-sm text-gray-300">
+                                <Globe2 className="h-4 w-4 text-purple-300" />
+                                {formatAvailabilityRange(
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableFrom ??
+                                    availability.availableFrom,
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableTo ??
+                                    availability.availableTo
                                 )}
                               </p>
                             </div>
 
-                            <div>
-                              <Label className="text-gray-300">
-                                Nota para este día (opcional)
-                              </Label>
-
-                              <Input
-                                value={item.notes}
-                                onChange={(event) =>
-                                  updateAvailability(
-                                    item.dayDate,
-                                    "notes",
-                                    event.target.value
-                                  )
-                                }
-                                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                                placeholder="Ej. Prefiero correr después de las 6 PM"
-                              />
-                            </div>
+                            {availability.isPreferred && (
+                              <Badge className="w-fit bg-yellow-500/20 text-yellow-300">
+                                <Star className="mr-1 h-3.5 w-3.5" />
+                                Preferido
+                              </Badge>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Video Demostrativo */}
-                <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
+                          {availability.notes && (
+                            <p className="mt-3 text-sm text-gray-400">
+                              {availability.notes}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Esta postulación no tiene disponibilidad registrada.
+                  </p>
+                )}
+              </div>
+
+              {selectedPostulacion.youtubeUrl && (
+                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                  <h3 className="mb-3 font-semibold text-cyan-400">
                     Video Demostrativo
                   </h3>
 
-                  <div>
-                    <Label
-                      htmlFor="videoUrl"
-                      className="text-gray-300"
-                    >
-                      URL de YouTube{" "}
-                      <span className="text-red-400">
-                        *
-                      </span>
-                    </Label>
+                  <a
+                    href={selectedPostulacion.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex max-w-full items-center gap-2 break-all text-cyan-400 hover:text-cyan-300"
+                  >
+                    <ExternalLink className="h-4 w-4 shrink-0" />
+                    <span className="break-all">
+                      Ver en YouTube
+                    </span>
+                  </a>
+                </div>
+              )}
 
-                    <Input
-                      id="videoUrl"
-                      {...register("videoUrl", {
-                        required:
-                          "Este campo es requerido",
-                        pattern: {
-                          value:
-                            /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/,
-                          message:
-                            "URL de YouTube inválida",
-                        },
-                      })}
-                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
+              {selectedPostulacion.socialNetworks?.length > 0 && (
+                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                  <h3 className="mb-3 font-semibold text-cyan-400">
+                    Redes Sociales
+                  </h3>
 
-                    {errors.videoUrl && (
-                      <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                        <AlertCircle className="h-3 w-3" />
-                        {errors.videoUrl.message}
-                      </p>
+                  <div className="space-y-3">
+                    {selectedPostulacion.socialNetworks.map(
+                      (sn) => (
+                        <div
+                          key={sn.socialNetworkId}
+                          className="space-y-1"
+                        >
+                          <span className="text-sm text-gray-400">
+                            {sn.name}
+                          </span>
+
+                          <a
+                            href={sn.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block break-all text-sm text-cyan-400 hover:text-cyan-300"
+                          >
+                            {sn.url}
+                          </a>
+                        </div>
+                      )
                     )}
                   </div>
                 </div>
+              )}
 
-                {/* Redes Sociales */}
-                <div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-cyan-400">
-                      Redes Sociales
-                    </h3>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addSocialNetwork}
-                      className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Agregar Red Social
-                    </Button>
-                  </div>
-
-                  <p className="mb-4 text-sm text-gray-400">
-                    Las redes sociales son opcionales pero recomendadas para que la
-                    comunidad pueda conocer tu contenido.
-                  </p>
-
-                  {socialNetworks.length === 0 ? (
-                    <p className="text-center text-gray-500">
-                      No has agregado ninguna red social
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {socialNetworks.map((sn) => (
-                        <div
-                          key={sn.id}
-                          className="flex flex-col gap-3 rounded-lg border border-gray-700 bg-gray-800/50 p-4 sm:flex-row"
-                        >
-                          <div className="flex-1">
-                            <Select
-                              value={sn.socialNetworkId}
-                              onValueChange={(value) =>
-                                updateSocialNetwork(
-                                  sn.id,
-                                  "socialNetworkId",
-                                  value
-                                )
-                              }
-                            >
-                              <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
-                                <SelectValue placeholder="Tipo de red" />
-                              </SelectTrigger>
-
-                              <SelectContent className="border-gray-700 bg-gray-800">
-                                {catalog.map((network) => (
-                                  <SelectItem
-                                    key={network.id}
-                                    value={network.id}
-                                  >
-                                    {network.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="flex-[2]">
-                            <Input
-                              value={sn.url}
-                              onChange={(event) =>
-                                updateSocialNetwork(
-                                  sn.id,
-                                  "url",
-                                  event.target.value
-                                )
-                              }
-                              className="border-gray-700 bg-gray-800 text-white"
-                              placeholder="https://..."
-                            />
-                          </div>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              removeSocialNetwork(sn.id)
-                            }
-                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Notas adicionales */}
-                <div>
-                  <Label
-                    htmlFor="notes"
-                    className="text-gray-300"
-                  >
-                    Notas adicionales (opcional)
-                  </Label>
-
-                  <Textarea
-                    id="notes"
-                    {...register("notes")}
-                    className="mt-1.5 min-h-[100px] border-gray-700 bg-gray-800 text-white"
-                    placeholder="Información adicional que quieras compartir..."
-                  />
-                </div>
-
-                {/* Comentarios para organizadores */}
-                <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
-                    Comentarios para Organizadores
+              {selectedPostulacion.notes && (
+                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                  <h3 className="mb-3 font-semibold text-cyan-400">
+                    Notas
                   </h3>
 
-                  <Label
-                    htmlFor="organizerComments"
-                    className="text-gray-300"
-                  >
-                    Comentarios (opcional)
-                  </Label>
-
-                  <Textarea
-                    id="organizerComments"
-                    {...register("organizerComments")}
-                    className="mt-1.5 min-h-[120px] border-gray-700 bg-gray-800 text-white"
-                    placeholder="Información adicional que quieras compartir con el equipo organizador..."
-                  />
-
-                  <p className="mt-2 text-sm text-gray-500">
-                    Usa este espacio para compartir información relevante para el equipo
-                    organizador, como restricciones de horario, necesidades especiales, o
-                    cualquier detalle técnico importante.
+                  <p className="whitespace-pre-wrap break-words text-gray-300">
+                    {selectedPostulacion.notes}
                   </p>
                 </div>
+              )}
+            </div>
+          )}
 
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-lg hover:from-cyan-600 hover:to-purple-700"
+          <DialogFooter className="shrink-0 border-t border-gray-800 px-6 py-4">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setDetailDialogOpen(false)
+              }
+              className="border-gray-700"
+            >
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Dialog */}
+      <Dialog
+        open={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
+      >
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
+          <DialogHeader className="shrink-0 border-b border-gray-800 px-6 py-4">
+            <DialogTitle>
+              Agregar al Horario
+            </DialogTitle>
+          </DialogHeader>
+
+          {scheduleApplication && (
+            <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                <p className="text-sm text-gray-400">
+                  Run
+                </p>
+
+                <p className="font-medium text-white">
+                  {scheduleApplication.game} -{" "}
+                  {scheduleApplication.category}
+                </p>
+
+                <p className="text-sm text-gray-400">
+                  Runner:{" "}
+                  {scheduleApplication.runnerName}
+                </p>
+              </div>
+
+              {scheduleApplication.availabilities?.length > 0 && (
+                <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-4">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-300">
+                    <CalendarDays className="h-5 w-5" />
+                    Disponibilidad declarada
+                  </h3>
+
+                  <p className="mb-3 text-xs text-cyan-100/80">
+                    Programa usando el horario convertido a México Centro.
+                  </p>
+
+                  <div className="space-y-2">
+                    {scheduleApplication.availabilities.map(
+                      (availability) => (
+                        <div
+                          key={availability.id}
+                          className="rounded-md border border-cyan-500/20 bg-gray-900/50 p-3"
+                        >
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                                México Centro
+                              </p>
+
+                              <p className="mt-1 text-sm text-white">
+                                {formatAvailabilityRange(
+                                  availability.dayDate,
+                                  availability.availableFrom,
+                                  availability.availableToDayDate,
+                                  availability.availableTo
+                                )}
+                              </p>
+
+                              <p className="mt-2 text-xs text-gray-400">
+                                Runner ({getTimezoneLabel(
+                                  scheduleApplication.runnerTimezone
+                                )}): {formatAvailabilityRange(
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableFrom ??
+                                    availability.availableFrom,
+                                  availability.localDayDate ??
+                                    availability.dayDate,
+                                  availability.localAvailableTo ??
+                                    availability.availableTo
+                                )}
+                              </p>
+                            </div>
+
+                            {availability.isPreferred && (
+                              <Badge className="w-fit bg-yellow-500/20 text-yellow-300">
+                                <Star className="mr-1 h-3.5 w-3.5" />
+                                Preferido
+                              </Badge>
+                            )}
+                          </div>
+
+                          {availability.notes && (
+                            <p className="mt-2 text-xs text-gray-400">
+                              {availability.notes}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label className="text-gray-300">
+                  Día del horario
+                </Label>
+
+                <Select
+                  value={selectedScheduleDayId}
+                  onValueChange={setSelectedScheduleDayId}
                 >
-                  {isSubmitting ? (
-                    <>Enviando...</>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-5 w-5" />
-                      Enviar Postulación
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                  <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                    <SelectValue placeholder="Selecciona un día" />
+                  </SelectTrigger>
+
+                  <SelectContent className="border-gray-700 bg-gray-800">
+                    {scheduleDays.map((day) => (
+                      <SelectItem
+                        key={day.id}
+                        value={day.id}
+                      >
+                        {formatScheduleDate(
+                          day.dayDate
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="scheduleStartTime"
+                  className="text-gray-300"
+                >
+                  Hora de inicio
+                </Label>
+
+                <Input
+                  id="scheduleStartTime"
+                  type="time"
+                  value={scheduleStartTime}
+                  onChange={(e) =>
+                    setScheduleStartTime(
+                      e.target.value
+                    )
+                  }
+                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="shrink-0 border-t border-gray-800 px-6 py-4">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setScheduleDialogOpen(false)
+              }
+              className="border-gray-700"
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              onClick={handleAddToSchedule}
+              className="bg-cyan-600 hover:bg-cyan-700"
+            >
+              Agregar al Horario
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
