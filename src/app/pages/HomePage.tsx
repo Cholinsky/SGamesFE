@@ -26,6 +26,13 @@ import {
   AccordionTrigger,
 } from "../components/ui/accordion";
 import logoSgames from "../../assets/logo-sgames.jpeg";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../components/ui/dialog";
 
 type PublicPost = {
   id: string;
@@ -73,6 +80,17 @@ export default function HomePage() {
 
   const [publicPosts, setPublicPosts] =
     useState<PublicPost[]>([]);
+
+    const [selectedPost, setSelectedPost] =
+  useState<PublicPost | null>(null);
+
+const [postDialogOpen, setPostDialogOpen] =
+  useState(false);
+
+function openPost(post: PublicPost) {
+  setSelectedPost(post);
+  setPostDialogOpen(true);
+}
 
   useEffect(() => {
     loadHomeData();
@@ -405,68 +423,143 @@ export default function HomePage() {
         </div>
       </section>
 
+      
       {/* Official Announcements Section */}
-      {publicPosts.length > 0 && (
-        <section className="bg-[#070817] py-20">
-          <div className="container mx-auto px-4">
-            <div className="mb-12 text-center">
-              <div className="mb-4 flex justify-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_28px_rgba(217,70,239,0.30)]">
-                  <Megaphone className="h-7 w-7 text-white" />
+{publicPosts.length > 0 && (
+  <section className="bg-[#070817] py-20">
+    <div className="container mx-auto px-4">
+      <div className="mb-12 text-center">
+        <div className="mb-4 flex justify-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_28px_rgba(217,70,239,0.30)]">
+            <Megaphone className="h-7 w-7 text-white" />
+          </div>
+        </div>
+
+        <h2 className="text-3xl font-black text-white md:text-4xl">
+          Anuncios oficiales
+        </h2>
+
+        <p className="mx-auto mt-3 max-w-2xl text-slate-400">
+          Noticias, avisos y actualizaciones importantes del staff de SGames.
+        </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {publicPosts.map((post) => (
+          <Card
+            key={post.id}
+            role="button"
+            tabIndex={0}
+            onClick={() =>
+              openPost(post)
+            }
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" ||
+                event.key === " "
+              ) {
+                openPost(post);
+              }
+            }}
+            className="group cursor-pointer border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
+          >
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
+                  <Newspaper className="h-5 w-5" />
                 </div>
+
+                {post.category && (
+                  <span className="rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-pink-200">
+                    {post.category}
+                  </span>
+                )}
               </div>
 
-              <h2 className="text-3xl font-black text-white md:text-4xl">
-                Anuncios oficiales
-              </h2>
-
-              <p className="mx-auto mt-3 max-w-2xl text-slate-400">
-                Noticias, avisos y actualizaciones importantes del staff de SGames.
+              <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                {formatPostDate(
+                  post.publishDate ??
+                    post.createdAt
+                )}
               </p>
-            </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {publicPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="group border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
-                >
-                  <CardContent className="p-6">
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
-                        <Newspaper className="h-5 w-5" />
-                      </div>
+              <h3 className="mb-3 text-xl font-black text-white transition-colors group-hover:text-cyan-200">
+                {post.title}
+              </h3>
 
-                      {post.category && (
-                        <span className="rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-pink-200">
-                          {post.category}
-                        </span>
-                      )}
-                    </div>
+              <p className="text-sm leading-relaxed text-slate-400">
+                {getPostPreview(
+                  post.content
+                )}
+              </p>
 
-                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-                      {formatPostDate(
-                        post.publishDate ??
-                          post.createdAt
-                      )}
-                    </p>
+              <p className="mt-5 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
+                Ver anuncio completo
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
 
-                    <h3 className="mb-3 text-xl font-black text-white transition-colors group-hover:text-cyan-200">
-                      {post.title}
-                    </h3>
+{/* Announcement Detail Dialog */}
+<Dialog
+  open={postDialogOpen}
+  onOpenChange={setPostDialogOpen}
+>
+  <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white">
+    <DialogHeader className="border-b border-violet-500/20 px-6 py-5">
+      <div className="mb-3 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
+          <Megaphone className="h-5 w-5" />
+        </div>
 
-                    <p className="text-sm leading-relaxed text-slate-400">
-                      {getPostPreview(
-                        post.content
-                      )}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
+        {selectedPost?.category && (
+          <span className="rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-pink-200">
+            {selectedPost.category}
+          </span>
+        )}
+      </div>
+
+      <DialogTitle className="text-2xl font-black text-white">
+        {selectedPost?.title}
+      </DialogTitle>
+
+      <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-500">
+        {formatPostDate(
+          selectedPost?.publishDate ??
+            selectedPost?.createdAt
+        )}
+      </p>
+    </DialogHeader>
+
+    <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
+      {selectedPost?.content?.trim() ? (
+        <p className="whitespace-pre-wrap break-words text-base leading-relaxed text-slate-300">
+          {selectedPost.content}
+        </p>
+      ) : (
+        <p className="text-slate-400">
+          Este anuncio no tiene contenido adicional.
+        </p>
       )}
+    </div>
+
+    <DialogFooter className="border-t border-violet-500/20 px-6 py-4">
+      <Button
+        variant="outline"
+        onClick={() =>
+          setPostDialogOpen(false)
+        }
+        className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+      >
+        Cerrar
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* FAQ Section */}
       <section
