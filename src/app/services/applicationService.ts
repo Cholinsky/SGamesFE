@@ -79,6 +79,11 @@ export async function rejectApplication(
 export async function createApplication(
   data: any
 ) {
+  console.log(
+    "CREATE APPLICATION PAYLOAD:",
+    data
+  );
+
   const response = await fetch(
     `${API_URL}/Applications`,
     {
@@ -88,17 +93,25 @@ export async function createApplication(
     }
   );
 
-  if (!response.ok) {
-    const error = await response.text();
+  const responseText =
+    await response.text();
 
+  console.log(
+    "CREATE APPLICATION RESPONSE:",
+    response.status,
+    responseText
+  );
+
+  if (!response.ok) {
     throw new Error(
-      error || "Error creating application"
+      responseText || "Error creating application"
     );
   }
 
-  return await response.json();
+  return responseText
+    ? JSON.parse(responseText)
+    : null;
 }
-
 export async function deleteApplication(id: string) {
   const response =
     await fetch(
