@@ -19,6 +19,21 @@ export async function getPosts() {
   return await response.json();
 }
 
+export async function getPublicPosts() {
+  const response =
+    await fetch(
+      `${API_URL}/Posts/public`
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      "Error loading public posts"
+    );
+  }
+
+  return await response.json();
+}
+
 export async function getPostById(
   id: string
 ) {

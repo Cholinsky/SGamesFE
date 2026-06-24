@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getActivePublicEvent } from "../services/eventService";
+import { getPublicPosts } from "../services/postService";
 import { Link } from "react-router";
 import { Button } from "../components/ui/button";
 import {
@@ -14,6 +15,8 @@ import {
   ClipboardCheck,
   Clock3,
   Sparkles,
+  Megaphone,
+  Newspaper,
 } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -24,27 +27,96 @@ import {
 } from "../components/ui/accordion";
 import logoSgames from "../../assets/logo-sgames.jpeg";
 
-export default function HomePage() {
-const [applicationsOpen, setApplicationsOpen] =
-  useState(true);
+type PublicPost = {
+  id: string;
+  title: string;
+  content: string;
+  category?: string | null;
+  publishDate?: string | null;
+  createdAt?: string | null;
+};
 
-useEffect(() => {
-  loadActiveEventStatus();
-}, []);
-
-async function loadActiveEventStatus() {
-  try {
-    const activeEvent =
-      await getActivePublicEvent();
-
-    setApplicationsOpen(
-      activeEvent.applicationsOpen ?? true
-    );
-  } catch (error) {
-    console.error(error);
-    setApplicationsOpen(true);
+function formatPostDate(
+  value?: string | null
+) {
+  if (!value) {
+    return "Anuncio oficial";
   }
+
+  return new Date(value)
+    .toLocaleDateString(
+      "es-MX",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }
+    );
 }
+
+function getPostPreview(
+  content: string
+) {
+  const cleanContent =
+    content?.trim() ?? "";
+
+  if (cleanContent.length <= 170) {
+    return cleanContent;
+  }
+
+  return `${cleanContent.slice(0, 170)}...`;
+}
+
+export default function HomePage() {
+  const [applicationsOpen, setApplicationsOpen] =
+    useState(true);
+
+  const [publicPosts, setPublicPosts] =
+    useState<PublicPost[]>([]);
+
+  useEffect(() => {
+    loadHomeData();
+  }, []);
+
+  async function loadHomeData() {
+    await Promise.all([
+      loadActiveEventStatus(),
+      loadPublicPosts(),
+    ]);
+  }
+
+  async function loadActiveEventStatus() {
+    try {
+      const activeEvent =
+        await getActivePublicEvent();
+
+      setApplicationsOpen(
+        activeEvent.applicationsOpen ?? true
+      );
+    } catch (error) {
+      console.error(error);
+      setApplicationsOpen(true);
+    }
+  }
+
+  async function loadPublicPosts() {
+    try {
+      const posts =
+        await getPublicPosts();
+
+      const normalizedPosts =
+        Array.isArray(posts)
+          ? posts
+          : [];
+
+      setPublicPosts(
+        normalizedPosts.slice(0, 3)
+      );
+    } catch (error) {
+      console.error(error);
+      setPublicPosts([]);
+    }
+  }
 
   const features = [
     {
@@ -85,11 +157,11 @@ async function loadActiveEventStatus() {
       icon: ClipboardCheck,
       title: "Postulaciones",
       value: applicationsOpen
-      ? "Abiertas"
-      : "Cerradas",
+        ? "Abiertas"
+        : "Cerradas",
       description: applicationsOpen
-      ? "Envía tu run desde el formulario público para revisión del staff."
-      : "Las postulaciones para esta edición ya fueron cerradas por el staff.",
+        ? "Envía tu run desde el formulario público para revisión del staff."
+        : "Las postulaciones para esta edición ya fueron cerradas por el staff.",
     },
     {
       icon: Clock3,
@@ -332,6 +404,69 @@ async function loadActiveEventStatus() {
           </div>
         </div>
       </section>
+
+      {/* Official Announcements Section */}
+      {publicPosts.length > 0 && (
+        <section className="bg-[#070817] py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-12 text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_28px_rgba(217,70,239,0.30)]">
+                  <Megaphone className="h-7 w-7 text-white" />
+                </div>
+              </div>
+
+              <h2 className="text-3xl font-black text-white md:text-4xl">
+                Anuncios oficiales
+              </h2>
+
+              <p className="mx-auto mt-3 max-w-2xl text-slate-400">
+                Noticias, avisos y actualizaciones importantes del staff de SGames.
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {publicPosts.map((post) => (
+                <Card
+                  key={post.id}
+                  className="group border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
+                >
+                  <CardContent className="p-6">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
+                        <Newspaper className="h-5 w-5" />
+                      </div>
+
+                      {post.category && (
+                        <span className="rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-pink-200">
+                          {post.category}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                      {formatPostDate(
+                        post.publishDate ??
+                          post.createdAt
+                      )}
+                    </p>
+
+                    <h3 className="mb-3 text-xl font-black text-white transition-colors group-hover:text-cyan-200">
+                      {post.title}
+                    </h3>
+
+                    <p className="text-sm leading-relaxed text-slate-400">
+                      {getPostPreview(
+                        post.content
+                      )}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FAQ Section */}
       <section
