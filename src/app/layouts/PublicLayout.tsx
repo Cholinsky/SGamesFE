@@ -1,10 +1,40 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Menu, X, Shield } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logoSgames from "../../assets/logo-sgames.jpeg";
+import {
+  Twitch,
+  Youtube,
+  MessageCircle,
+  Mail,
+  ExternalLink,
+} from "lucide-react";
+import {
+  getPublicSettings,
+  type PublicSettings,
+} from "../services/publicSettingsService";
 
 export function PublicLayout() {
+
+  const [publicSettings, setPublicSettings] =
+  useState<PublicSettings | null>(null);
+
+useEffect(() => {
+  loadPublicSettings();
+}, []);
+
+async function loadPublicSettings() {
+  try {
+    const data =
+      await getPublicSettings();
+
+    setPublicSettings(data);
+  } catch (error) {
+    console.error(error);
+    setPublicSettings(null);
+  }
+}
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] =
     useState(false);
@@ -18,7 +48,32 @@ export function PublicLayout() {
         ? "bg-white/10 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.25)]"
         : "text-slate-300 hover:bg-white/5 hover:text-pink-300"
     }`;
-
+const officialSocialLinks = [
+  {
+    name: "Twitch",
+    url: publicSettings?.twitchUrl,
+    icon: Twitch,
+  },
+  {
+    name: "YouTube",
+    url: publicSettings?.youtubeUrl,
+    icon: Youtube,
+  },
+  {
+    name: "Discord",
+    url: publicSettings?.discordUrl,
+    icon: MessageCircle,
+  },
+  {
+    name: "X / Twitter",
+    url: publicSettings?.twitterUrl,
+    icon: ExternalLink,
+  },
+].filter(
+  (item) =>
+    item.url &&
+    item.url.trim().length > 0
+);
   return (
     <div className="min-h-screen bg-[#070817] text-white">
       {/* Header */}
@@ -182,7 +237,7 @@ export function PublicLayout() {
       {/* Footer */}
       <footer className="border-t border-violet-500/20 bg-[#090c1a] py-10">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="mb-4 flex items-center gap-3">
                 <img
@@ -264,7 +319,48 @@ export function PublicLayout() {
               </div>
             </div>
           </div>
+<div>
+  <h3 className="mb-4 text-lg font-bold text-cyan-300">
+    Redes oficiales
+  </h3>
 
+  {officialSocialLinks.length > 0 ? (
+    <div className="flex flex-wrap gap-3">
+      {officialSocialLinks.map((social) => {
+        const Icon =
+          social.icon;
+
+        return (
+          <a
+            key={social.name}
+            href={social.url ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-500/10 text-cyan-200 transition-all hover:-translate-y-0.5 hover:border-pink-400/40 hover:bg-pink-500/15 hover:text-pink-200 hover:shadow-[0_0_18px_rgba(236,72,153,0.22)]"
+            title={social.name}
+            aria-label={social.name}
+          >
+            <Icon className="h-5 w-5" />
+          </a>
+        );
+      })}
+    </div>
+  ) : (
+    <p className="text-sm text-slate-500">
+      Redes oficiales próximamente.
+    </p>
+  )}
+
+  {publicSettings?.contactEmail && (
+    <a
+      href={`mailto:${publicSettings.contactEmail}`}
+      className="mt-5 inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-cyan-300"
+    >
+      <Mail className="h-4 w-4" />
+      {publicSettings.contactEmail}
+    </a>
+  )}
+</div>
           <div className="mt-8 border-t border-violet-500/20 pt-8 text-center text-sm text-slate-500">
             © 2026 SGames. Proyecto comunitario de speedruns.
           </div>
