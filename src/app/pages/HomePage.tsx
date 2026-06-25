@@ -686,122 +686,128 @@ async function loadPublicRunners() {
   </DialogContent>
 </Dialog>
 
-
+{/* Runner Profile Section */}
 <Dialog
   open={runnerDialogOpen}
   onOpenChange={setRunnerDialogOpen}
 >
-  <DialogContent className="max-h-[94vh] w-[96vw] max-w-7xl overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white">
+  <DialogContent className="max-h-[94vh] w-[calc(100vw-2rem)] overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white sm:max-w-[1200px] xl:max-w-[1280px]">
     <DialogHeader className="border-b border-violet-500/20 px-6 py-5">
-      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">
-            Perfil del runner
-          </p>
+      <div>
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">
+          Perfil del runner
+        </p>
 
-          <DialogTitle className="text-3xl font-black text-white md:text-4xl">
-            {selectedRunner?.displayName}
-          </DialogTitle>
+        <DialogTitle className="text-3xl font-black text-white md:text-4xl">
+          {selectedRunner?.displayName}
+        </DialogTitle>
 
-          <DialogDescription className="mt-2 text-sm text-slate-400">
-            {selectedRunner?.country
-              ? selectedRunner.country
-              : "Runner participante de SGames"}
-          </DialogDescription>
-        </div>
-
-        {selectedRunner?.socialLinks?.length ? (
-          <div className="flex flex-wrap gap-2">
-            {selectedRunner.socialLinks.map((link) => (
-              <a
-                key={`${selectedRunner.id}-${link.socialNetworkId}-${link.url}`}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
-              >
-                {link.name}
-              </a>
-            ))}
-          </div>
-        ) : null}
+        <DialogDescription className="mt-2 text-sm text-slate-400">
+          {selectedRunner?.country
+            ? selectedRunner.country
+            : "Runner participante de SGames"}
+        </DialogDescription>
       </div>
     </DialogHeader>
 
-    <div className="grid max-h-[76vh] overflow-y-auto lg:grid-cols-[420px_minmax(0,1fr)]">
-      {/* Imagen */}
-      <div className="border-b border-violet-500/20 bg-[#070817] p-5 lg:border-b-0 lg:border-r">
-        <div className="mx-auto aspect-[4/5] max-h-[68vh] overflow-hidden rounded-3xl border border-violet-500/25 bg-black/40 shadow-[0_0_35px_rgba(56,189,248,0.10)]">
-          {selectedRunner?.photoUrl ? (
-            <img
-              src={selectedRunner.photoUrl}
-              alt={selectedRunner.displayName}
-              className="h-full w-full object-contain object-center"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <Users className="h-16 w-16 text-slate-700" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Info + video */}
-      <div className="space-y-6 p-5 md:p-6">
-        <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
-          <h3 className="mb-3 text-xl font-black text-white">
-            Presentación
-          </h3>
-
-          {selectedRunner?.bio ? (
-            <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-300">
-              {selectedRunner.bio}
-            </p>
-          ) : (
-            <p className="text-slate-500">
-              Este runner todavía no tiene presentación escrita.
-            </p>
-          )}
+    <div className="max-h-[76vh] overflow-y-auto overflow-x-hidden">
+      <div className="grid gap-0 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[430px_minmax(0,1fr)]">
+        {/* Imagen */}
+        <div className="min-w-0 border-b border-violet-500/20 bg-[#070817] p-5 lg:border-b-0 lg:border-r lg:border-violet-500/20">
+          <div className="mx-auto aspect-[4/5] max-h-[66vh] overflow-hidden rounded-3xl border border-violet-500/25 bg-black/40 shadow-[0_0_35px_rgba(56,189,248,0.10)]">
+            {selectedRunner?.photoUrl ? (
+              <img
+                src={selectedRunner.photoUrl}
+                alt={selectedRunner.displayName}
+                className="h-full w-full object-contain object-center"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Users className="h-16 w-16 text-slate-700" />
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-300">
-                Video
+        {/* Info + video */}
+        <div className="min-w-0 space-y-5 p-5 md:p-6">
+          <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">
+              Presentación
+            </p>
+
+            <h3 className="text-2xl font-black text-white">
+              {selectedRunner?.displayName}
+            </h3>
+
+            {selectedRunner?.bio ? (
+              <p className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-slate-300">
+                {selectedRunner.bio}
               </p>
-
-              <h3 className="mt-1 text-xl font-black text-white">
-                Video de presentación
-              </h3>
-            </div>
+            ) : (
+              <p className="mt-4 text-slate-500">
+                Este runner todavía no tiene presentación escrita.
+              </p>
+            )}
           </div>
 
-          {selectedRunner?.presentationVideoUrl ? (
-            <div className="overflow-hidden rounded-2xl border border-pink-400/20 bg-black">
-              <video
-                src={selectedRunner.presentationVideoUrl}
-                controls
-                playsInline
-                preload="metadata"
-                className="aspect-video w-full bg-black"
-              >
-                Tu navegador no puede reproducir este video.
-              </video>
-            </div>
-          ) : (
-            <div className="flex aspect-video items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-black/30 text-center">
-              <div>
-                <p className="font-semibold text-white">
-                  Sin video de presentación
-                </p>
+          <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-300">
+              Video
+            </p>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Cuando el staff suba un video, aparecerá aquí.
-                </p>
+            <h3 className="mt-1 mb-4 text-2xl font-black text-white">
+              Video de presentación
+            </h3>
+
+            {selectedRunner?.presentationVideoUrl ? (
+              <div className="overflow-hidden rounded-2xl border border-pink-400/20 bg-black">
+                <video
+                  src={selectedRunner.presentationVideoUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full bg-black"
+                >
+                  Tu navegador no puede reproducir este video.
+                </video>
+              </div>
+            ) : (
+              <div className="flex aspect-video items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-black/30 text-center">
+                <div>
+                  <p className="font-semibold text-white">
+                    Sin video de presentación
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Cuando el staff suba un video, aparecerá aquí.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {selectedRunner?.socialLinks?.length ? (
+            <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
+              <p className="mb-3 text-sm font-semibold text-cyan-300">
+                Redes sociales
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {selectedRunner.socialLinks.map((link) => (
+                  <a
+                    key={`${selectedRunner.id}-${link.socialNetworkId}-${link.url}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                  >
+                    {link.name}
+                  </a>
+                ))}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
