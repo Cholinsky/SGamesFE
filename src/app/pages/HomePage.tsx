@@ -691,8 +691,8 @@ async function loadPublicRunners() {
   open={runnerDialogOpen}
   onOpenChange={setRunnerDialogOpen}
 >
-  <DialogContent className="max-h-[94vh] w-[calc(100vw-2rem)] overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white sm:max-w-[1200px] xl:max-w-[1280px]">
-    <DialogHeader className="border-b border-violet-500/20 px-6 py-5">
+  <DialogContent className="flex h-[92vh] w-[calc(100vw-2rem)] flex-col overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white sm:max-w-[1200px] xl:max-w-[1280px]">
+    <DialogHeader className="shrink-0 border-b border-violet-500/20 px-6 py-5">
       <div>
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">
           Perfil del runner
@@ -710,7 +710,7 @@ async function loadPublicRunners() {
       </div>
     </DialogHeader>
 
-    <div className="max-h-[76vh] overflow-y-auto overflow-x-hidden">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden">
       <div className="grid gap-0 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[430px_minmax(0,1fr)]">
         {/* Imagen */}
         <div className="min-w-0 border-b border-violet-500/20 bg-[#070817] p-5 lg:border-b-0 lg:border-r lg:border-violet-500/20">
@@ -812,7 +812,7 @@ async function loadPublicRunners() {
       </div>
     </div>
 
-    <DialogFooter className="border-t border-violet-500/20 px-6 py-4">
+    <DialogFooter className="shrink-0 border-t border-violet-500/20 px-6 py-4">
       <Button
         variant="outline"
         onClick={() => setRunnerDialogOpen(false)}
