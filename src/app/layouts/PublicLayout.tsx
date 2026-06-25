@@ -8,6 +8,8 @@ import {
   Youtube,
   MessageCircle,
   Mail,
+  Facebook,
+Instagram,
   ExternalLink,
 } from "lucide-react";
 import {
@@ -60,14 +62,24 @@ const officialSocialLinks = [
     icon: Youtube,
   },
   {
-    name: "Discord",
-    url: publicSettings?.discordUrl,
-    icon: MessageCircle,
+    name: "Facebook",
+    url: publicSettings?.facebookUrl,
+    icon: Facebook,
+  },
+  {
+    name: "Instagram",
+    url: publicSettings?.instagramUrl,
+    icon: Instagram,
   },
   {
     name: "X / Twitter",
     url: publicSettings?.twitterUrl,
     icon: ExternalLink,
+  },
+  {
+    name: "Discord",
+    url: publicSettings?.discordUrl,
+    icon: MessageCircle,
   },
 ].filter(
   (item) =>
@@ -296,29 +308,6 @@ const officialSocialLinks = [
               <h3 className="mb-4 font-semibold text-cyan-300">
                 Evento
               </h3>
-
-              <div className="space-y-2 text-sm text-slate-400">
-                <p>
-                  <span className="text-slate-300">
-                    Fechas:
-                  </span>{" "}
-                  31 de julio al 2 de agosto de 2026
-                </p>
-
-                <p>
-                  <span className="text-slate-300">
-                    Estado:
-                  </span>{" "}
-                  Postulaciones abiertas
-                </p>
-
-                <p>
-                  Los canales oficiales y avisos del evento
-                  se comunicarán por el staff de SGames.
-                </p>
-              </div>
-            </div>
-          </div>
 <div>
   <h3 className="mb-4 text-lg font-bold text-cyan-300">
     Redes oficiales
@@ -361,6 +350,29 @@ const officialSocialLinks = [
     </a>
   )}
 </div>
+              <div className="space-y-2 text-sm text-slate-400">
+                <p>
+                  <span className="text-slate-300">
+                    Fechas:
+                  </span>{" "}
+                  31 de julio al 2 de agosto de 2026
+                </p>
+
+                <p>
+                  <span className="text-slate-300">
+                    Estado:
+                  </span>{" "}
+                  Postulaciones abiertas
+                </p>
+
+                <p>
+                  Los canales oficiales y avisos del evento
+                  se comunicarán por el staff de SGames.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-8 border-t border-violet-500/20 pt-8 text-center text-sm text-slate-500">
             © 2026 SGames. Proyecto comunitario de speedruns.
           </div>

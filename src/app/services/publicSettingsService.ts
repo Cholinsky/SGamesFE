@@ -7,6 +7,8 @@ export type PublicSettings = {
   youtubeUrl?: string | null;
   discordUrl?: string | null;
   twitterUrl?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
 };
 
 export async function getPublicSettings(): Promise<PublicSettings> {
