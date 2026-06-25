@@ -533,19 +533,19 @@ export default function AdminRunners() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {runners.map((runner) => (
             <Card
               key={runner.id}
               className="overflow-hidden border-gray-800 bg-gray-900/50"
             >
-              <div className="relative aspect-square bg-gray-950">
+              <div className="relative aspect-[4/3] bg-gray-950">
                 {runner.photoUrl ? (
                   <img
-                      src={runner.photoUrl}
-                      alt={runner.displayName}
-                      className="h-full w-full object-cover object-center"
-                  />
+  src={runner.photoUrl}
+  alt={runner.displayName}
+  className="h-full w-full object-cover object-center"
+/>
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <ImageIcon className="h-12 w-12 text-gray-700" />
@@ -565,7 +565,7 @@ export default function AdminRunners() {
                 </div>
               </div>
 
-              <CardContent className="space-y-4 p-5">
+              <CardContent className="space-y-3 p-4">
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -586,7 +586,7 @@ export default function AdminRunners() {
                   </div>
 
                   {runner.bio && (
-                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-gray-400">
+                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-gray-400">
                       {runner.bio}
                     </p>
                   )}

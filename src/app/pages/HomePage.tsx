@@ -485,9 +485,9 @@ async function loadPublicRunners() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {publicRunners.map((runner) => (
-          <Card
+<Card
   key={runner.id}
   role="button"
   tabIndex={0}
@@ -500,7 +500,7 @@ async function loadPublicRunners() {
       openRunner(runner);
     }
   }}
-  className="group cursor-pointer overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
+  className="group cursor-pointer overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_24px_rgba(56,189,248,0.14)]"
 >
   <div className="aspect-square bg-[#070817]">
     {runner.photoUrl ? (
@@ -511,33 +511,33 @@ async function loadPublicRunners() {
       />
     ) : (
       <div className="flex h-full w-full items-center justify-center">
-        <Users className="h-12 w-12 text-slate-700" />
+        <Users className="h-10 w-10 text-slate-700" />
       </div>
     )}
   </div>
 
-  <CardContent className="p-6">
-    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300">
+  <CardContent className="p-4">
+    <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">
       Runner
     </p>
 
-    <h3 className="text-2xl font-black text-white">
+    <h3 className="line-clamp-1 text-lg font-black text-white">
       {runner.displayName}
     </h3>
 
     {runner.country && (
-      <p className="mt-1 text-sm text-slate-400">
+      <p className="mt-1 line-clamp-1 text-xs text-slate-400">
         {runner.country}
       </p>
     )}
 
     {runner.bio && (
-      <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-slate-400">
+      <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-400">
         {runner.bio}
       </p>
     )}
 
-    <p className="mt-5 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
+    <p className="mt-4 text-xs font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
       Ver perfil completo
     </p>
   </CardContent>
