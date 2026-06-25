@@ -506,10 +506,13 @@ async function loadPublicRunners() {
   <div className="aspect-square bg-[#070817]">
     {runner.photoUrl ? (
       <img
-        src={runner.photoUrl}
-        alt={runner.displayName}
-        className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-      />
+  src={runner.photoUrl}
+  alt={runner.displayName}
+  onError={(event) => {
+    event.currentTarget.style.display = "none";
+  }}
+  className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+/>
     ) : (
       <div className="flex h-full w-full items-center justify-center">
         <Users className="h-10 w-10 text-slate-700" />
