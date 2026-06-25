@@ -246,138 +246,146 @@ const officialSocialLinks = [
         <Outlet />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-violet-500/20 bg-[#090c1a] py-10">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <div className="mb-4 flex items-center gap-3">
-                <img
-                  src={logoSgames}
-                  alt="SGames"
-                  className="h-10 w-10 rounded-xl border border-white/20 object-cover"
-                />
+{/* Footer */}
+<footer className="border-t border-violet-500/20 bg-[#090c1a] py-10">
+  <div className="container mx-auto px-4">
+    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_1fr_1fr]">
+      {/* Brand */}
+      <div>
+        <div className="mb-4 flex items-center gap-3">
+          <img
+            src={logoSgames}
+            alt="SGames"
+            className="h-10 w-10 rounded-xl border border-white/20 object-cover"
+          />
 
-                <div>
-                  <span className="block bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text font-black text-transparent">
-                    SGames
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    Speedrun Event
-                  </span>
-                </div>
-              </div>
-
-              <p className="max-w-sm text-sm text-slate-400">
-                Evento comunitario dedicado a reunir runners,
-                juegos y categorías distintas en un espacio
-                competitivo, amigable y organizado.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="mb-4 font-semibold text-cyan-300">
-                Navegación
-              </h3>
-
-              <div className="flex flex-col gap-2 text-sm text-slate-400">
-                <Link
-                  to="/postulacion"
-                  className="hover:text-pink-300"
-                >
-                  Enviar postulación
-                </Link>
-
-                <Link
-                  to="/horario"
-                  className="hover:text-pink-300"
-                >
-                  Ver horario
-                </Link>
-
-                <Link
-                  to="/#faq"
-                  className="hover:text-pink-300"
-                >
-                  Preguntas frecuentes
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="mb-4 font-semibold text-cyan-300">
-                Evento
-              </h3>
-              <div className="space-y-2 text-sm text-slate-400">
-                <p>
-                  <span className="text-slate-300">
-                    Fechas:
-                  </span>{" "}
-                  31 de julio al 2 de agosto de 2026
-                </p>
-
-                <p>
-                  <span className="text-slate-300">
-                    Estado:
-                  </span>{" "}
-                  Postulaciones abiertas
-                </p>
-
-                <p>
-                  Los canales oficiales y avisos del evento
-                  se comunicarán por el staff de SGames.
-                </p>
-              </div>
-            </div>
-          </div>
           <div>
-  <h3 className="mb-4 text-lg font-bold text-cyan-300">
-    Redes oficiales
-  </h3>
+            <span className="block bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text font-black text-transparent">
+              SGames
+            </span>
 
-  {officialSocialLinks.length > 0 ? (
-    <div className="flex flex-wrap gap-3">
-      {officialSocialLinks.map((social) => {
-        const Icon =
-          social.icon;
-
-        return (
-          <a
-            key={social.name}
-            href={social.url ?? "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-500/10 text-cyan-200 transition-all hover:-translate-y-0.5 hover:border-pink-400/40 hover:bg-pink-500/15 hover:text-pink-200 hover:shadow-[0_0_18px_rgba(236,72,153,0.22)]"
-            title={social.name}
-            aria-label={social.name}
-          >
-            <Icon className="h-5 w-5" />
-          </a>
-        );
-      })}
-    </div>
-  ) : (
-    <p className="text-sm text-slate-500">
-      Redes oficiales próximamente.
-    </p>
-  )}
-
-  {publicSettings?.contactEmail && (
-    <a
-      href={`mailto:${publicSettings.contactEmail}`}
-      className="mt-5 inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-cyan-300"
-    >
-      <Mail className="h-4 w-4" />
-      {publicSettings.contactEmail}
-    </a>
-  )}
-</div>
-
-          <div className="mt-8 border-t border-violet-500/20 pt-8 text-center text-sm text-slate-500">
-            © 2026 SGames. Proyecto comunitario de speedruns.
+            <span className="text-xs text-slate-500">
+              Speedrun Event
+            </span>
           </div>
         </div>
-      </footer>
+
+        <p className="max-w-sm text-sm text-slate-400">
+          Evento comunitario dedicado a reunir runners,
+          juegos y categorías distintas en un espacio
+          competitivo, amigable y organizado.
+        </p>
+      </div>
+
+      {/* Navigation */}
+      <div>
+        <h3 className="mb-4 font-semibold text-cyan-300">
+          Navegación
+        </h3>
+
+        <div className="flex flex-col gap-2 text-sm text-slate-400">
+          <Link
+            to="/postulacion"
+            className="hover:text-pink-300"
+          >
+            Enviar postulación
+          </Link>
+
+          <Link
+            to="/horario"
+            className="hover:text-pink-300"
+          >
+            Ver horario
+          </Link>
+
+          <Link
+            to="/#faq"
+            className="hover:text-pink-300"
+          >
+            Preguntas frecuentes
+          </Link>
+        </div>
+      </div>
+
+      {/* Event */}
+      <div>
+        <h3 className="mb-4 font-semibold text-cyan-300">
+          Evento
+        </h3>
+
+        <div className="space-y-2 text-sm text-slate-400">
+          <p>
+            <span className="text-slate-300">
+              Fechas:
+            </span>{" "}
+            31 de julio al 2 de agosto de 2026
+          </p>
+
+          <p>
+            <span className="text-slate-300">
+              Estado:
+            </span>{" "}
+            Postulaciones abiertas
+          </p>
+
+          <p>
+            Los canales oficiales y avisos del evento
+            se comunicarán por el staff de SGames.
+          </p>
+        </div>
+      </div>
+
+      {/* Official Social Links */}
+      <div className="lg:justify-self-end lg:text-right">
+        <h3 className="mb-4 text-lg font-bold text-cyan-300">
+          Redes oficiales
+        </h3>
+
+        {officialSocialLinks.length > 0 ? (
+          <div className="flex flex-wrap gap-3 lg:justify-end">
+            {officialSocialLinks.map((social) => {
+              const Icon = social.icon;
+
+              return (
+                <a
+                  key={social.name}
+                  href={social.url ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-500/10 text-cyan-200 transition-all hover:-translate-y-0.5 hover:border-pink-400/40 hover:bg-pink-500/15 hover:text-pink-200 hover:shadow-[0_0_18px_rgba(236,72,153,0.22)]"
+                  title={social.name}
+                  aria-label={social.name}
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">
+            Redes oficiales próximamente.
+          </p>
+        )}
+
+        {publicSettings?.contactEmail && (
+          <div className="mt-5 flex lg:justify-end">
+            <a
+              href={`mailto:${publicSettings.contactEmail}`}
+              className="inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-cyan-300"
+            >
+              <Mail className="h-4 w-4" />
+              {publicSettings.contactEmail}
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div className="mt-8 border-t border-violet-500/20 pt-8 text-center text-sm text-slate-500">
+      © 2026 SGames. Proyecto comunitario de speedruns.
+    </div>
+  </div>
+</footer>
     </div>
   );
 }
