@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { DateTime } from "luxon";
 import {
   Calendar,
   Clock,
@@ -27,6 +28,12 @@ import {
 } from "lucide-react";
 import { getPublicSchedule } from "../services/scheduleService";
 
+type ScheduleStatus =
+  | "scheduled"
+  | "preparing"
+  | "live"
+  | "completed";
+
 type ScheduleEntry = {
   id: string;
   dayDate: string;
@@ -39,7 +46,8 @@ type ScheduleEntry = {
   platform: string;
   duration: string;
   durationMinutes: number;
-  status?: "current" | "next" | "completed";
+  status: ScheduleStatus;
+  statusText: string;
 };
 
 type PublicScheduleResponse = {
@@ -68,6 +76,154 @@ type DayOption = {
 
 const EVENT_ID =
   "04337355-98CA-4836-A1C1-5A8F84869F6D";
+
+  const EVENT_TIMEZONE =
+  "America/Mexico_City";
+
+const PREPARING_MINUTES =
+  15;
+
+function normalizeDateOnly(
+  dayDate: string
+) {
+  return dayDate.split("T")[0];
+}
+
+function getEntryDateTimes(
+  dayDate: string,
+  startTime: string,
+  durationMinutes: number
+) {
+  const cleanDate =
+    normalizeDateOnly(dayDate);
+
+  const cleanTime =
+    String(startTime).substring(0, 5);
+
+  const start =
+    DateTime.fromISO(
+      `${cleanDate}T${cleanTime}`,
+      {
+        zone: EVENT_TIMEZONE,
+      }
+    );
+
+  const end =
+    start.plus({
+      minutes: durationMinutes,
+    });
+
+  return {
+    start,
+    end,
+  };
+}
+
+function formatClock(
+  date: DateTime
+) {
+  return date.toFormat("HH:mm");
+}
+
+function formatRelativeMinutes(
+  minutes: number
+) {
+  if (minutes <= 0) {
+    return "ahora";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+
+  const hours =
+    Math.floor(minutes / 60);
+
+  const remainingMinutes =
+    minutes % 60;
+
+  if (remainingMinutes === 0) {
+    return `${hours} h`;
+  }
+
+  return `${hours} h ${remainingMinutes} min`;
+}
+
+function getScheduleStatus(
+  dayDate: string,
+  startTime: string,
+  durationMinutes: number,
+  now: DateTime
+) {
+  const { start, end } =
+    getEntryDateTimes(
+      dayDate,
+      startTime,
+      durationMinutes
+    );
+
+  const preparingStart =
+    start.minus({
+      minutes: PREPARING_MINUTES,
+    });
+
+  const nowMs =
+    now.toMillis();
+
+  const startMs =
+    start.toMillis();
+
+  const endMs =
+    end.toMillis();
+
+  const preparingStartMs =
+    preparingStart.toMillis();
+
+  if (nowMs >= endMs) {
+    return {
+      status: "completed" as const,
+      statusText: `Finalizó aprox. ${formatClock(end)}`,
+    };
+  }
+
+  if (
+    nowMs >= startMs &&
+    nowMs < endMs
+  ) {
+    return {
+      status: "live" as const,
+      statusText: `Termina aprox. ${formatClock(end)}`,
+    };
+  }
+
+  if (
+    nowMs >= preparingStartMs &&
+    nowMs < startMs
+  ) {
+    const minutes =
+      Math.ceil(
+        start.diff(now, "minutes").minutes
+      );
+
+    return {
+      status: "preparing" as const,
+      statusText: `Inicia en ${formatRelativeMinutes(minutes)}`,
+    };
+  }
+
+  const minutes =
+    Math.ceil(
+      start.diff(now, "minutes").minutes
+    );
+
+  return {
+    status: "scheduled" as const,
+    statusText:
+      minutes > 0
+        ? `Inicia en ${formatRelativeMinutes(minutes)}`
+        : `Inicia ${formatClock(start)}`,
+  };
+}
 
 function parseLocalDate(dayDate: string) {
   const cleanDate =
@@ -146,8 +302,20 @@ function compareEntries(
 }
 
 function mapPublicEntry(
-  entry: PublicScheduleEntryDto
+  entry: PublicScheduleEntryDto,
+  now: DateTime
 ): ScheduleEntry {
+  const startTime =
+    String(entry.startTime).substring(0, 5);
+
+  const statusInfo =
+    getScheduleStatus(
+      entry.dayDate,
+      startTime,
+      entry.durationMinutes,
+      now
+    );
+
   return {
     id:
       entry.id,
@@ -162,7 +330,7 @@ function mapPublicEntry(
       formatShortDay(entry.dayDate),
 
     time:
-      String(entry.startTime).substring(0, 5),
+      startTime,
 
     runner:
       entry.runnerName ?? "Bloque",
@@ -181,13 +349,19 @@ function mapPublicEntry(
 
     durationMinutes:
       entry.durationMinutes,
+
+    status:
+      statusInfo.status,
+
+    statusText:
+      statusInfo.statusText,
   };
 }
 
 function getStatusBadge(
-  status?: string
+  status: ScheduleStatus
 ) {
-  if (status === "current") {
+  if (status === "live") {
     return (
       <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
         En vivo
@@ -195,10 +369,10 @@ function getStatusBadge(
     );
   }
 
-  if (status === "next") {
+  if (status === "preparing") {
     return (
-      <Badge className="bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30">
-        Próximo
+      <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
+        Preparando
       </Badge>
     );
   }
@@ -211,7 +385,11 @@ function getStatusBadge(
     );
   }
 
-  return null;
+  return (
+    <Badge className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30">
+      Programado
+    </Badge>
+  );
 }
 
 export default function HorarioPage() {
@@ -239,9 +417,48 @@ export default function HorarioPage() {
   const [loading, setLoading] =
     useState(true);
 
+    const [now, setNow] =
+  useState(
+    DateTime.now().setZone(EVENT_TIMEZONE)
+  );
+
   useEffect(() => {
     loadPublicSchedule();
   }, []);
+
+  useEffect(() => {
+  const interval =
+    window.setInterval(() => {
+      setNow(
+        DateTime.now().setZone(EVENT_TIMEZONE)
+      );
+    }, 30000);
+
+  return () =>
+    window.clearInterval(interval);
+}, []);
+
+useEffect(() => {
+  setSchedule((currentSchedule) =>
+    currentSchedule.map((entry) => {
+      const statusInfo =
+        getScheduleStatus(
+          entry.dayDate,
+          entry.time,
+          entry.durationMinutes,
+          now
+        );
+
+      return {
+        ...entry,
+        status:
+          statusInfo.status,
+        statusText:
+          statusInfo.statusText,
+      };
+    })
+  );
+}, [now]);
 
   async function loadPublicSchedule() {
     try {
@@ -266,10 +483,18 @@ export default function HorarioPage() {
         data.event ?? "SGames"
       );
 
-      const mappedEntries =
-        (data.entries ?? [])
-          .map(mapPublicEntry)
-          .sort(compareEntries);
+     const currentNow =
+  DateTime.now().setZone(EVENT_TIMEZONE);
+
+const mappedEntries =
+  (data.entries ?? [])
+    .map((entry) =>
+      mapPublicEntry(
+        entry,
+        currentNow
+      )
+    )
+    .sort(compareEntries);
 
       setSchedule(mappedEntries);
     } catch (error) {
@@ -679,11 +904,13 @@ export default function HorarioPage() {
                       <Card
                         key={entry.id}
                         className={`group border-violet-500/20 bg-[#10182b]/75 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-cyan-400/45 hover:shadow-[0_0_28px_rgba(34,211,238,0.12)] ${
-                          entry.status === "current"
-                            ? "border-green-500/50 shadow-lg shadow-green-500/20"
-                            : entry.status === "next"
-                              ? "border-cyan-500/50"
-                              : ""
+                         entry.status === "live"
+  ? "border-green-500/50 shadow-lg shadow-green-500/20"
+  : entry.status === "preparing"
+    ? "border-yellow-500/50 shadow-lg shadow-yellow-500/10"
+    : entry.status === "scheduled"
+      ? "border-cyan-500/40"
+      : ""
                         }`}
                       >
                         <CardContent className="p-4 md:p-6">
@@ -755,9 +982,13 @@ export default function HorarioPage() {
                             </div>
 
                             {/* Status */}
-                            <div className="flex justify-start lg:justify-end">
-                              {getStatusBadge(entry.status)}
-                            </div>
+                            <div className="flex flex-col items-start gap-1 lg:items-end">
+  {getStatusBadge(entry.status)}
+
+  <p className="max-w-[160px] text-xs text-slate-500 lg:text-right">
+    {entry.statusText}
+  </p>
+</div>
                           </div>
                         </CardContent>
                       </Card>
