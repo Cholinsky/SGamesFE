@@ -181,4 +181,35 @@ export async function unpublishSchedule(
 
   return await response.json();
 }
+export type ScheduleEntryManualStatus =
+  | "preparing"
+  | "live"
+  | "completed"
+  | "scheduled"
+  | "auto";
+
+export async function updateScheduleEntryStatus(
+  id: string,
+  status: ScheduleEntryManualStatus
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Schedule/entries/${id}/status/${status}`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    const error =
+      await response.text();
+
+    throw new Error(
+      error || "Error updating schedule entry status"
+    );
+  }
+
+  return await response.json();
+}
 

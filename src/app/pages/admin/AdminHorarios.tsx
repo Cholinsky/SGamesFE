@@ -24,6 +24,11 @@ import {
   Trash2,
   EyeOff,
   AlertTriangle,
+  Radio,
+  CheckCircle2,
+  RotateCcw,
+  Hourglass,
+  PlayCircle,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -44,6 +49,8 @@ import {
   unpublishSchedule,
   getActiveEvent,
   deleteScheduleEntry,
+  updateScheduleEntryStatus,
+  type ScheduleEntryManualStatus,
 } from "../../services/scheduleService";
 
 type ScheduleItem = {
@@ -59,6 +66,11 @@ type ScheduleItem = {
   durationMinutes: number;
   platform: string;
   positionOrder: number;
+  runStatus?: string | null;
+  actualStartedAt?: string | null;
+  actualCompletedAt?: string | null;
+  statusUpdatedAt?: string | null;
+  statusNote?: string | null;
 };
 
 type DaySchedule = {
@@ -127,6 +139,68 @@ function normalizeTimeForApi(time: string) {
 
   return time;
 }
+function getManualStatusLabel(
+  status?: string | null
+) {
+  switch (status) {
+    case "Preparing":
+      return "Preparando";
+
+    case "Live":
+      return "En vivo";
+
+    case "Completed":
+      return "Completado";
+
+    case "Scheduled":
+      return "Programado";
+
+    default:
+      return "Automático";
+  }
+}
+
+function getManualStatusBadge(
+  status?: string | null
+) {
+  if (status === "Live") {
+    return (
+      <Badge className="bg-green-500/20 text-green-400">
+        En vivo
+      </Badge>
+    );
+  }
+
+  if (status === "Preparing") {
+    return (
+      <Badge className="bg-yellow-500/20 text-yellow-300">
+        Preparando
+      </Badge>
+    );
+  }
+
+  if (status === "Completed") {
+    return (
+      <Badge className="bg-gray-500/20 text-gray-400">
+        Completado
+      </Badge>
+    );
+  }
+
+  if (status === "Scheduled") {
+    return (
+      <Badge className="bg-cyan-500/20 text-cyan-300">
+        Programado
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="bg-purple-500/20 text-purple-300">
+      Automático
+    </Badge>
+  );
+}
 
 interface DraggableItemProps {
   item: ScheduleItem;
@@ -140,6 +214,10 @@ interface DraggableItemProps {
   ) => void;
   onEdit: (item: ScheduleItem) => void;
   onDelete: (item: ScheduleItem) => void;
+  onStatusChange: (
+    item: ScheduleItem,
+    status: ScheduleEntryManualStatus
+  ) => void;
 }
 
 function DraggableItem({
@@ -149,6 +227,7 @@ function DraggableItem({
   moveItem,
   onEdit,
   onDelete,
+  onStatusChange,
 }: DraggableItemProps) {
   const [{ isDragging }, drag] =
     useDrag({
@@ -270,6 +349,73 @@ function DraggableItem({
               {item.duration}
             </Badge>
           </div>
+          <div className="mt-3 rounded-lg border border-gray-700/80 bg-gray-900/50 p-3">
+  <div className="mb-2 flex items-center justify-between gap-2">
+    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
+      Estado
+    </span>
+
+    {getManualStatusBadge(item.runStatus)}
+  </div>
+
+  <p className="mb-3 text-xs text-gray-500">
+    {getManualStatusLabel(item.runStatus)}
+  </p>
+
+  <div className="grid grid-cols-2 gap-2">
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={(e) => {
+        e.stopPropagation();
+        onStatusChange(item, "preparing");
+      }}
+      className="border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/10"
+    >
+      <Hourglass className="mr-1.5 h-3.5 w-3.5" />
+      Preparar
+    </Button>
+
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={(e) => {
+        e.stopPropagation();
+        onStatusChange(item, "live");
+      }}
+      className="border-green-500/40 text-green-300 hover:bg-green-500/10"
+    >
+      <Radio className="mr-1.5 h-3.5 w-3.5" />
+      En vivo
+    </Button>
+
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={(e) => {
+        e.stopPropagation();
+        onStatusChange(item, "completed");
+      }}
+      className="border-gray-500/40 text-gray-300 hover:bg-gray-500/10"
+    >
+      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+      Completar
+    </Button>
+
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={(e) => {
+        e.stopPropagation();
+        onStatusChange(item, "auto");
+      }}
+      className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
+    >
+      <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+      Auto
+    </Button>
+  </div>
+</div>
         </div>
       </div>
     </div>
@@ -287,6 +433,10 @@ interface DayColumnProps {
   ) => void;
   onEdit: (item: ScheduleItem) => void;
   onDelete: (item: ScheduleItem) => void;
+   onStatusChange: (
+    item: ScheduleItem,
+    status: ScheduleEntryManualStatus
+  ) => void;
 }
 
 function DayColumn({
@@ -295,6 +445,7 @@ function DayColumn({
   moveItem,
   onEdit,
   onDelete,
+  onStatusChange,
 }: DayColumnProps){
   const [, drop] =
     useDrop({
@@ -355,6 +506,7 @@ function DayColumn({
                   moveItem={moveItem}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onStatusChange={onStatusChange}
                 />
               ))
             )}
@@ -486,6 +638,21 @@ const [itemToDelete, setItemToDelete] =
 
           positionOrder:
             entry.positionOrder,
+
+            runStatus:
+  entry.runStatus ?? null,
+
+actualStartedAt:
+  entry.actualStartedAt ?? null,
+
+actualCompletedAt:
+  entry.actualCompletedAt ?? null,
+
+statusUpdatedAt:
+  entry.statusUpdatedAt ?? null,
+
+statusNote:
+  entry.statusNote ?? null,
         });
       });
 
@@ -770,7 +937,55 @@ const handleUnpublish = async () => {
       );
     }
   };
+async function handleStatusChange(
+  item: ScheduleItem,
+  status: ScheduleEntryManualStatus
+) {
+  try {
+    const result =
+      await updateScheduleEntryStatus(
+        item.id,
+        status
+      );
 
+    setSchedule((current) => {
+      const updated: DaySchedule = {};
+
+      Object.keys(current).forEach((day) => {
+        updated[day] =
+          current[day].map((scheduleItem) =>
+            scheduleItem.id === item.id
+              ? {
+                  ...scheduleItem,
+                  runStatus:
+                    result.runStatus ?? null,
+                  actualStartedAt:
+                    result.actualStartedAt ?? null,
+                  actualCompletedAt:
+                    result.actualCompletedAt ?? null,
+                  statusUpdatedAt:
+                    result.statusUpdatedAt ?? null,
+                  statusNote:
+                    result.statusNote ?? null,
+                }
+              : scheduleItem
+          );
+      });
+
+      return updated;
+    });
+
+    toast.success(
+      "Estado de la run actualizado"
+    );
+  } catch (error) {
+    console.error(error);
+
+    toast.error(
+      "No se pudo actualizar el estado de la run"
+    );
+  }
+}
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="space-y-6">
@@ -863,6 +1078,7 @@ const handleUnpublish = async () => {
               moveItem={moveItem}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
             />
           ))}
         </div>
