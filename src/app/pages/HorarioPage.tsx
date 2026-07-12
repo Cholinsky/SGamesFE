@@ -48,6 +48,11 @@ type ScheduleEntry = {
   durationMinutes: number;
   status: ScheduleStatus;
   statusText: string;
+  runStatus?: string | null;
+  actualStartedAt?: string | null;
+  actualCompletedAt?: string | null;
+  statusUpdatedAt?: string | null;
+  statusNote?: string | null;
 };
 
 type PublicScheduleResponse = {
@@ -62,6 +67,11 @@ type PublicScheduleEntryDto = {
   dayDate: string;
   startTime: string;
   durationMinutes: number;
+  runStatus?: string | null;
+  actualStartedAt?: string | null;
+  actualCompletedAt?: string | null;
+  statusUpdatedAt?: string | null;
+  statusNote?: string | null;
   runnerName: string | null;
   game: string | null;
   category: string | null;
@@ -225,6 +235,64 @@ function getScheduleStatus(
   };
 }
 
+function getManualScheduleStatus(
+  entry: PublicScheduleEntryDto,
+  fallbackStatus: {
+    status: ScheduleStatus;
+    statusText: string;
+  }
+) {
+  if (!entry.runStatus) {
+    return fallbackStatus;
+  }
+
+  if (entry.runStatus === "Live") {
+    return {
+      status: "live" as const,
+      statusText:
+        entry.actualStartedAt
+          ? `Inició ${formatManualTime(entry.actualStartedAt)}`
+          : "Transmitiendo ahora",
+    };
+  }
+
+  if (entry.runStatus === "Preparing") {
+    return {
+      status: "preparing" as const,
+      statusText: "El staff está preparando esta run",
+    };
+  }
+
+  if (entry.runStatus === "Completed") {
+    return {
+      status: "completed" as const,
+      statusText:
+        entry.actualCompletedAt
+          ? `Finalizó ${formatManualTime(entry.actualCompletedAt)}`
+          : "Run completada",
+    };
+  }
+
+  if (entry.runStatus === "Scheduled") {
+    return {
+      status: "scheduled" as const,
+      statusText: "Programado por el staff",
+    };
+  }
+
+  return fallbackStatus;
+}
+
+function formatManualTime(
+  value: string
+) {
+  return DateTime
+    .fromISO(value, {
+      zone: "utc",
+    })
+    .setZone(EVENT_TIMEZONE)
+    .toFormat("HH:mm");
+}
 function parseLocalDate(dayDate: string) {
   const cleanDate =
     dayDate.split("T")[0];
@@ -308,13 +376,19 @@ function mapPublicEntry(
   const startTime =
     String(entry.startTime).substring(0, 5);
 
-  const statusInfo =
-    getScheduleStatus(
-      entry.dayDate,
-      startTime,
-      entry.durationMinutes,
-      now
-    );
+const automaticStatus =
+  getScheduleStatus(
+    entry.dayDate,
+    startTime,
+    entry.durationMinutes,
+    now
+  );
+
+const statusInfo =
+  getManualScheduleStatus(
+    entry,
+    automaticStatus
+  );
 
   return {
     id:
@@ -355,6 +429,21 @@ function mapPublicEntry(
 
     statusText:
       statusInfo.statusText,
+      
+      runStatus:
+  entry.runStatus ?? null,
+
+actualStartedAt:
+  entry.actualStartedAt ?? null,
+
+actualCompletedAt:
+  entry.actualCompletedAt ?? null,
+
+statusUpdatedAt:
+  entry.statusUpdatedAt ?? null,
+
+statusNote:
+  entry.statusNote ?? null,
   };
 }
 
@@ -441,6 +530,10 @@ export default function HorarioPage() {
 useEffect(() => {
   setSchedule((currentSchedule) =>
     currentSchedule.map((entry) => {
+      if (entry.runStatus) {
+        return entry;
+      }
+
       const statusInfo =
         getScheduleStatus(
           entry.dayDate,
