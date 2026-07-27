@@ -969,7 +969,9 @@ export default function PostulacionPage() {
       console.error(error);
 
       toast.error(
-        "No se pudo enviar la postulación"
+        error instanceof Error && error.message
+          ? error.message
+          : "No se pudo enviar la postulación"
       );
     } finally {
       setIsSubmitting(false);

@@ -9,6 +9,67 @@ function getHeaders() {
   };
 }
 
+function getPublicHeaders() {
+  return {
+    "Content-Type": "application/json",
+  };
+}
+
+async function getErrorMessage(
+  response: Response,
+  fallbackMessage: string
+) {
+  const responseText =
+    await response.text();
+
+  if (!responseText) {
+    return fallbackMessage;
+  }
+
+  try {
+    const parsed =
+      JSON.parse(responseText);
+
+    if (typeof parsed === "string") {
+      return parsed;
+    }
+
+    if (parsed?.message) {
+      return parsed.message;
+    }
+
+    if (parsed?.title) {
+      return parsed.title;
+    }
+
+    if (parsed?.errors) {
+      const messages =
+        Object.values(parsed.errors)
+          .flat()
+          .filter(Boolean);
+
+      if (messages.length > 0) {
+        return messages.join("\n");
+      }
+    }
+  } catch {
+    // Si no es JSON, se usa el texto directo del backend.
+  }
+
+  return responseText;
+}
+
+async function readJsonResponse(
+  response: Response
+) {
+  const responseText =
+    await response.text();
+
+  return responseText
+    ? JSON.parse(responseText)
+    : null;
+}
+
 export async function getApplications() {
   const response = await fetch(
     `${API_URL}/Applications`,
@@ -18,7 +79,12 @@ export async function getApplications() {
   );
 
   if (!response.ok) {
-    throw new Error("Error loading applications");
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading applications"
+      )
+    );
   }
 
   return await response.json();
@@ -36,7 +102,10 @@ export async function getApplicationById(
 
   if (!response.ok) {
     throw new Error(
-      "Error loading application"
+      await getErrorMessage(
+        response,
+        "Error loading application"
+      )
     );
   }
 
@@ -55,7 +124,12 @@ export async function approveApplication(
   );
 
   if (!response.ok) {
-    throw new Error("Error approving application");
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error approving application"
+      )
+    );
   }
 }
 
@@ -71,48 +145,42 @@ export async function rejectApplication(
   );
 
   if (!response.ok) {
-    throw new Error("Error rejecting application");
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error rejecting application"
+      )
+    );
   }
-
 }
 
 export async function createApplication(
   data: any
 ) {
-  console.log(
-    "CREATE APPLICATION PAYLOAD:",
-    data
-  );
-
   const response = await fetch(
     `${API_URL}/Applications`,
     {
       method: "POST",
-      headers: getHeaders(),
+      headers: getPublicHeaders(),
       body: JSON.stringify(data),
     }
   );
 
-  const responseText =
-    await response.text();
-
-  console.log(
-    "CREATE APPLICATION RESPONSE:",
-    response.status,
-    responseText
-  );
-
   if (!response.ok) {
     throw new Error(
-      responseText || "Error creating application"
+      await getErrorMessage(
+        response,
+        "Error creating application"
+      )
     );
   }
 
-  return responseText
-    ? JSON.parse(responseText)
-    : null;
+  return await readJsonResponse(response);
 }
-export async function deleteApplication(id: string) {
+
+export async function deleteApplication(
+  id: string
+) {
   const response =
     await fetch(
       `${API_URL}/Applications/${id}`,
@@ -123,11 +191,11 @@ export async function deleteApplication(id: string) {
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error deleting application"
+      await getErrorMessage(
+        response,
+        "Error deleting application"
+      )
     );
   }
 
@@ -142,7 +210,10 @@ export async function getPublicApprovedApplications() {
 
   if (!response.ok) {
     throw new Error(
-      "Error loading approved applications"
+      await getErrorMessage(
+        response,
+        "Error loading approved applications"
+      )
     );
   }
 
