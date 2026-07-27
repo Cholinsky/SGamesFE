@@ -269,6 +269,14 @@ async function loadPublicRunners() {
     },
   ];
 
+  const runnerCarouselItems =
+    publicRunners.length > 1
+      ? [
+          ...publicRunners,
+          ...publicRunners,
+        ]
+      : publicRunners;
+
   return (
     <div className="overflow-hidden bg-[#070817]">
       {/* Hero Section */}
@@ -550,6 +558,35 @@ async function loadPublicRunners() {
 
 {publicRunners.length > 0 && (
   <section className="bg-[#070817] py-20">
+    <style>
+      {`
+        @keyframes sgames-runner-carousel-scroll {
+          from {
+            transform: translateX(0);
+          }
+
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        .sgames-runner-track {
+          animation: sgames-runner-carousel-scroll 38s linear infinite;
+        }
+
+        .sgames-runner-carousel:hover .sgames-runner-track,
+        .sgames-runner-carousel:focus-within .sgames-runner-track {
+          animation-play-state: paused;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .sgames-runner-track {
+            animation: none;
+          }
+        }
+      `}
+    </style>
+
     <div className="container mx-auto px-4">
       <div className="mb-12 text-center">
         <div className="mb-4 flex justify-center">
@@ -563,78 +600,84 @@ async function loadPublicRunners() {
         </h2>
 
         <p className="mx-auto mt-3 max-w-2xl text-slate-400">
-          Conoce a algunos de los runners que formarán parte de esta primera maratón.
+          Conoce a todos los runners que formarán parte de esta primera maratón.
+          El carrusel se pausa al pasar el cursor o enfocar una tarjeta.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        {publicRunners.slice(0, 5).map((runner) => (
-<Card
-  key={runner.id}
-  role="button"
-  tabIndex={0}
-  onClick={() => openRunner(runner)}
-  onKeyDown={(event) => {
-    if (
-      event.key === "Enter" ||
-      event.key === " "
-    ) {
-      openRunner(runner);
-    }
-  }}
-  className="group cursor-pointer overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_24px_rgba(56,189,248,0.14)]"
->
-  <div className="aspect-square bg-[#070817]">
-    {runner.photoUrl ? (
-      <img
-  src={runner.photoUrl}
-  alt={runner.displayName}
-  onError={(event) => {
-    event.currentTarget.style.display = "none";
-  }}
-  className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-/>
-    ) : (
-      <div className="flex h-full w-full items-center justify-center">
-        <Users className="h-10 w-10 text-slate-700" />
+      <div className="sgames-runner-carousel relative overflow-hidden py-3">
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#070817] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#070817] to-transparent" />
+
+        <div
+          className={`flex w-max gap-4 ${
+            publicRunners.length > 1
+              ? "sgames-runner-track"
+              : ""
+          }`}
+        >
+          {runnerCarouselItems.map((runner, index) => (
+            <Card
+              key={`${runner.id}-${index}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => openRunner(runner)}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" ||
+                  event.key === " "
+                ) {
+                  openRunner(runner);
+                }
+              }}
+              className="group w-[230px] shrink-0 cursor-pointer overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_24px_rgba(56,189,248,0.14)] sm:w-[250px] lg:w-[270px]"
+            >
+              <div className="aspect-square bg-[#070817]">
+                {runner.photoUrl ? (
+                  <img
+                    src={runner.photoUrl}
+                    alt={runner.displayName}
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                    className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Users className="h-10 w-10 text-slate-700" />
+                  </div>
+                )}
+              </div>
+
+              <CardContent className="p-4">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">
+                  Runner
+                </p>
+
+                <h3 className="line-clamp-1 text-lg font-black text-white">
+                  {runner.displayName}
+                </h3>
+
+                {runner.country && (
+                  <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+                    {runner.country}
+                  </p>
+                )}
+
+                {runner.bio && (
+                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-400">
+                    {runner.bio}
+                  </p>
+                )}
+
+                <p className="mt-4 text-xs font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
+                  Ver perfil completo
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    )}
-  </div>
-
-  <CardContent className="p-4">
-    <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">
-      Runner
-    </p>
-
-    <h3 className="line-clamp-1 text-lg font-black text-white">
-      {runner.displayName}
-    </h3>
-
-    {runner.country && (
-      <p className="mt-1 line-clamp-1 text-xs text-slate-400">
-        {runner.country}
-      </p>
-    )}
-
-    {runner.bio && (
-      <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-400">
-        {runner.bio}
-      </p>
-    )}
-
-    <p className="mt-4 text-xs font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
-      Ver perfil completo
-    </p>
-  </CardContent>
-</Card>
-        ))}
-      </div>
-
-      {publicRunners.length > 5 && (
-        <p className="mt-6 text-center text-sm text-slate-500">
-          Mostrando algunos runners destacados. Más perfiles estarán disponibles próximamente.
-        </p>
-      )}
     </div>
   </section>
 )}
