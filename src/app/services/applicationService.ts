@@ -133,3 +133,18 @@ export async function deleteApplication(id: string) {
 
   return true;
 }
+
+export async function getPublicApprovedApplications() {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/public-approved`
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      "Error loading approved applications"
+    );
+  }
+
+  return await response.json();
+}

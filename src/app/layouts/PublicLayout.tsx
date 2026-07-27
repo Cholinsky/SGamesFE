@@ -132,6 +132,13 @@ const officialSocialLinks = [
             </Link>
 
             <Link
+              to="/runs"
+              className={navLinkClass("/runs")}
+            >
+              Runs
+            </Link>
+
+            <Link
               to="/horario"
               className={navLinkClass("/horario")}
             >
@@ -198,7 +205,15 @@ const officialSocialLinks = [
               >
                 Postulación
               </Link>
-
+              <Link
+                to="/runs"
+                onClick={() =>
+                  setMobileMenuOpen(false)
+                }
+                className={navLinkClass("/runs")}
+              >
+                Runs
+              </Link>
               <Link
                 to="/horario"
                 onClick={() =>
