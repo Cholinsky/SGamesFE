@@ -13,6 +13,10 @@ import {
   SearchX,
 } from "lucide-react";
 import { getPublicApprovedApplications } from "../services/applicationService";
+import {
+  ShareModal,
+  type SharePayload,
+} from "../components/ShareModal";
 
 type PublicApprovedRunSocialNetwork = {
   socialNetworkId: string;
@@ -127,14 +131,10 @@ function getRunParticipantNames(run: PublicApprovedRun) {
 
 function getRunShareText(run: PublicApprovedRun) {
   if (isRaceRun(run)) {
-    return encodeURIComponent(
-      `${getRunParticipantNames(run)} participarán en SGames con ${run.game} - ${run.category} en formato Race.`
-    );
+    return `${getRunParticipantNames(run)} participarán en SGames con ${run.game} - ${run.category} en formato Race.`;
   }
 
-  return encodeURIComponent(
-    `${run.runnerName} participará en SGames con ${run.game} - ${run.category}.`
-  );
+  return `${run.runnerName} participará en SGames con ${run.game} - ${run.category}.`;
 }
 
 function getRunnerShareText(group: PublicApprovedRunnerGroup) {
@@ -150,9 +150,7 @@ function getRunnerShareText(group: PublicApprovedRunnerGroup) {
       })
       .join(", ");
 
-  return encodeURIComponent(
-    `${group.runnerName} participará en SGames con: ${runNames}.`
-  );
+  return `${group.runnerName} participará en SGames con: ${runNames}.`;
 }
 
 function groupRunsByRunner(
@@ -207,12 +205,26 @@ function groupRunsByRunner(
     );
 }
 
+function getRunsPageUrl() {
+  if (typeof window === "undefined") {
+    return "/runs";
+  }
+
+  return `${window.location.origin}/runs`;
+}
+
 export default function RunsPage() {
   const [runs, setRuns] =
     useState<PublicApprovedRun[]>([]);
 
   const [loading, setLoading] =
     useState(true);
+
+  const [shareOpen, setShareOpen] =
+    useState(false);
+
+  const [sharePayload, setSharePayload] =
+    useState<SharePayload | null>(null);
 
   const runnerGroups =
     groupRunsByRunner(runs);
@@ -239,6 +251,37 @@ export default function RunsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function openShare(payload: SharePayload) {
+    setSharePayload(payload);
+    setShareOpen(true);
+  }
+
+  function openRunShare(run: PublicApprovedRun) {
+    openShare({
+      title: isRaceRun(run)
+        ? `Race aprobada: ${run.game}`
+        : `Run aprobada: ${run.game}`,
+      text: getRunShareText(run),
+      url: getRunsPageUrl(),
+    });
+  }
+
+  function openRunnerShare(group: PublicApprovedRunnerGroup) {
+    openShare({
+      title: `${group.runnerName} en SGames`,
+      text: getRunnerShareText(group),
+      url: getRunsPageUrl(),
+    });
+  }
+
+  function openLineupShare() {
+    openShare({
+      title: "Lineup confirmado de SGames",
+      text: "Ya hay jugadores con runs aprobadas para SGames. Revisa el lineup confirmado.",
+      url: getRunsPageUrl(),
+    });
   }
 
   if (loading) {
@@ -415,17 +458,18 @@ export default function RunsPage() {
                                   </a>
                                 )}
 
-                                <a
-                                  href={`https://twitter.com/intent/tweet?text=${getRunShareText(
-                                    run
-                                  )}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-200 hover:bg-pink-500/20"
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    openRunShare(run)
+                                  }
+                                  className="h-7 rounded-full border-pink-400/30 bg-pink-500/10 px-3 text-xs font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
                                 >
                                   Compartir run
-                                  <Share2 className="h-3 w-3" />
-                                </a>
+                                  <Share2 className="ml-1 h-3 w-3" />
+                                </Button>
                               </div>
                             </div>
 
@@ -513,17 +557,17 @@ export default function RunsPage() {
                       Compartir
                     </p>
 
-                    <a
-                      href={`https://twitter.com/intent/tweet?text=${getRunnerShareText(
-                        group
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-xl border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm font-semibold text-pink-200 hover:bg-pink-500/20"
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        openRunnerShare(group)
+                      }
+                      className="inline-flex items-center gap-2 rounded-xl border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
                     >
                       Compartir jugador
                       <Share2 className="h-4 w-4" />
-                    </a>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -534,23 +578,22 @@ export default function RunsPage() {
         {runs.length > 0 && (
           <div className="mt-10 text-center">
             <Button
-              asChild
+              type="button"
+              onClick={openLineupShare}
               className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
             >
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                  "Ya hay jugadores con runs aprobadas para SGames. Revisa el lineup confirmado."
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Share2 className="mr-2 h-4 w-4" />
-                Compartir lineup
-              </a>
+              <Share2 className="mr-2 h-4 w-4" />
+              Compartir lineup
             </Button>
           </div>
         )}
       </div>
+
+      <ShareModal
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        payload={sharePayload}
+      />
     </div>
   );
 }
