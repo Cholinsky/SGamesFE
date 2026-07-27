@@ -67,6 +67,8 @@ type Postulacion = {
   category: string;
   platform: string;
   status: string;
+  estimatedTimeMinutes?: number | null;
+  estimatedTime?: string | null;
   submittedAt: string;
 };
 
@@ -159,6 +161,25 @@ function formatEstimatedTime(totalMinutes: number) {
     .padStart(2, "0")}:${minutes
     .toString()
     .padStart(2, "0")}:00`;
+}
+
+function getEstimatedDisplay(
+  postulacion: Postulacion
+) {
+  if (
+    typeof postulacion.estimatedTimeMinutes === "number" &&
+    postulacion.estimatedTimeMinutes > 0
+  ) {
+    return formatEstimatedTime(
+      postulacion.estimatedTimeMinutes
+    );
+  }
+
+  if (postulacion.estimatedTime) {
+    return postulacion.estimatedTime;
+  }
+
+  return "--:--:--";
 }
 
 function formatTimeValue(value: string) {
@@ -642,6 +663,9 @@ export default function AdminPostulaciones() {
                     Plataforma
                   </TableHead>
                   <TableHead className="text-gray-400">
+                    Estimado
+                  </TableHead>
+                  <TableHead className="text-gray-400">
                     Estado
                   </TableHead>
                   <TableHead className="text-gray-400">
@@ -657,7 +681,7 @@ export default function AdminPostulaciones() {
                 {filteredPostulaciones.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="text-center text-gray-500"
                     >
                       No se encontraron postulaciones
@@ -686,6 +710,10 @@ export default function AdminPostulaciones() {
                           {postulacion.platform || "-"}
                         </TableCell>
 
+                        <TableCell className="font-mono text-sm text-cyan-300">
+                          {getEstimatedDisplay(postulacion)}
+                        </TableCell>
+                        
                         <TableCell>
                           {getStatusBadge(
                             postulacion.status
