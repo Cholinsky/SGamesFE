@@ -202,17 +202,7 @@ export default function RunsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="overflow-hidden rounded-3xl border border-violet-500/20 bg-[#10182b]/70 shadow-[0_0_35px_rgba(15,23,42,0.35)]">
-            <div className="hidden grid-cols-[1.2fr_1.4fr_1fr_0.8fr_0.8fr_1.4fr] gap-4 border-b border-violet-500/20 bg-white/5 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 lg:grid">
-              <span>Runner</span>
-              <span>Juego</span>
-              <span>Categoría</span>
-              <span>Plataforma</span>
-              <span>Estimado</span>
-              <span>Redes</span>
-            </div>
-
-            <div className="divide-y divide-violet-500/15">
+          <div className="divide-y divide-violet-500/15">
               {runs.map((run) => (
                 <div className="overflow-hidden rounded-3xl border border-violet-500/20 bg-[#10182b]/70 shadow-[0_0_35px_rgba(15,23,42,0.35)]">
   <div className="hidden grid-cols-[1fr_2.4fr_1.2fr_0.8fr] gap-4 border-b border-violet-500/20 bg-white/5 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 lg:grid">
@@ -366,10 +356,7 @@ export default function RunsPage() {
 </div>
               ))}
             </div>
-          </div>
         )}
-
-        
       </div>
     </div>
   );
