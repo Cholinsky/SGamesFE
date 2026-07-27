@@ -369,25 +369,7 @@ export default function RunsPage() {
           </div>
         )}
 
-        {runs.length > 0 && (
-          <div className="mt-10 text-center">
-            <Button
-              asChild
-              className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
-            >
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                  "Ya hay runs aprobadas para SGames. Revisa el lineup confirmado."
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Share2 className="mr-2 h-4 w-4" />
-                Compartir lineup
-              </a>
-            </Button>
-          </div>
-        )}
+        
       </div>
     </div>
   );
