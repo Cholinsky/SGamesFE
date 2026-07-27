@@ -26,6 +26,7 @@ import {
   Lock,
   Globe2,
   Gamepad2,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createApplication } from "../services/applicationService";
@@ -64,6 +65,12 @@ type RunForm = {
   platform: string;
   aspectRatio: string;
   videoUrl: string;
+  runType: string;
+  raceRunnerName: string;
+  raceEmail: string;
+  raceDiscordUser: string;
+  raceCountry: string;
+  raceVideoUrl: string;
   notes: string;
 };
 
@@ -227,6 +234,12 @@ function createEmptyRun(): RunForm {
     platform: "",
     aspectRatio: "",
     videoUrl: "",
+    runType: "Solo",
+    raceRunnerName: "",
+    raceEmail: "",
+    raceDiscordUser: "",
+    raceCountry: "",
+    raceVideoUrl: "",
     notes: "",
   };
 }
@@ -252,8 +265,8 @@ function getRunEstimatedMinutes(run: RunForm) {
   );
 }
 
-function isValidYoutubeUrl(value: string) {
-  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(
+function isValidVideoUrl(value: string) {
+  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|twitch\.tv)\/.+$/i.test(
     value
   );
 }
@@ -651,20 +664,48 @@ export default function PostulacionPage() {
 
       if (!run.videoUrl.trim()) {
         toast.error(
-          `La run #${runNumber} necesita video demostrativo`
+          `La run #${runNumber} necesita video demostrativo del jugador principal`
         );
 
         return false;
       }
 
-      if (!isValidYoutubeUrl(
+      if (!isValidVideoUrl(
           run.videoUrl.trim()
       )) {
         toast.error(
-          `La run #${runNumber} tiene una URL de YouTube inválida`
+          `La run #${runNumber} tiene una URL inválida. Usa un video de YouTube o Twitch`
         );
 
         return false;
+      }
+
+      if (run.runType === "Race") {
+        if (!run.raceRunnerName.trim()) {
+          toast.error(
+            `La run #${runNumber} necesita el nombre del jugador 2`
+          );
+
+          return false;
+        }
+
+        if (!run.raceVideoUrl.trim()) {
+          toast.error(
+            `La run #${runNumber} necesita el VOD del jugador 2`
+          );
+
+          return false;
+        }
+
+        if (!isValidVideoUrl(
+            run.raceVideoUrl.trim()
+        )) {
+          toast.error(
+            `La run #${runNumber} tiene una URL inválida en el jugador 2. Usa YouTube o Twitch`
+          );
+
+          return false;
+        }
       }
     }
 
@@ -785,28 +826,73 @@ export default function PostulacionPage() {
         );
 
       const applicationRuns =
-        runs.map((run) => ({
-          gameName:
-            run.game.trim(),
+        runs.map((run) => {
+          const participants =
+            run.runType === "Race"
+              ? [
+                  {
+                    runnerName:
+                      data.runnerName.trim(),
 
-          categoryName:
-            run.category.trim(),
+                    email:
+                      data.email.trim(),
 
-          platformName:
-            run.platform,
+                    discordUser:
+                      data.discordUser?.trim() || null,
 
-          estimatedTimeMinutes:
-            getRunEstimatedMinutes(run),
+                    country:
+                      null,
 
-          aspectRatio:
-            run.aspectRatio,
+                    videoUrl:
+                      run.videoUrl.trim(),
+                  },
+                  {
+                    runnerName:
+                      run.raceRunnerName.trim(),
 
-          youtubeUrl:
-            run.videoUrl.trim(),
+                    email:
+                      run.raceEmail.trim() || null,
 
-          notes:
-            run.notes.trim() || null,
-        }));
+                    discordUser:
+                      run.raceDiscordUser.trim() || null,
+
+                    country:
+                      run.raceCountry.trim() || null,
+
+                    videoUrl:
+                      run.raceVideoUrl.trim(),
+                  },
+                ]
+              : [];
+
+          return {
+            gameName:
+              run.game.trim(),
+
+            categoryName:
+              run.category.trim(),
+
+            platformName:
+              run.platform,
+
+            estimatedTimeMinutes:
+              getRunEstimatedMinutes(run),
+
+            aspectRatio:
+              run.aspectRatio,
+
+            youtubeUrl:
+              run.videoUrl.trim(),
+
+            notes:
+              run.notes.trim() || null,
+
+            runType:
+              run.runType,
+
+            participants,
+          };
+        });
 
       const firstRun =
         applicationRuns[0];
@@ -1137,6 +1223,44 @@ export default function PostulacionPage() {
                         <div className="space-y-4">
                           <div>
                             <Label className="text-gray-300">
+                              Formato de run{" "}
+                              <span className="text-red-400">
+                                *
+                              </span>
+                            </Label>
+
+                            <Select
+                              value={run.runType}
+                              onValueChange={(value) =>
+                                updateRun(
+                                  run.id,
+                                  "runType",
+                                  value
+                                )
+                              }
+                            >
+                              <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                                <SelectValue placeholder="Selecciona formato" />
+                              </SelectTrigger>
+
+                              <SelectContent className="border-gray-700 bg-gray-800">
+                                <SelectItem value="Solo">
+                                  Individual
+                                </SelectItem>
+
+                                <SelectItem value="Race">
+                                  Race / Carrera
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <p className="mt-2 text-sm text-gray-500">
+                              En Race, el runner principal será el jugador 1 y podrás agregar el jugador 2.
+                            </p>
+                          </div>
+
+                          <div>
+                            <Label className="text-gray-300">
                               Juego{" "}
                               <span className="text-red-400">
                                 *
@@ -1320,7 +1444,7 @@ export default function PostulacionPage() {
 
                           <div>
                             <Label className="text-gray-300">
-                              URL de YouTube{" "}
+                              URL de YouTube o Twitch / VOD del jugador principal{" "}
                               <span className="text-red-400">
                                 *
                               </span>
@@ -1336,9 +1460,153 @@ export default function PostulacionPage() {
                                 )
                               }
                               className="mt-1.5 border-gray-700 bg-gray-800 text-white"
-                              placeholder="https://youtube.com/watch?v=..."
+                              placeholder="https://youtube.com/watch?v=... o https://www.twitch.tv/videos/..."
                             />
                           </div>
+
+                          {run.runType === "Race" && (
+                            <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-4">
+                              <div className="mb-4 flex items-center gap-2">
+                                <Users className="h-5 w-5 text-purple-300" />
+
+                                <div>
+                                  <h5 className="font-semibold text-purple-200">
+                                    Participantes de la Race
+                                  </h5>
+
+                                  <p className="text-sm text-purple-100/70">
+                                    El runner principal del formulario será el jugador 1.
+                                    Agrega aquí los datos del jugador 2.
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="mb-4 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                                  Jugador 1
+                                </p>
+
+                                <p className="mt-1 text-sm text-gray-300">
+                                  Se usará el nombre, correo y Discord de la sección
+                                  Información Personal.
+                                </p>
+
+                                <p className="mt-2 text-xs text-gray-500">
+                                  El video principal de esta run será el VOD del jugador 1.
+                                </p>
+                              </div>
+
+                              <div className="space-y-4">
+                                <div>
+                                  <Label className="text-gray-300">
+                                    Nombre del jugador 2{" "}
+                                    <span className="text-red-400">
+                                      *
+                                    </span>
+                                  </Label>
+
+                                  <Input
+                                    value={run.raceRunnerName}
+                                    onChange={(event) =>
+                                      updateRun(
+                                        run.id,
+                                        "raceRunnerName",
+                                        event.target.value
+                                      )
+                                    }
+                                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                    placeholder="Alias o nombre del jugador 2"
+                                  />
+                                </div>
+
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <div>
+                                    <Label className="text-gray-300">
+                                      Correo del jugador 2 (opcional)
+                                    </Label>
+
+                                    <Input
+                                      type="email"
+                                      value={run.raceEmail}
+                                      onChange={(event) =>
+                                        updateRun(
+                                          run.id,
+                                          "raceEmail",
+                                          event.target.value
+                                        )
+                                      }
+                                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                      placeholder="correo@ejemplo.com"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <Label className="text-gray-300">
+                                      Discord del jugador 2 (opcional)
+                                    </Label>
+
+                                    <Input
+                                      value={run.raceDiscordUser}
+                                      onChange={(event) =>
+                                        updateRun(
+                                          run.id,
+                                          "raceDiscordUser",
+                                          event.target.value
+                                        )
+                                      }
+                                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                      placeholder="Ej: runner2#1234 o runner2"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <Label className="text-gray-300">
+                                    País del jugador 2 (opcional)
+                                  </Label>
+
+                                  <Input
+                                    value={run.raceCountry}
+                                    onChange={(event) =>
+                                      updateRun(
+                                        run.id,
+                                        "raceCountry",
+                                        event.target.value
+                                      )
+                                    }
+                                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                    placeholder="País del jugador 2"
+                                  />
+                                </div>
+
+                                <div>
+                                  <Label className="text-gray-300">
+                                    VOD del jugador 2{" "}
+                                    <span className="text-red-400">
+                                      *
+                                    </span>
+                                  </Label>
+
+                                  <Input
+                                    value={run.raceVideoUrl}
+                                    onChange={(event) =>
+                                      updateRun(
+                                        run.id,
+                                        "raceVideoUrl",
+                                        event.target.value
+                                      )
+                                    }
+                                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                    placeholder="https://youtube.com/watch?v=... o https://www.twitch.tv/videos/..."
+                                  />
+
+                                  <p className="mt-2 text-sm text-gray-500">
+                                    Sólo se aceptan videos de YouTube o Twitch.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
 
                           <div>
                             <Label className="text-gray-300">

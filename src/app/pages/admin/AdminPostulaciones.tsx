@@ -51,6 +51,7 @@ import {
   Star,
   Trash2,
   Globe2,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -67,6 +68,7 @@ type Postulacion = {
   category: string;
   platform: string;
   status: string;
+  runType?: string | null;
   estimatedTimeMinutes?: number | null;
   estimatedTime?: string | null;
   submittedAt: string;
@@ -91,6 +93,16 @@ type AvailabilityDetail = {
   notes?: string | null;
 };
 
+type ApplicationParticipantDetail = {
+  id: string;
+  runnerName: string;
+  email?: string | null;
+  discordUser?: string | null;
+  country?: string | null;
+  videoUrl: string;
+  sortOrder: number;
+};
+
 type ApplicationDetail = {
   id: string;
   runnerName: string;
@@ -101,6 +113,7 @@ type ApplicationDetail = {
   game: string;
   category: string;
   platform: string;
+  runType?: string | null;
   estimatedTimeMinutes: number;
   aspectRatio: string;
   youtubeUrl: string;
@@ -111,6 +124,7 @@ type ApplicationDetail = {
   submittedAt: string;
   socialNetworks: SocialNetworkDetail[];
   availabilities: AvailabilityDetail[];
+  participants?: ApplicationParticipantDetail[];
 };
 
 function parseLocalDate(dayDate: string) {
@@ -180,6 +194,32 @@ function getEstimatedDisplay(
   }
 
   return "--:--:--";
+}
+
+function getRunTypeLabel(
+  runType?: string | null
+) {
+  return runType === "Race"
+    ? "Race"
+    : "Individual";
+}
+
+function getRunTypeBadge(
+  runType?: string | null
+) {
+  if (runType === "Race") {
+    return (
+      <Badge className="bg-pink-500/20 text-pink-300">
+        Race
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="bg-cyan-500/20 text-cyan-300">
+      Individual
+    </Badge>
+  );
 }
 
 function formatTimeValue(value: string) {
@@ -666,6 +706,9 @@ export default function AdminPostulaciones() {
                     Estimado
                   </TableHead>
                   <TableHead className="text-gray-400">
+                    Formato
+                  </TableHead>
+                  <TableHead className="text-gray-400">
                     Estado
                   </TableHead>
                   <TableHead className="text-gray-400">
@@ -681,7 +724,7 @@ export default function AdminPostulaciones() {
                 {filteredPostulaciones.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={9}
                       className="text-center text-gray-500"
                     >
                       No se encontraron postulaciones
@@ -712,6 +755,10 @@ export default function AdminPostulaciones() {
 
                         <TableCell className="font-mono text-sm text-cyan-300">
                           {getEstimatedDisplay(postulacion)}
+                        </TableCell>
+
+                        <TableCell>
+                          {getRunTypeBadge(postulacion.runType)}
                         </TableCell>
                         
                         <TableCell>
@@ -955,6 +1002,15 @@ export default function AdminPostulaciones() {
 
                   <div>
                     <span className="text-sm text-gray-400">
+                      Formato:
+                    </span>
+                    <div className="mt-1">
+                      {getRunTypeBadge(selectedPostulacion.runType)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-400">
                       Tiempo estimado:
                     </span>
                     <p className="text-white">
@@ -974,6 +1030,82 @@ export default function AdminPostulaciones() {
                   </div>
                 </div>
               </div>
+
+              {(selectedPostulacion.runType === "Race" ||
+                (selectedPostulacion.participants?.length ?? 0) > 0) && (
+                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-400">
+                    <Users className="h-5 w-5" />
+                    Participantes
+                  </h3>
+
+                  {selectedPostulacion.participants?.length ? (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {selectedPostulacion.participants.map(
+                        (participant, index) => (
+                          <div
+                            key={participant.id}
+                            className="rounded-lg border border-gray-700 bg-gray-900/60 p-4"
+                          >
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-pink-300">
+                                  Jugador {index + 1}
+                                </p>
+
+                                <p className="mt-1 break-words text-lg font-bold text-white">
+                                  {participant.runnerName}
+                                </p>
+                              </div>
+
+                              <Badge className="bg-pink-500/20 text-pink-300">
+                                Race
+                              </Badge>
+                            </div>
+
+                            {participant.email && (
+                              <p className="break-all text-sm text-gray-400">
+                                <span className="text-gray-500">Correo:</span>{" "}
+                                {participant.email}
+                              </p>
+                            )}
+
+                            {participant.discordUser && (
+                              <p className="break-words text-sm text-gray-400">
+                                <span className="text-gray-500">Discord:</span>{" "}
+                                {participant.discordUser}
+                              </p>
+                            )}
+
+                            {participant.country && (
+                              <p className="break-words text-sm text-gray-400">
+                                <span className="text-gray-500">País:</span>{" "}
+                                {participant.country}
+                              </p>
+                            )}
+
+                            <a
+                              href={participant.videoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-3 inline-flex max-w-full items-center gap-2 break-all text-sm text-cyan-400 hover:text-cyan-300"
+                            >
+                              <ExternalLink className="h-4 w-4 shrink-0" />
+                              <span className="break-all">
+                                Ver VOD del jugador
+                              </span>
+                            </a>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Esta race no tiene participantes registrados.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
                 <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-400">
@@ -1051,7 +1183,7 @@ export default function AdminPostulaciones() {
               {selectedPostulacion.youtubeUrl && (
                 <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
                   <h3 className="mb-3 font-semibold text-cyan-400">
-                    Video Demostrativo
+                    Video demostrativo
                   </h3>
 
                   <a
@@ -1062,7 +1194,7 @@ export default function AdminPostulaciones() {
                   >
                     <ExternalLink className="h-4 w-4 shrink-0" />
                     <span className="break-all">
-                      Ver en YouTube
+                      Ver video
                     </span>
                   </a>
                 </div>
@@ -1301,4 +1433,3 @@ export default function AdminPostulaciones() {
     </div>
   );
 }
-
