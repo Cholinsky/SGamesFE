@@ -139,6 +139,66 @@ function normalizeTimeForApi(time: string) {
 
   return time;
 }
+
+function getTimeSortValue(time: string) {
+  const normalizedTime =
+    normalizeTimeForApi(time || "00:00:00");
+
+  const [hours, minutes, seconds] =
+    normalizedTime
+      .split(":")
+      .map((value) => Number(value));
+
+  return (
+    (Number.isFinite(hours) ? hours : 0) * 3600 +
+    (Number.isFinite(minutes) ? minutes : 0) * 60 +
+    (Number.isFinite(seconds) ? seconds : 0)
+  );
+}
+
+function sortScheduleItemsByTime(
+  items: ScheduleItem[]
+) {
+  return [...items]
+    .sort((a, b) => {
+      const timeComparison =
+        getTimeSortValue(a.time) -
+        getTimeSortValue(b.time);
+
+      if (timeComparison !== 0) {
+        return timeComparison;
+      }
+
+      const positionComparison =
+        (a.positionOrder ?? 0) -
+        (b.positionOrder ?? 0);
+
+      if (positionComparison !== 0) {
+        return positionComparison;
+      }
+
+      return a.game.localeCompare(b.game);
+    })
+    .map((item, index) => ({
+      ...item,
+      positionOrder: index + 1,
+    }));
+}
+
+function sortScheduleByTime(
+  schedule: DaySchedule
+) {
+  const sortedSchedule: DaySchedule = {};
+
+  Object.keys(schedule).forEach((day) => {
+    sortedSchedule[day] =
+      sortScheduleItemsByTime(
+        schedule[day] ?? []
+      );
+  });
+
+  return sortedSchedule;
+}
 function getManualStatusLabel(
   status?: string | null
 ) {
@@ -656,16 +716,11 @@ statusNote:
         });
       });
 
-      Object.keys(grouped).forEach((day) => {
-        grouped[day].sort(
-          (a, b) =>
-            a.positionOrder -
-            b.positionOrder
-        );
-      });
+      const sortedSchedule =
+        sortScheduleByTime(grouped);
 
       setScheduleDayIds(dayIds);
-      setSchedule(grouped);
+      setSchedule(sortedSchedule);
     } catch (error) {
       console.error(error);
 
@@ -741,7 +796,7 @@ statusNote:
           targetItems;
       }
 
-      return newSchedule;
+      return sortScheduleByTime(newSchedule);
     });
   };
 
@@ -755,6 +810,14 @@ statusNote:
 
   const handleSaveEdit = () => {
     if (!editingItem) {
+      return;
+    }
+
+    if (!editTime) {
+      toast.error(
+        "Selecciona una hora válida"
+      );
+
       return;
     }
 
@@ -774,11 +837,11 @@ statusNote:
           );
       });
 
-      return newSchedule;
+      return sortScheduleByTime(newSchedule);
     });
 
     toast.success(
-      "Horario actualizado. Recuerda guardar el borrador."
+      "Horario actualizado y ordenado por hora. Recuerda guardar el borrador."
     );
 
     setEditDialogOpen(false);
@@ -866,8 +929,11 @@ const handleUnpublish = async () => {
       const updates: Promise<any>[] =
         [];
 
-      Object.keys(schedule).forEach((day) => {
-        schedule[day].forEach((item, index) => {
+      const sortedSchedule =
+        sortScheduleByTime(schedule);
+
+      Object.keys(sortedSchedule).forEach((day) => {
+        sortedSchedule[day].forEach((item, index) => {
           updates.push(
             updateScheduleEntry(
               item.id,
@@ -897,10 +963,12 @@ const handleUnpublish = async () => {
         });
       });
 
+      setSchedule(sortedSchedule);
+
       await Promise.all(updates);
 
       toast.success(
-        "Borrador guardado correctamente"
+        "Borrador guardado correctamente y ordenado por hora"
       );
 
       await loadSchedule();
@@ -1051,8 +1119,8 @@ async function handleStatusChange(
               <p className="text-sm text-yellow-300">
                 ⚠️ <strong>MODO BORRADOR:</strong> Este horario aún no es
                 visible para el público. Arrastra los bloques de speedrun para
-                reorganizarlos o moverlos entre días. Haz clic en el ícono de
-                editar para modificar la hora de inicio.
+                moverlos entre días. Al editar la hora de inicio, el día se
+                ordena automáticamente de menor a mayor hora.
               </p>
             </CardContent>
           </Card>
