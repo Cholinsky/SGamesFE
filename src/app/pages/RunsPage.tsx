@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import {
   ExternalLink,
   Gamepad2,
@@ -11,6 +16,8 @@ import {
   Users,
   Monitor,
   SearchX,
+  Search,
+  ListFilter,
 } from "lucide-react";
 import { getPublicApprovedApplications } from "../services/applicationService";
 import {
@@ -54,7 +61,14 @@ type PublicApprovedRunnerGroup = {
   runs: PublicApprovedRun[];
 };
 
-function getNormalizedRunType(run?: PublicApprovedRun | null) {
+type RunFormatFilter =
+  | "All"
+  | "Solo"
+  | "Race";
+
+function getNormalizedRunType(
+  run?: PublicApprovedRun | null
+) {
   const value = run?.runType?.trim();
 
   if (!value) {
@@ -64,21 +78,32 @@ function getNormalizedRunType(run?: PublicApprovedRun | null) {
   return value;
 }
 
-function isRaceRun(run: PublicApprovedRun) {
-  return getNormalizedRunType(run).toLowerCase() === "race";
+function isRaceRun(
+  run: PublicApprovedRun
+) {
+  return getNormalizedRunType(run)
+    .toLowerCase() === "race";
 }
 
-function getRunFormatLabel(run: PublicApprovedRun) {
-  return isRaceRun(run) ? "Race" : "Individual";
+function getRunFormatLabel(
+  run: PublicApprovedRun
+) {
+  return isRaceRun(run)
+    ? "Race"
+    : "Individual";
 }
 
-function getRunFormatBadgeClass(run: PublicApprovedRun) {
+function getRunFormatBadgeClass(
+  run: PublicApprovedRun
+) {
   return isRaceRun(run)
     ? "border-pink-400/30 bg-pink-500/10 text-pink-200"
     : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200";
 }
 
-function getSortedParticipants(run: PublicApprovedRun) {
+function getSortedParticipants(
+  run: PublicApprovedRun
+) {
   const participants =
     run.participants?.filter(
       (participant) =>
@@ -95,14 +120,16 @@ function getSortedParticipants(run: PublicApprovedRun) {
     ];
   }
 
-  return participants.sort(
+  return [...participants].sort(
     (a, b) =>
       (a.sortOrder ?? 999) -
       (b.sortOrder ?? 999)
   );
 }
 
-function getRaceParticipants(run: PublicApprovedRun) {
+function getRaceParticipants(
+  run: PublicApprovedRun
+) {
   if (!isRaceRun(run)) {
     return [];
   }
@@ -110,7 +137,9 @@ function getRaceParticipants(run: PublicApprovedRun) {
   return getSortedParticipants(run);
 }
 
-function getRunParticipantNames(run: PublicApprovedRun) {
+function getRunParticipantNames(
+  run: PublicApprovedRun
+) {
   if (!isRaceRun(run)) {
     return run.runnerName;
   }
@@ -129,7 +158,9 @@ function getRunParticipantNames(run: PublicApprovedRun) {
   return names.join(" vs ");
 }
 
-function getRunShareText(run: PublicApprovedRun) {
+function getRunShareText(
+  run: PublicApprovedRun
+) {
   if (isRaceRun(run)) {
     return `${getRunParticipantNames(run)} participarán en SGames con ${run.game} - ${run.category} en formato Race.`;
   }
@@ -137,7 +168,9 @@ function getRunShareText(run: PublicApprovedRun) {
   return `${run.runnerName} participará en SGames con ${run.game} - ${run.category}.`;
 }
 
-function getRunnerShareText(group: PublicApprovedRunnerGroup) {
+function getRunnerShareText(
+  group: PublicApprovedRunnerGroup
+) {
   const runNames =
     group.runs
       .map((run) => {
@@ -205,6 +238,98 @@ function groupRunsByRunner(
     );
 }
 
+function normalizeSearchValue(
+  value?: string | null
+) {
+  return value
+    ?.trim()
+    .toLowerCase() ?? "";
+}
+
+function runMatchesFormat(
+  run: PublicApprovedRun,
+  formatFilter: RunFormatFilter
+) {
+  if (formatFilter === "All") {
+    return true;
+  }
+
+  if (formatFilter === "Race") {
+    return isRaceRun(run);
+  }
+
+  return !isRaceRun(run);
+}
+
+function runMatchesSearch(
+  run: PublicApprovedRun,
+  searchText: string
+) {
+  const term =
+    normalizeSearchValue(searchText);
+
+  if (!term) {
+    return true;
+  }
+
+  const participantNames =
+    getSortedParticipants(run)
+      .map((participant) =>
+        participant.runnerName ?? ""
+      )
+      .join(" ");
+
+  const searchableText =
+    [
+      run.runnerName,
+      run.game,
+      run.category,
+      run.platform,
+      getRunFormatLabel(run),
+      participantNames,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+  return searchableText.includes(term);
+}
+
+function getUniqueRunnerCount(
+  runs: PublicApprovedRun[]
+) {
+  const names =
+    new Set<string>();
+
+  runs.forEach((run) => {
+    if (isRaceRun(run)) {
+      getSortedParticipants(run)
+        .forEach((participant) => {
+          const name =
+            participant.runnerName
+              ?.trim()
+              .toLowerCase();
+
+          if (name) {
+            names.add(name);
+          }
+        });
+
+      return;
+    }
+
+    const name =
+      run.runnerName
+        ?.trim()
+        .toLowerCase();
+
+    if (name) {
+      names.add(name);
+    }
+  });
+
+  return names.size;
+}
+
 function getRunsPageUrl() {
   if (typeof window === "undefined") {
     return "/runs";
@@ -220,14 +345,68 @@ export default function RunsPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const [searchText, setSearchText] =
+    useState("");
+
+  const [formatFilter, setFormatFilter] =
+    useState<RunFormatFilter>("All");
+
   const [shareOpen, setShareOpen] =
     useState(false);
 
   const [sharePayload, setSharePayload] =
     useState<SharePayload | null>(null);
 
+  const filteredRuns =
+    useMemo(
+      () =>
+        runs.filter(
+          (run) =>
+            runMatchesFormat(
+              run,
+              formatFilter
+            ) &&
+            runMatchesSearch(
+              run,
+              searchText
+            )
+        ),
+      [
+        runs,
+        formatFilter,
+        searchText,
+      ]
+    );
+
   const runnerGroups =
-    groupRunsByRunner(runs);
+    useMemo(
+      () =>
+        groupRunsByRunner(
+          filteredRuns
+        ),
+      [filteredRuns]
+    );
+
+  const stats =
+    useMemo(() => {
+      const raceRuns =
+        runs.filter(isRaceRun).length;
+
+      const individualRuns =
+        runs.length - raceRuns;
+
+      return {
+        totalRuns: runs.length,
+        individualRuns,
+        raceRuns,
+        totalRunners:
+          getUniqueRunnerCount(runs),
+      };
+    }, [runs]);
+
+  const hasActiveFilters =
+    searchText.trim() !== "" ||
+    formatFilter !== "All";
 
   useEffect(() => {
     loadRuns();
@@ -253,12 +432,16 @@ export default function RunsPage() {
     }
   }
 
-  function openShare(payload: SharePayload) {
+  function openShare(
+    payload: SharePayload
+  ) {
     setSharePayload(payload);
     setShareOpen(true);
   }
 
-  function openRunShare(run: PublicApprovedRun) {
+  function openRunShare(
+    run: PublicApprovedRun
+  ) {
     openShare({
       title: isRaceRun(run)
         ? `Race aprobada: ${run.game}`
@@ -268,7 +451,9 @@ export default function RunsPage() {
     });
   }
 
-  function openRunnerShare(group: PublicApprovedRunnerGroup) {
+  function openRunnerShare(
+    group: PublicApprovedRunnerGroup
+  ) {
     openShare({
       title: `${group.runnerName} en SGames`,
       text: getRunnerShareText(group),
@@ -282,6 +467,11 @@ export default function RunsPage() {
       text: "Ya hay jugadores con runs aprobadas para SGames. Revisa el lineup confirmado.",
       url: getRunsPageUrl(),
     });
+  }
+
+  function clearFilters() {
+    setSearchText("");
+    setFormatFilter("All");
   }
 
   if (loading) {
@@ -301,6 +491,28 @@ export default function RunsPage() {
       </div>
     );
   }
+
+  const filterOptions: {
+    value: RunFormatFilter;
+    label: string;
+    count: number;
+  }[] = [
+    {
+      value: "All",
+      label: "Todos",
+      count: stats.totalRuns,
+    },
+    {
+      value: "Solo",
+      label: "Individual",
+      count: stats.individualRuns,
+    },
+    {
+      value: "Race",
+      label: "Race",
+      count: stats.raceRuns,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_34rem),radial-gradient(circle_at_top_right,rgba(236,72,153,0.14),transparent_34rem),linear-gradient(180deg,#0b1022_0%,#070817_48%,#070817_100%)] py-12">
@@ -343,249 +555,431 @@ export default function RunsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="overflow-hidden rounded-3xl border border-violet-500/20 bg-[#10182b]/70 shadow-[0_0_35px_rgba(15,23,42,0.35)]">
-            <div className="hidden grid-cols-[1fr_2.4fr_1.2fr_0.8fr] gap-4 border-b border-violet-500/20 bg-white/5 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 lg:grid">
-              <span>Jugador</span>
-              <span>Runs aprobadas</span>
-              <span>Redes</span>
-              <span>Compartir</span>
+          <>
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl border border-violet-500/20 bg-[#10182b]/70 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Total
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-white">
+                  {stats.totalRuns}
+                </p>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  runs aprobadas
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">
+                  Individual
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-white">
+                  {stats.individualRuns}
+                </p>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  runs solo
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-pink-400/20 bg-pink-500/10 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-300">
+                  Race
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-white">
+                  {stats.raceRuns}
+                </p>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  carreras aprobadas
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-300">
+                  Jugadores
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-white">
+                  {stats.totalRunners}
+                </p>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  participantes únicos
+                </p>
+              </div>
             </div>
 
-            <div className="divide-y divide-violet-500/15">
-              {runnerGroups.map((group) => (
-                <div
-                  key={group.runnerName}
-                  className="grid gap-5 px-5 py-6 transition-colors hover:bg-cyan-500/5 lg:grid-cols-[1fr_2.4fr_1.2fr_0.8fr] lg:items-start"
-                >
-                  {/* Jugador */}
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Jugador
-                    </p>
+            <div className="mb-6 rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5 shadow-[0_0_35px_rgba(15,23,42,0.25)]">
+              <div className="mb-4 flex items-center gap-2">
+                <ListFilter className="h-5 w-5 text-cyan-300" />
 
-                    <p className="flex items-center gap-2 text-xl font-black text-white">
-                      <Users className="h-5 w-5 text-cyan-300" />
-                      {group.runnerName}
-                    </p>
+                <h2 className="text-lg font-black text-white">
+                  Buscar y filtrar
+                </h2>
+              </div>
 
-                    <Badge className="mt-3 bg-violet-500/20 text-violet-300">
-                      {group.runs.length}{" "}
-                      {group.runs.length === 1
-                        ? "run aprobada"
-                        : "runs aprobadas"}
-                    </Badge>
-                  </div>
+              <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+                <div>
+                  <label
+                    htmlFor="runs-search"
+                    className="mb-2 block text-sm font-semibold text-slate-300"
+                  >
+                    Buscar por runner, juego, categoría o plataforma
+                  </label>
 
-                  {/* Runs */}
-                  <div>
-                    <p className="mb-3 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Runs aprobadas
-                    </p>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
-                    <div className="space-y-3">
-                      {group.runs.map((run) => {
-                        const raceParticipants =
-                          getRaceParticipants(run);
-
-                        return (
-                          <div
-                            key={run.id}
-                            className="rounded-2xl border border-violet-500/20 bg-[#070817]/60 p-4"
-                          >
-                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                              <div>
-                                <div className="mb-2 flex flex-wrap items-center gap-2">
-                                  <Badge
-                                    variant="outline"
-                                    className={getRunFormatBadgeClass(run)}
-                                  >
-                                    {getRunFormatLabel(run)}
-                                  </Badge>
-
-                                  {isRaceRun(run) && (
-                                    <Badge
-                                      variant="outline"
-                                      className="border-violet-400/30 bg-violet-500/10 text-violet-200"
-                                    >
-                                      <Users className="mr-1.5 h-3.5 w-3.5" />
-                                      {raceParticipants.length} jugadores
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                <p className="flex items-center gap-2 font-black text-white">
-                                  <Gamepad2 className="h-4 w-4 text-violet-300" />
-                                  {run.game}
-                                </p>
-
-                                <p className="mt-1 text-sm text-slate-400">
-                                  {run.category}
-                                </p>
-
-                                {isRaceRun(run) && (
-                                  <p className="mt-2 text-sm font-semibold text-pink-200">
-                                    {getRunParticipantNames(run)}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className="flex flex-wrap gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className="border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
-                                >
-                                  <Monitor className="mr-1.5 h-3.5 w-3.5" />
-                                  {run.platform}
-                                </Badge>
-
-                                <Badge
-                                  variant="outline"
-                                  className="border-pink-400/30 bg-pink-400/10 text-pink-200"
-                                >
-                                  <Timer className="mr-1.5 h-3.5 w-3.5" />
-                                  {run.estimatedTime}
-                                </Badge>
-
-                                {!isRaceRun(run) && run.youtubeUrl && (
-                                  <a
-                                    href={run.youtubeUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
-                                  >
-                                    VOD
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
-                                )}
-
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    openRunShare(run)
-                                  }
-                                  className="h-7 rounded-full border-pink-400/30 bg-pink-500/10 px-3 text-xs font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
-                                >
-                                  Compartir run
-                                  <Share2 className="ml-1 h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-
-                            {isRaceRun(run) && (
-                              <div className="mt-4 rounded-2xl border border-pink-400/20 bg-pink-500/5 p-3">
-                                <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-pink-200">
-                                  Participantes de la race
-                                </p>
-
-                                <div className="grid gap-3 md:grid-cols-2">
-                                  {raceParticipants.map(
-                                    (participant, participantIndex) => (
-                                      <div
-                                        key={`${run.id}-${participant.sortOrder ?? participantIndex}-${participant.runnerName}`}
-                                        className="rounded-xl border border-violet-500/20 bg-[#10182b]/70 p-3"
-                                      >
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                                          Jugador {participantIndex + 1}
-                                        </p>
-
-                                        <p className="mt-1 font-black text-white">
-                                          {participant.runnerName}
-                                        </p>
-
-                                        {participant.country && (
-                                          <p className="mt-1 text-xs text-slate-400">
-                                            {participant.country}
-                                          </p>
-                                        )}
-
-                                        {participant.videoUrl && (
-                                          <a
-                                            href={participant.videoUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="mt-3 inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
-                                          >
-                                            VOD jugador {participantIndex + 1}
-                                            <ExternalLink className="h-3 w-3" />
-                                          </a>
-                                        )}
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Redes */}
-                  <div>
-                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Redes
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {group.socialNetworks.length > 0 ? (
-                        group.socialNetworks.map((social) => (
-                          <a
-                            key={`${group.runnerName}-${social.socialNetworkId}-${social.url}`}
-                            href={social.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
-                          >
-                            {social.name}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        ))
-                      ) : (
-                        <span className="text-xs text-slate-500">
-                          Sin redes
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Compartir jugador */}
-                  <div>
-                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Compartir
-                    </p>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        openRunnerShare(group)
+                    <Input
+                      id="runs-search"
+                      value={searchText}
+                      onChange={(event) =>
+                        setSearchText(
+                          event.target.value
+                        )
                       }
-                      className="inline-flex items-center gap-2 rounded-xl border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
-                    >
-                      Compartir jugador
-                      <Share2 className="h-4 w-4" />
-                    </Button>
+                      className="border-violet-500/20 bg-[#070817] pl-10 text-white placeholder:text-slate-600"
+                      placeholder="Ej. Mario, Any%, PC, runner..."
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {runs.length > 0 && (
-          <div className="mt-10 text-center">
-            <Button
-              type="button"
-              onClick={openLineupShare}
-              className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Compartir lineup
-            </Button>
-          </div>
+                <div>
+                  <p className="mb-2 text-sm font-semibold text-slate-300">
+                    Formato
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {filterOptions.map((option) => {
+                      const active =
+                        formatFilter === option.value;
+
+                      return (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          variant="outline"
+                          onClick={() =>
+                            setFormatFilter(
+                              option.value
+                            )
+                          }
+                          className={
+                            active
+                              ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/25"
+                              : "border-violet-500/20 bg-[#070817]/70 text-slate-300 hover:bg-white/5 hover:text-white"
+                          }
+                        >
+                          {option.label}
+                          <Badge className="ml-2 bg-white/10 text-[10px] text-white">
+                            {option.count}
+                          </Badge>
+                        </Button>
+                      );
+                    })}
+
+                    {hasActiveFilters && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={clearFilters}
+                        className="text-slate-400 hover:bg-white/5 hover:text-pink-200"
+                      >
+                        Limpiar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm text-slate-500">
+                Mostrando{" "}
+                <span className="font-semibold text-cyan-300">
+                  {filteredRuns.length}
+                </span>{" "}
+                de{" "}
+                <span className="font-semibold text-white">
+                  {runs.length}
+                </span>{" "}
+                runs aprobadas.
+              </p>
+            </div>
+
+            {filteredRuns.length === 0 ? (
+              <Card className="mx-auto max-w-2xl border-violet-500/20 bg-[#10182b]/70">
+                <CardContent className="p-10 text-center">
+                  <SearchX className="mx-auto mb-4 h-14 w-14 text-slate-500" />
+
+                  <h2 className="mb-3 text-2xl font-black text-white">
+                    No encontramos coincidencias
+                  </h2>
+
+                  <p className="mb-6 text-slate-400">
+                    Ajusta la búsqueda o limpia los filtros para volver a ver
+                    todo el lineup.
+                  </p>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+                  >
+                    Limpiar filtros
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="overflow-hidden rounded-3xl border border-violet-500/20 bg-[#10182b]/70 shadow-[0_0_35px_rgba(15,23,42,0.35)]">
+                <div className="hidden grid-cols-[1fr_2.4fr_1.2fr_0.8fr] gap-4 border-b border-violet-500/20 bg-white/5 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 lg:grid">
+                  <span>Jugador</span>
+                  <span>Runs aprobadas</span>
+                  <span>Redes</span>
+                  <span>Compartir</span>
+                </div>
+
+                <div className="divide-y divide-violet-500/15">
+                  {runnerGroups.map((group) => (
+                    <div
+                      key={group.runnerName}
+                      className="grid gap-5 px-5 py-6 transition-colors hover:bg-cyan-500/5 lg:grid-cols-[1fr_2.4fr_1.2fr_0.8fr] lg:items-start"
+                    >
+                      {/* Jugador */}
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                          Jugador
+                        </p>
+
+                        <p className="flex items-center gap-2 text-xl font-black text-white">
+                          <Users className="h-5 w-5 text-cyan-300" />
+                          {group.runnerName}
+                        </p>
+
+                        <Badge className="mt-3 bg-violet-500/20 text-violet-300">
+                          {group.runs.length}{" "}
+                          {group.runs.length === 1
+                            ? "run aprobada"
+                            : "runs aprobadas"}
+                        </Badge>
+                      </div>
+
+                      {/* Runs */}
+                      <div>
+                        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                          Runs aprobadas
+                        </p>
+
+                        <div className="space-y-3">
+                          {group.runs.map((run) => {
+                            const raceParticipants =
+                              getRaceParticipants(run);
+
+                            return (
+                              <div
+                                key={run.id}
+                                className="rounded-2xl border border-violet-500/20 bg-[#070817]/60 p-4"
+                              >
+                                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                  <div>
+                                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                                      <Badge
+                                        variant="outline"
+                                        className={getRunFormatBadgeClass(run)}
+                                      >
+                                        {getRunFormatLabel(run)}
+                                      </Badge>
+
+                                      {isRaceRun(run) && (
+                                        <Badge
+                                          variant="outline"
+                                          className="border-violet-400/30 bg-violet-500/10 text-violet-200"
+                                        >
+                                          <Users className="mr-1.5 h-3.5 w-3.5" />
+                                          {raceParticipants.length} jugadores
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    <p className="flex items-center gap-2 font-black text-white">
+                                      <Gamepad2 className="h-4 w-4 text-violet-300" />
+                                      {run.game}
+                                    </p>
+
+                                    <p className="mt-1 text-sm text-slate-400">
+                                      {run.category}
+                                    </p>
+
+                                    {isRaceRun(run) && (
+                                      <p className="mt-2 text-sm font-semibold text-pink-200">
+                                        {getRunParticipantNames(run)}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-wrap gap-2">
+                                    <Badge
+                                      variant="outline"
+                                      className="border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+                                    >
+                                      <Monitor className="mr-1.5 h-3.5 w-3.5" />
+                                      {run.platform}
+                                    </Badge>
+
+                                    <Badge
+                                      variant="outline"
+                                      className="border-pink-400/30 bg-pink-400/10 text-pink-200"
+                                    >
+                                      <Timer className="mr-1.5 h-3.5 w-3.5" />
+                                      {run.estimatedTime}
+                                    </Badge>
+
+                                    {!isRaceRun(run) && run.youtubeUrl && (
+                                      <a
+                                        href={run.youtubeUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
+                                      >
+                                        VOD
+                                        <ExternalLink className="h-3 w-3" />
+                                      </a>
+                                    )}
+
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        openRunShare(run)
+                                      }
+                                      className="h-7 rounded-full border-pink-400/30 bg-pink-500/10 px-3 text-xs font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
+                                    >
+                                      Compartir run
+                                      <Share2 className="ml-1 h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                {isRaceRun(run) && (
+                                  <div className="mt-4 rounded-2xl border border-pink-400/20 bg-pink-500/5 p-3">
+                                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-pink-200">
+                                      Participantes de la race
+                                    </p>
+
+                                    <div className="grid gap-3 md:grid-cols-2">
+                                      {raceParticipants.map(
+                                        (participant, participantIndex) => (
+                                          <div
+                                            key={`${run.id}-${participant.sortOrder ?? participantIndex}-${participant.runnerName}`}
+                                            className="rounded-xl border border-violet-500/20 bg-[#10182b]/70 p-3"
+                                          >
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                                              Jugador {participantIndex + 1}
+                                            </p>
+
+                                            <p className="mt-1 font-black text-white">
+                                              {participant.runnerName}
+                                            </p>
+
+                                            {participant.country && (
+                                              <p className="mt-1 text-xs text-slate-400">
+                                                {participant.country}
+                                              </p>
+                                            )}
+
+                                            {participant.videoUrl && (
+                                              <a
+                                                href={participant.videoUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-3 inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
+                                              >
+                                                VOD jugador {participantIndex + 1}
+                                                <ExternalLink className="h-3 w-3" />
+                                              </a>
+                                            )}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Redes */}
+                      <div>
+                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                          Redes
+                        </p>
+
+                        <div className="flex flex-wrap gap-2">
+                          {group.socialNetworks.length > 0 ? (
+                            group.socialNetworks.map((social) => (
+                              <a
+                                key={`${group.runnerName}-${social.socialNetworkId}-${social.url}`}
+                                href={social.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                              >
+                                {social.name}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ))
+                          ) : (
+                            <span className="text-xs text-slate-500">
+                              Sin redes
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Compartir jugador */}
+                      <div>
+                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                          Compartir
+                        </p>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() =>
+                            openRunnerShare(group)
+                          }
+                          className="inline-flex items-center gap-2 rounded-xl border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
+                        >
+                          Compartir jugador
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {runs.length > 0 && (
+              <div className="mt-10 text-center">
+                <Button
+                  type="button"
+                  onClick={openLineupShare}
+                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+                >
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Compartir lineup
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
