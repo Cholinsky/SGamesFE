@@ -14,42 +14,141 @@ import {
 } from "lucide-react";
 import { getPublicApprovedApplications } from "../services/applicationService";
 
+type PublicApprovedRunSocialNetwork = {
+  socialNetworkId: string;
+  name: string;
+  url: string;
+};
+
+type PublicApprovedRunParticipant = {
+  id?: string;
+  runnerName?: string | null;
+  email?: string | null;
+  discordUser?: string | null;
+  country?: string | null;
+  videoUrl?: string | null;
+  sortOrder?: number | null;
+};
+
 type PublicApprovedRun = {
   id: string;
   runnerName: string;
   game: string;
   category: string;
   platform: string;
+  runType?: string | null;
   estimatedTimeMinutes: number;
   estimatedTime: string;
   youtubeUrl?: string | null;
-  socialNetworks: {
-    socialNetworkId: string;
-    name: string;
-    url: string;
-  }[];
+  socialNetworks?: PublicApprovedRunSocialNetwork[] | null;
+  participants?: PublicApprovedRunParticipant[] | null;
 };
 
 type PublicApprovedRunnerGroup = {
   runnerName: string;
-  socialNetworks: {
-    socialNetworkId: string;
-    name: string;
-    url: string;
-  }[];
+  socialNetworks: PublicApprovedRunSocialNetwork[];
   runs: PublicApprovedRun[];
 };
 
+function getNormalizedRunType(run?: PublicApprovedRun | null) {
+  const value = run?.runType?.trim();
+
+  if (!value) {
+    return "Solo";
+  }
+
+  return value;
+}
+
+function isRaceRun(run: PublicApprovedRun) {
+  return getNormalizedRunType(run).toLowerCase() === "race";
+}
+
+function getRunFormatLabel(run: PublicApprovedRun) {
+  return isRaceRun(run) ? "Race" : "Individual";
+}
+
+function getRunFormatBadgeClass(run: PublicApprovedRun) {
+  return isRaceRun(run)
+    ? "border-pink-400/30 bg-pink-500/10 text-pink-200"
+    : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200";
+}
+
+function getSortedParticipants(run: PublicApprovedRun) {
+  const participants =
+    run.participants?.filter(
+      (participant) =>
+        participant.runnerName?.trim()
+    ) ?? [];
+
+  if (!participants.length) {
+    return [
+      {
+        runnerName: run.runnerName,
+        videoUrl: run.youtubeUrl,
+        sortOrder: 1,
+      },
+    ];
+  }
+
+  return participants.sort(
+    (a, b) =>
+      (a.sortOrder ?? 999) -
+      (b.sortOrder ?? 999)
+  );
+}
+
+function getRaceParticipants(run: PublicApprovedRun) {
+  if (!isRaceRun(run)) {
+    return [];
+  }
+
+  return getSortedParticipants(run);
+}
+
+function getRunParticipantNames(run: PublicApprovedRun) {
+  if (!isRaceRun(run)) {
+    return run.runnerName;
+  }
+
+  const names =
+    getSortedParticipants(run)
+      .map((participant) =>
+        participant.runnerName?.trim()
+      )
+      .filter(Boolean);
+
+  if (!names.length) {
+    return run.runnerName;
+  }
+
+  return names.join(" vs ");
+}
+
 function getRunShareText(run: PublicApprovedRun) {
+  if (isRaceRun(run)) {
+    return encodeURIComponent(
+      `${getRunParticipantNames(run)} participarán en SGames con ${run.game} - ${run.category} en formato Race.`
+    );
+  }
+
   return encodeURIComponent(
     `${run.runnerName} participará en SGames con ${run.game} - ${run.category}.`
   );
 }
 
 function getRunnerShareText(group: PublicApprovedRunnerGroup) {
-  const runNames = group.runs
-    .map((run) => `${run.game} - ${run.category}`)
-    .join(", ");
+  const runNames =
+    group.runs
+      .map((run) => {
+        const format =
+          isRaceRun(run)
+            ? "Race"
+            : "Individual";
+
+        return `${run.game} - ${run.category} (${format})`;
+      })
+      .join(", ");
 
   return encodeURIComponent(
     `${group.runnerName} participará en SGames con: ${runNames}.`
@@ -59,29 +158,36 @@ function getRunnerShareText(group: PublicApprovedRunnerGroup) {
 function groupRunsByRunner(
   runs: PublicApprovedRun[]
 ): PublicApprovedRunnerGroup[] {
-  const groups = new Map<string, PublicApprovedRunnerGroup>();
+  const groups =
+    new Map<string, PublicApprovedRunnerGroup>();
 
   runs.forEach((run) => {
-    const key = run.runnerName.trim().toLowerCase();
+    const cleanRunnerName =
+      run.runnerName?.trim() || "Runner sin nombre";
+
+    const key =
+      cleanRunnerName.toLowerCase();
 
     if (!groups.has(key)) {
       groups.set(key, {
-        runnerName: run.runnerName,
+        runnerName: cleanRunnerName,
         socialNetworks: [],
         runs: [],
       });
     }
 
-    const group = groups.get(key)!;
+    const group =
+      groups.get(key)!;
 
     group.runs.push(run);
 
     run.socialNetworks?.forEach((social) => {
-      const alreadyExists = group.socialNetworks.some(
-        (item) =>
-          item.socialNetworkId === social.socialNetworkId &&
-          item.url === social.url
-      );
+      const alreadyExists =
+        group.socialNetworks.some(
+          (item) =>
+            item.socialNetworkId === social.socialNetworkId &&
+            item.url === social.url
+        );
 
       if (!alreadyExists) {
         group.socialNetworks.push(social);
@@ -102,10 +208,14 @@ function groupRunsByRunner(
 }
 
 export default function RunsPage() {
-  const [runs, setRuns] = useState<PublicApprovedRun[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [runs, setRuns] =
+    useState<PublicApprovedRun[]>([]);
 
-  const runnerGroups = groupRunsByRunner(runs);
+  const [loading, setLoading] =
+    useState(true);
+
+  const runnerGroups =
+    groupRunsByRunner(runs);
 
   useEffect(() => {
     loadRuns();
@@ -115,9 +225,14 @@ export default function RunsPage() {
     try {
       setLoading(true);
 
-      const data = await getPublicApprovedApplications();
+      const data =
+        await getPublicApprovedApplications();
 
-      setRuns(Array.isArray(data) ? data : []);
+      setRuns(
+        Array.isArray(data)
+          ? data
+          : []
+      );
     } catch (error) {
       console.error(error);
       setRuns([]);
@@ -164,9 +279,9 @@ export default function RunsPage() {
 
           <p className="mx-auto max-w-3xl text-slate-400">
             Conoce las runs confirmadas para SGames. Aquí podrás ver
-            runners, juegos, categorías, plataformas, tiempos estimados y
-            redes para compartir con la comunidad. Si no funciona bien un
-            hipervínculo revisen bien los datos.
+            runners, juegos, categorías, plataformas, tiempos estimados,
+            formato individual o race, VODs y redes para compartir con la
+            comunidad.
           </p>
         </div>
 
@@ -225,67 +340,142 @@ export default function RunsPage() {
                     </p>
 
                     <div className="space-y-3">
-                      {group.runs.map((run) => (
-                        <div
-                          key={run.id}
-                          className="rounded-2xl border border-violet-500/20 bg-[#070817]/60 p-4"
-                        >
-                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div>
-                              <p className="flex items-center gap-2 font-black text-white">
-                                <Gamepad2 className="h-4 w-4 text-violet-300" />
-                                {run.game}
-                              </p>
+                      {group.runs.map((run) => {
+                        const raceParticipants =
+                          getRaceParticipants(run);
 
-                              <p className="mt-1 text-sm text-slate-400">
-                                {run.category}
-                              </p>
-                            </div>
+                        return (
+                          <div
+                            key={run.id}
+                            className="rounded-2xl border border-violet-500/20 bg-[#070817]/60 p-4"
+                          >
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                              <div>
+                                <div className="mb-2 flex flex-wrap items-center gap-2">
+                                  <Badge
+                                    variant="outline"
+                                    className={getRunFormatBadgeClass(run)}
+                                  >
+                                    {getRunFormatLabel(run)}
+                                  </Badge>
 
-                            <div className="flex flex-wrap gap-2">
-                              <Badge
-                                variant="outline"
-                                className="border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
-                              >
-                                <Monitor className="mr-1.5 h-3.5 w-3.5" />
-                                {run.platform}
-                              </Badge>
+                                  {isRaceRun(run) && (
+                                    <Badge
+                                      variant="outline"
+                                      className="border-violet-400/30 bg-violet-500/10 text-violet-200"
+                                    >
+                                      <Users className="mr-1.5 h-3.5 w-3.5" />
+                                      {raceParticipants.length} jugadores
+                                    </Badge>
+                                  )}
+                                </div>
 
-                              <Badge
-                                variant="outline"
-                                className="border-pink-400/30 bg-pink-400/10 text-pink-200"
-                              >
-                                <Timer className="mr-1.5 h-3.5 w-3.5" />
-                                {run.estimatedTime}
-                              </Badge>
+                                <p className="flex items-center gap-2 font-black text-white">
+                                  <Gamepad2 className="h-4 w-4 text-violet-300" />
+                                  {run.game}
+                                </p>
 
-                              {run.youtubeUrl && (
+                                <p className="mt-1 text-sm text-slate-400">
+                                  {run.category}
+                                </p>
+
+                                {isRaceRun(run) && (
+                                  <p className="mt-2 text-sm font-semibold text-pink-200">
+                                    {getRunParticipantNames(run)}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="flex flex-wrap gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className="border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+                                >
+                                  <Monitor className="mr-1.5 h-3.5 w-3.5" />
+                                  {run.platform}
+                                </Badge>
+
+                                <Badge
+                                  variant="outline"
+                                  className="border-pink-400/30 bg-pink-400/10 text-pink-200"
+                                >
+                                  <Timer className="mr-1.5 h-3.5 w-3.5" />
+                                  {run.estimatedTime}
+                                </Badge>
+
+                                {!isRaceRun(run) && run.youtubeUrl && (
+                                  <a
+                                    href={run.youtubeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
+                                  >
+                                    VOD
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                )}
+
                                 <a
-                                  href={run.youtubeUrl}
+                                  href={`https://twitter.com/intent/tweet?text=${getRunShareText(
+                                    run
+                                  )}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
+                                  className="inline-flex items-center gap-1 rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-200 hover:bg-pink-500/20"
                                 >
-                                  VOD
-                                  <ExternalLink className="h-3 w-3" />
+                                  Compartir run
+                                  <Share2 className="h-3 w-3" />
                                 </a>
-                              )}
-
-                              <a
-                                href={`https://twitter.com/intent/tweet?text=${getRunShareText(
-                                  run
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-200 hover:bg-pink-500/20"
-                              >
-                                Compartir run
-                                <Share2 className="h-3 w-3" />
-                              </a>
+                              </div>
                             </div>
+
+                            {isRaceRun(run) && (
+                              <div className="mt-4 rounded-2xl border border-pink-400/20 bg-pink-500/5 p-3">
+                                <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-pink-200">
+                                  Participantes de la race
+                                </p>
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                  {raceParticipants.map(
+                                    (participant, participantIndex) => (
+                                      <div
+                                        key={`${run.id}-${participant.sortOrder ?? participantIndex}-${participant.runnerName}`}
+                                        className="rounded-xl border border-violet-500/20 bg-[#10182b]/70 p-3"
+                                      >
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                                          Jugador {participantIndex + 1}
+                                        </p>
+
+                                        <p className="mt-1 font-black text-white">
+                                          {participant.runnerName}
+                                        </p>
+
+                                        {participant.country && (
+                                          <p className="mt-1 text-xs text-slate-400">
+                                            {participant.country}
+                                          </p>
+                                        )}
+
+                                        {participant.videoUrl && (
+                                          <a
+                                            href={participant.videoUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-3 inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
+                                          >
+                                            VOD jugador {participantIndex + 1}
+                                            <ExternalLink className="h-3 w-3" />
+                                          </a>
+                                        )}
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
