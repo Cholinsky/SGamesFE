@@ -30,6 +30,16 @@ type PublicApprovedRun = {
   }[];
 };
 
+type PublicApprovedRunnerGroup = {
+  runnerName: string;
+  socialNetworks: {
+    socialNetworkId: string;
+    name: string;
+    url: string;
+  }[];
+  runs: PublicApprovedRun[];
+};
+
 function getRunShareText(
   run: PublicApprovedRun
 ) {
@@ -38,13 +48,77 @@ function getRunShareText(
   );
 }
 
+function getRunnerShareText(
+  group: PublicApprovedRunnerGroup
+) {
+  const runNames =
+    group.runs
+      .map((run) => `${run.game} - ${run.category}`)
+      .join(", ");
+
+  return encodeURIComponent(
+    `${group.runnerName} participará en SGames con: ${runNames}.`
+  );
+}
+
+function groupRunsByRunner(
+  runs: PublicApprovedRun[]
+): PublicApprovedRunnerGroup[] {
+  const groups =
+    new Map<string, PublicApprovedRunnerGroup>();
+
+  runs.forEach((run) => {
+    const key =
+      run.runnerName.trim().toLowerCase();
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        runnerName: run.runnerName,
+        socialNetworks: [],
+        runs: [],
+      });
+    }
+
+    const group =
+      groups.get(key)!;
+
+    group.runs.push(run);
+
+    run.socialNetworks?.forEach((social) => {
+      const alreadyExists =
+        group.socialNetworks.some(
+          (item) =>
+            item.socialNetworkId === social.socialNetworkId &&
+            item.url === social.url
+        );
+
+      if (!alreadyExists) {
+        group.socialNetworks.push(social);
+      }
+    });
+  });
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      runs: group.runs.sort((a, b) =>
+        a.game.localeCompare(b.game)
+      ),
+    }))
+    .sort((a, b) =>
+      a.runnerName.localeCompare(b.runnerName)
+    );
+}
+
 export default function RunsPage() {
   const [runs, setRuns] =
     useState<PublicApprovedRun[]>([]);
 
   const [loading, setLoading] =
     useState(true);
-
+    
+  const runnerGroups =
+  groupRunsByRunner(runs);
   useEffect(() => {
     loadRuns();
   }, []);
@@ -139,47 +213,64 @@ export default function RunsPage() {
 
             <div className="divide-y divide-violet-500/15">
               {runs.map((run) => (
-                <div
-                  key={run.id}
-                  className="grid gap-4 px-5 py-5 transition-colors hover:bg-cyan-500/5 lg:grid-cols-[1.2fr_1.4fr_1fr_0.8fr_0.8fr_1.4fr] lg:items-center"
-                >
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Runner
-                    </p>
+                <div className="overflow-hidden rounded-3xl border border-violet-500/20 bg-[#10182b]/70 shadow-[0_0_35px_rgba(15,23,42,0.35)]">
+  <div className="hidden grid-cols-[1fr_2.4fr_1.2fr_0.8fr] gap-4 border-b border-violet-500/20 bg-white/5 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 lg:grid">
+    <span>Jugador</span>
+    <span>Runs aprobadas</span>
+    <span>Redes</span>
+    <span>Compartir</span>
+  </div>
 
+  <div className="divide-y divide-violet-500/15">
+    {runnerGroups.map((group) => (
+      <div
+        key={group.runnerName}
+        className="grid gap-5 px-5 py-6 transition-colors hover:bg-cyan-500/5 lg:grid-cols-[1fr_2.4fr_1.2fr_0.8fr] lg:items-start"
+      >
+        {/* Jugador */}
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+            Jugador
+          </p>
+
+          <p className="flex items-center gap-2 text-xl font-black text-white">
+            <Users className="h-5 w-5 text-cyan-300" />
+            {group.runnerName}
+          </p>
+
+          <Badge className="mt-3 bg-violet-500/20 text-violet-300">
+            {group.runs.length}{" "}
+            {group.runs.length === 1
+              ? "run aprobada"
+              : "runs aprobadas"}
+          </Badge>
+        </div>
+
+        {/* Runs */}
+        <div>
+          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+            Runs aprobadas
+          </p>
+
+          <div className="space-y-3">
+            {group.runs.map((run) => (
+              <div
+                key={run.id}
+                className="rounded-2xl border border-violet-500/20 bg-[#070817]/60 p-4"
+              >
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
                     <p className="flex items-center gap-2 font-black text-white">
-                      <Users className="h-4 w-4 text-cyan-300" />
-                      {run.runnerName}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Juego
-                    </p>
-
-                    <p className="flex items-center gap-2 font-semibold text-white">
                       <Gamepad2 className="h-4 w-4 text-violet-300" />
                       {run.game}
                     </p>
-                  </div>
 
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Categoría
-                    </p>
-
-                    <p className="text-slate-300">
+                    <p className="mt-1 text-sm text-slate-400">
                       {run.category}
                     </p>
                   </div>
 
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Plataforma
-                    </p>
-
+                  <div className="flex flex-wrap gap-2">
                     <Badge
                       variant="outline"
                       className="border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
@@ -187,68 +278,91 @@ export default function RunsPage() {
                       <Monitor className="mr-1.5 h-3.5 w-3.5" />
                       {run.platform}
                     </Badge>
-                  </div>
 
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Estimado
-                    </p>
-
-                    <p className="flex items-center gap-2 font-mono text-sm text-pink-200">
-                      <Timer className="h-4 w-4" />
+                    <Badge
+                      variant="outline"
+                      className="border-pink-400/30 bg-pink-400/10 text-pink-200"
+                    >
+                      <Timer className="mr-1.5 h-3.5 w-3.5" />
                       {run.estimatedTime}
-                    </p>
-                  </div>
+                    </Badge>
 
-                  <div>
-                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
-                      Redes
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {run.socialNetworks?.length ? (
-                        run.socialNetworks.map((social) => (
-                          <a
-                            key={`${run.id}-${social.socialNetworkId}-${social.url}`}
-                            href={social.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
-                          >
-                            {social.name}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        ))
-                      ) : (
-                        <span className="text-xs text-slate-500">
-                          Sin redes
-                        </span>
-                      )}
-
-                      {run.youtubeUrl && (
-                        <a
-                          href={run.youtubeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
-                        >
-                          VOD
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
-
+                    {run.youtubeUrl && (
                       <a
-                        href={`https://twitter.com/intent/tweet?text=${getRunShareText(run)}`}
+                        href={run.youtubeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-200 hover:bg-pink-500/20"
+                        className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
                       >
-                        Compartir
-                        <Share2 className="h-3 w-3" />
+                        VOD
+                        <ExternalLink className="h-3 w-3" />
                       </a>
-                    </div>
+                    )}
+
+                    <a
+                      href={`https://twitter.com/intent/tweet?text=${getRunShareText(run)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold text-pink-200 hover:bg-pink-500/20"
+                    >
+                      Compartir run
+                      <Share2 className="h-3 w-3" />
+                    </a>
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Redes */}
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+            Redes
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {group.socialNetworks.length > 0 ? (
+              group.socialNetworks.map((social) => (
+                <a
+                  key={`${group.runnerName}-${social.socialNetworkId}-${social.url}`}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                >
+                  {social.name}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ))
+            ) : (
+              <span className="text-xs text-slate-500">
+                Sin redes
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Compartir jugador */}
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+            Compartir
+          </p>
+
+          <a
+            href={`https://twitter.com/intent/tweet?text=${getRunnerShareText(group)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm font-semibold text-pink-200 hover:bg-pink-500/20"
+          >
+            Compartir jugador
+            <Share2 className="h-4 w-4" />
+          </a>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
               ))}
             </div>
           </div>
