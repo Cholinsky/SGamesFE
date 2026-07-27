@@ -183,6 +183,7 @@ export default function RunsPage() {
             Conoce las runs confirmadas para SGames. Aquí podrás ver
             runners, juegos, categorías, plataformas, tiempos estimados y
             redes para compartir con la comunidad.
+            Si no funciona bien un hipervinculo revisen bien los datos.
           </p>
         </div>
 
