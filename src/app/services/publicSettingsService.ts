@@ -5,13 +5,15 @@ export type PublicSettings = {
   contactEmail?: string | null;
   twitchUrl?: string | null;
   youtubeUrl?: string | null;
-  discordUrl?: string | null;
-  twitterUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
+  discordUrl?: string | null;
+  twitterUrl?: string | null;
+  maintenanceMode?: boolean;
+  maintenanceMessage?: string | null;
 };
 
-export async function getPublicSettings(): Promise<PublicSettings> {
+export async function getPublicSettings() {
   const response =
     await fetch(
       `${API_URL}/Settings/public`

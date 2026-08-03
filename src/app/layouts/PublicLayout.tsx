@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router";
-import { Menu, X, Shield } from "lucide-react";
+import { Menu, X, Shield, Badge } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useState, useEffect } from "react";
 import logoSgames from "../../assets/logo-sgames.jpeg";
@@ -86,6 +86,62 @@ const officialSocialLinks = [
     item.url &&
     item.url.trim().length > 0
 );
+  if (publicSettings?.maintenanceMode) {
+    return (
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_34rem),radial-gradient(circle_at_top_right,rgba(236,72,153,0.16),transparent_34rem),#070817] text-white">
+        <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-12">
+          <div className="w-full max-w-2xl rounded-3xl border border-violet-500/25 bg-[#10182b]/85 p-8 text-center shadow-[0_0_45px_rgba(88,28,135,0.22)] backdrop-blur-sm md:p-12">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_35px_rgba(217,70,239,0.35)]">
+              <img
+                src={logoSgames}
+                alt="SGames"
+                className="h-16 w-16 rounded-2xl object-cover"
+              />
+            </div>
+
+            <Badge className="mb-5 border border-yellow-400/30 bg-yellow-400/10 text-yellow-300">
+              Sitio en mantenimiento
+            </Badge>
+
+            <h1 className="mb-4 bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-4xl font-black text-transparent md:text-5xl">
+              Estamos trabajando en mejoras
+            </h1>
+
+            <p className="mx-auto mb-8 max-w-xl text-lg text-slate-300">
+              {publicSettings.maintenanceMessage ||
+                "Estamos trabajando en mejoras. Vuelve más tarde."}
+            </p>
+
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              {publicSettings.twitchUrl && (
+                <a
+                  href={publicSettings.twitchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400">
+                    <Twitch className="mr-2 h-4 w-4" />
+                    Ir al Twitch
+                  </Button>
+                </a>
+              )}
+
+              <Link to="/admin/login">
+                <Button
+                  variant="outline"
+                  className="border-cyan-400/40 bg-white/5 text-cyan-200 hover:bg-cyan-500/10"
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#070817] text-white">
       {/* Header */}

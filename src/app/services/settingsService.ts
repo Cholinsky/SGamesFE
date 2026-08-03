@@ -69,4 +69,3 @@ export async function updateSettings(
 
   return await response.json();
 }
-

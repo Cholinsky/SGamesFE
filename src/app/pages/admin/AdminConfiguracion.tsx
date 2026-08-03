@@ -61,6 +61,8 @@ type SettingsConfig = {
   youtubeUrl: string;
   discordUrl: string;
   twitterUrl: string;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
 };
 
 function toDateInputValue(
@@ -119,6 +121,9 @@ export default function AdminConfiguracion() {
       youtubeUrl: "",
       discordUrl: "",
       twitterUrl: "",
+      maintenanceMode: false,
+      maintenanceMessage:
+        "Estamos trabajando en mejoras. Vuelve más tarde.",
     });
 
   const [loading, setLoading] =
@@ -193,6 +198,11 @@ export default function AdminConfiguracion() {
             "",
           twitterUrl:
             currentSettings.twitterUrl ?? "",
+          maintenanceMode:
+            Boolean(currentSettings.maintenanceMode),
+          maintenanceMessage:
+            currentSettings.maintenanceMessage ??
+            "Estamos trabajando en mejoras. Vuelve más tarde.",
         });
       } else {
         setSettingsConfig({
@@ -206,6 +216,9 @@ export default function AdminConfiguracion() {
           discordUrl:
             activeEvent.discordUrl ?? "",
           twitterUrl: "",
+          maintenanceMode: false,
+          maintenanceMessage:
+            "Estamos trabajando en mejoras. Vuelve más tarde.",
         });
       }
     } catch (error) {
@@ -231,7 +244,7 @@ export default function AdminConfiguracion() {
 
   function updateSettingsField(
     field: keyof SettingsConfig,
-    value: string
+    value: string | boolean
   ) {
     setSettingsConfig((current) => ({
       ...current,
@@ -381,6 +394,15 @@ export default function AdminConfiguracion() {
           normalizeText(
             settingsConfig.twitterUrl
           ),
+
+        maintenanceMode:
+          settingsConfig.maintenanceMode,
+
+        maintenanceMessage:
+          normalizeText(
+            settingsConfig.maintenanceMessage
+          ) ??
+          "Estamos trabajando en mejoras. Vuelve más tarde.",
       };
 
       if (settingsConfig.id === null) {
@@ -393,7 +415,7 @@ export default function AdminConfiguracion() {
       }
 
       toast.success(
-        "Contacto y redes guardados"
+        "Contacto, redes y mantenimiento guardados"
       );
 
       await loadConfiguration();
@@ -401,7 +423,7 @@ export default function AdminConfiguracion() {
       console.error(error);
 
       toast.error(
-        "No se pudo guardar contacto y redes"
+        "No se pudo guardar contacto, redes y mantenimiento"
       );
     } finally {
       setSavingSettings(false);
@@ -862,6 +884,75 @@ export default function AdminConfiguracion() {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="flex-1">
+                <p className="font-semibold text-white">
+                  Modo mantenimiento
+                </p>
+
+                <p className="mt-1 text-sm text-yellow-100/80">
+                  Cuando esté activo, el sitio público mostrará una pantalla de
+                  mantenimiento. El panel admin seguirá disponible.
+                </p>
+
+                <div className="mt-3">
+                  {settingsConfig.maintenanceMode ? (
+                    <Badge className="bg-red-500/20 text-red-400">
+                      Activo
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-green-500/20 text-green-400">
+                      Inactivo
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  updateSettingsField(
+                    "maintenanceMode",
+                    !settingsConfig.maintenanceMode
+                  )
+                }
+                className={
+                  settingsConfig.maintenanceMode
+                    ? "border-green-400/50 text-green-300 hover:bg-green-500/10"
+                    : "border-red-400/50 text-red-300 hover:bg-red-500/10"
+                }
+              >
+                {settingsConfig.maintenanceMode
+                  ? "Desactivar mantenimiento"
+                  : "Activar mantenimiento"}
+              </Button>
+            </div>
+
+            <div className="mt-4">
+              <Label
+                htmlFor="maintenanceMessage"
+                className="text-gray-300"
+              >
+                Mensaje público
+              </Label>
+
+              <Textarea
+                id="maintenanceMessage"
+                value={settingsConfig.maintenanceMessage}
+                onChange={(event) =>
+                  updateSettingsField(
+                    "maintenanceMessage",
+                    event.target.value
+                  )
+                }
+                className="mt-1.5 min-h-[90px] border-gray-700 bg-gray-800 text-white"
+                placeholder="Estamos trabajando en mejoras. Vuelve más tarde."
+              />
+            </div>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label
@@ -1024,7 +1115,7 @@ export default function AdminConfiguracion() {
               <Save className="mr-2 h-4 w-4" />
               {savingSettings
                 ? "Guardando..."
-                : "Guardar Contacto y Redes"}
+                : "Guardar Contacto, Redes y Mantenimiento"}
             </Button>
           </div>
         </CardContent>
