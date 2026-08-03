@@ -70,15 +70,21 @@ function getSeasonLogoCandidates(
 
   return [
     `/logos/${logoName}.png`,
+    `/logos/${logoName}.Png`,
+    `/logos/${logoName}.PNG`,
     `/logos/${logoName}.webp`,
     `/logos/${logoName}.jpg`,
     `/logos/${logoName}.jpeg`,
-    `/logos/${logoName}.PNG`,
+    `/logos/${logoName}.svg`,
+    `/logos/${logoName}.avif`,
     "/logos/LogoSummer.png",
+    "/logos/LogoSummer.Png",
+    "/logos/LogoSummer.PNG",
     "/logos/LogoSummer.webp",
     "/logos/LogoSummer.jpg",
     "/logos/LogoSummer.jpeg",
-    "/logos/LogoSummer.PNG",
+    "/logos/LogoSummer.svg",
+    "/logos/LogoSummer.avif",
   ];
 }
 
@@ -92,6 +98,9 @@ export function PublicLayout() {
 
   const [logoFallbackIndex, setLogoFallbackIndex] =
     useState(0);
+
+  const [logoFailed, setLogoFailed] =
+    useState(false);
 
   const location = useLocation();
 
@@ -117,12 +126,17 @@ export function PublicLayout() {
     ];
 
   function handleLogoError() {
-    setLogoFallbackIndex((current) =>
-      current <
-      seasonLogoCandidates.length - 1
-        ? current + 1
-        : current
-    );
+    setLogoFallbackIndex((current) => {
+      if (
+        current <
+        seasonLogoCandidates.length - 1
+      ) {
+        return current + 1;
+      }
+
+      setLogoFailed(true);
+      return current;
+    });
   }
 
   useEffect(() => {
@@ -131,6 +145,7 @@ export function PublicLayout() {
 
   useEffect(() => {
     setLogoFallbackIndex(0);
+    setLogoFailed(false);
   }, [seasonAssetKey]);
 
   async function loadPublicSettings() {
@@ -264,12 +279,18 @@ export function PublicLayout() {
         <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-12">
           <div className="sgames-glass sgames-neon-border w-full max-w-2xl rounded-3xl p-8 text-center md:p-12">
             <div className="sgames-logo-shell mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl">
-              <img
-                src={seasonLogoSrc}
-                alt={`SGames ${seasonAssetKey}`}
-                onError={handleLogoError}
-                className="h-16 w-16 rounded-2xl object-cover"
-              />
+              {!logoFailed ? (
+                <img
+                  src={seasonLogoSrc}
+                  alt={`SGames ${seasonAssetKey}`}
+                  onError={handleLogoError}
+                  className="h-16 w-16 rounded-2xl object-cover"
+                />
+              ) : (
+                <span className="text-xl font-black text-white">
+                  SG
+                </span>
+              )}
             </div>
 
             <Badge className="sgames-badge-warning mb-5">
@@ -331,12 +352,18 @@ export function PublicLayout() {
             <div className="relative">
               <div className="sgames-logo-glow absolute inset-0 rounded-2xl blur-md transition" />
 
-              <img
-                src={seasonLogoSrc}
-                alt={`SGames ${seasonAssetKey}`}
-                onError={handleLogoError}
-                className="relative h-12 w-12 rounded-2xl border border-white/20 object-cover"
-              />
+              {!logoFailed ? (
+                <img
+                  src={seasonLogoSrc}
+                  alt={`SGames ${seasonAssetKey}`}
+                  onError={handleLogoError}
+                  className="relative h-12 w-12 rounded-2xl border border-white/20 object-cover"
+                />
+              ) : (
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] text-sm font-black text-white">
+                  SG
+                </div>
+              )}
             </div>
 
             <div className="leading-tight">

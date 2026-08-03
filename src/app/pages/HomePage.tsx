@@ -124,15 +124,21 @@ function getSeasonLogoCandidates(
 
   return [
     `/logos/${logoName}.png`,
+    `/logos/${logoName}.Png`,
+    `/logos/${logoName}.PNG`,
     `/logos/${logoName}.webp`,
     `/logos/${logoName}.jpg`,
     `/logos/${logoName}.jpeg`,
-    `/logos/${logoName}.PNG`,
+    `/logos/${logoName}.svg`,
+    `/logos/${logoName}.avif`,
     "/logos/LogoSummer.png",
+    "/logos/LogoSummer.Png",
+    "/logos/LogoSummer.PNG",
     "/logos/LogoSummer.webp",
     "/logos/LogoSummer.jpg",
     "/logos/LogoSummer.jpeg",
-    "/logos/LogoSummer.PNG",
+    "/logos/LogoSummer.svg",
+    "/logos/LogoSummer.avif",
   ];
 }
 
@@ -176,6 +182,9 @@ export default function HomePage() {
 
   const [logoFallbackIndex, setLogoFallbackIndex] =
     useState(0);
+
+  const [logoFailed, setLogoFailed] =
+    useState(false);
 
   const [publicPosts, setPublicPosts] =
     useState<PublicPost[]>([]);
@@ -395,6 +404,7 @@ async function loadPublicRunners() {
 
   useEffect(() => {
     setLogoFallbackIndex(0);
+    setLogoFailed(false);
   }, [seasonAssetKey]);
 
   return (
@@ -447,19 +457,30 @@ async function loadPublicRunners() {
               <div className="relative">
                 <div className="absolute inset-0 rounded-[2rem] bg-[var(--sg-accent)]/40 blur-2xl" />
 
-                <img
-                  src={seasonLogoSrc}
-                  alt={`Logo de SGames ${seasonAssetKey}`}
-                  onError={() => {
-                    setLogoFallbackIndex((current) =>
-                      current <
-                      seasonLogoCandidates.length - 1
-                        ? current + 1
-                        : current
-                    );
-                  }}
-                  className="sgames-logo-shadow relative h-36 w-36 rounded-[2rem] border border-white/25 object-cover md:h-44 md:w-44"
-                />
+                {!logoFailed ? (
+                  <img
+                    src={seasonLogoSrc}
+                    alt={`Logo de SGames ${seasonAssetKey}`}
+                    onError={() => {
+                      setLogoFallbackIndex((current) => {
+                        if (
+                          current <
+                          seasonLogoCandidates.length - 1
+                        ) {
+                          return current + 1;
+                        }
+
+                        setLogoFailed(true);
+                        return current;
+                      });
+                    }}
+                    className="sgames-logo-shadow relative h-36 w-36 rounded-[2rem] border border-white/25 object-cover md:h-44 md:w-44"
+                  />
+                ) : (
+                  <div className="sgames-logo-shadow relative flex h-36 w-36 items-center justify-center rounded-[2rem] border border-white/25 bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] text-4xl font-black text-white md:h-44 md:w-44 md:text-5xl">
+                    SG
+                  </div>
+                )}
               </div>
             </div>
 
