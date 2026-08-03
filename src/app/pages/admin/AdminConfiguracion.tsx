@@ -20,6 +20,8 @@ import {
   Radio,
   Save,
   Settings,
+  Eye,
+  EyeOff,
   ShieldCheck,
   Twitch,
   Youtube,
@@ -29,6 +31,7 @@ import { toast } from "sonner";
 import {
   getActiveEvent,
   updateEvent,
+  updatePublicRunsVisibility,
 } from "../../services/eventService";
 import {
   createSettings,
@@ -47,6 +50,7 @@ type EventConfig = {
   isActive: boolean;
   isPublished: boolean;
   applicationsOpen: boolean;
+  publicRunsVisible: boolean;
 };
 
 type SettingsConfig = {
@@ -103,6 +107,7 @@ export default function AdminConfiguracion() {
       isActive: false,
       isPublished: false,
       applicationsOpen: true,
+      publicRunsVisible: true,
     });
 
   const [settingsConfig, setSettingsConfig] =
@@ -156,6 +161,8 @@ export default function AdminConfiguracion() {
         ),
         applicationsOpen:
           activeEvent.applicationsOpen ?? true,
+        publicRunsVisible:
+          activeEvent.publicRunsVisible ?? true,
       });
 
       const settings =
@@ -308,6 +315,38 @@ export default function AdminConfiguracion() {
     }
   }
 
+  async function handleTogglePublicRunsVisible() {
+    if (!eventConfig.id) {
+      toast.error("No hay evento activo");
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+
+      await updatePublicRunsVisibility(
+        eventConfig.id,
+        !eventConfig.publicRunsVisible
+      );
+
+      toast.success(
+        eventConfig.publicRunsVisible
+          ? "Runs públicas ocultas"
+          : "Runs públicas visibles"
+      );
+
+      await loadConfiguration();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo actualizar la visibilidad de las runs"
+      );
+    } finally {
+      setSavingEvent(false);
+    }
+  }
+
   async function handleSaveSettingsConfig() {
     try {
       setSavingSettings(true);
@@ -416,7 +455,7 @@ export default function AdminConfiguracion() {
       </div>
 
       {/* Estado Operativo */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="border-gray-800 bg-gray-900/50">
           <CardContent className="flex items-center justify-between p-6">
             <div>
@@ -497,6 +536,34 @@ export default function AdminConfiguracion() {
                 }`}
               />
             </CardContent>
+        </Card>
+
+        <Card className="border-gray-800 bg-gray-900/50">
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm text-gray-400">
+                Runs públicas
+              </p>
+
+              <div className="mt-2">
+                {eventConfig.publicRunsVisible ? (
+                  <Badge className="bg-green-500/20 text-green-400">
+                    Visibles
+                  </Badge>
+                ) : (
+                  <Badge className="bg-red-500/20 text-red-400">
+                    Ocultas
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {eventConfig.publicRunsVisible ? (
+              <Eye className="h-8 w-8 text-green-400" />
+            ) : (
+              <EyeOff className="h-8 w-8 text-red-400" />
+            )}
+          </CardContent>
         </Card>
 
         <Card className="border-gray-800 bg-gray-900/50">
@@ -711,6 +778,56 @@ export default function AdminConfiguracion() {
                 </Button>
               </div>
             </div>
+
+          <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-semibold text-white">
+                  Runs públicas
+                </p>
+
+                <p className="mt-1 text-sm text-cyan-100/80">
+                  Controla si la página /runs muestra las runs aprobadas del
+                  evento activo. Útil para limpiar el lineup al cerrar el
+                  evento sin borrar historial.
+                </p>
+
+                <div className="mt-3">
+                  {eventConfig.publicRunsVisible ? (
+                    <Badge className="bg-green-500/20 text-green-400">
+                      Visibles
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-red-500/20 text-red-400">
+                      Ocultas
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleTogglePublicRunsVisible}
+                disabled={savingEvent}
+                className={
+                  eventConfig.publicRunsVisible
+                    ? "border-red-400/50 text-red-300 hover:bg-red-500/10"
+                    : "border-green-400/50 text-green-300 hover:bg-green-500/10"
+                }
+              >
+                {eventConfig.publicRunsVisible ? (
+                  <EyeOff className="mr-2 h-4 w-4" />
+                ) : (
+                  <Eye className="mr-2 h-4 w-4" />
+                )}
+
+                {eventConfig.publicRunsVisible
+                  ? "Ocultar runs públicas"
+                  : "Mostrar runs públicas"}
+              </Button>
+            </div>
+          </div>
 
           <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-100">
             El estado de publicación del horario se controla desde{" "}

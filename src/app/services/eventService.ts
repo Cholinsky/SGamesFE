@@ -45,6 +45,32 @@ export async function updateEvent(
   return true;
 }
 
+export async function updatePublicRunsVisibility(
+  id: string,
+  visible: boolean
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Events/${id}/public-runs/${visible}`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    const error =
+      await response.text();
+
+    throw new Error(
+      error ||
+        "Error updating public runs visibility"
+    );
+  }
+
+  return await response.json();
+}
+
 export async function getActivePublicEvent() {
   const response =
     await fetch(
