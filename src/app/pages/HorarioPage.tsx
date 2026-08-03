@@ -276,7 +276,7 @@ function getManualScheduleStatus(
   if (entry.runStatus === "Scheduled") {
     return {
       status: "scheduled" as const,
-      statusText: "Programado por el staff",
+      statusText: "Esperando inicio",
     };
   }
 
@@ -476,7 +476,7 @@ function getStatusBadge(
 
   return (
     <Badge className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30">
-      Programado
+      Esperando
     </Badge>
   );
 }

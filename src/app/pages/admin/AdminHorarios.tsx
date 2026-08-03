@@ -216,7 +216,7 @@ function getManualStatusLabel(
       return "Programado";
 
     default:
-      return "Automático";
+      return "Esperando";
   }
 }
 
@@ -256,8 +256,8 @@ function getManualStatusBadge(
   }
 
   return (
-    <Badge className="bg-purple-500/20 text-purple-300">
-      Automático
+    <Badge className="bg-cyan-500/20 text-cyan-300">
+      Esperando
     </Badge>
   );
 }
@@ -469,10 +469,10 @@ function DraggableItem({
         e.stopPropagation();
         onStatusChange(item, "auto");
       }}
-      className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
+      className="border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10"
     >
       <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-      Auto
+      Esperando
     </Button>
   </div>
 </div>
