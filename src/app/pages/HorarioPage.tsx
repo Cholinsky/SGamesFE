@@ -481,6 +481,98 @@ function getStatusBadge(
   );
 }
 
+
+const horarioThemeCss = `
+  .sgames-schedule-page {
+    background:
+      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 15%, transparent), transparent 30rem),
+      radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 13%, transparent), transparent 32rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 64%, var(--sg-background) 36%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+    color: var(--sg-text);
+  }
+
+  .sgames-schedule-card {
+    border: 1px solid var(--sg-border);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--sg-surface) 72%, transparent),
+        color-mix(in srgb, var(--sg-background) 84%, transparent)
+      );
+    box-shadow:
+      0 0 32px rgba(15, 23, 42, 0.25);
+    backdrop-filter: blur(14px);
+  }
+
+  .sgames-schedule-gradient-box {
+    background:
+      linear-gradient(
+        135deg,
+        var(--sg-primary),
+        var(--sg-secondary),
+        var(--sg-accent)
+      );
+    box-shadow:
+      0 0 32px color-mix(in srgb, var(--sg-accent) 30%, transparent);
+  }
+
+  .sgames-schedule-badge-primary {
+    border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+    background: color-mix(in srgb, var(--sg-primary) 11%, transparent);
+    color: var(--sg-primary);
+  }
+
+  .sgames-schedule-badge-secondary {
+    border: 1px solid color-mix(in srgb, var(--sg-secondary) 34%, transparent);
+    background: color-mix(in srgb, var(--sg-secondary) 11%, transparent);
+    color: var(--sg-secondary);
+  }
+
+  .sgames-schedule-badge-accent {
+    border: 1px solid color-mix(in srgb, var(--sg-accent) 34%, transparent);
+    background: color-mix(in srgb, var(--sg-accent) 11%, transparent);
+    color: var(--sg-accent);
+  }
+
+  .sgames-schedule-filter {
+    border-color: var(--sg-border) !important;
+    background: color-mix(in srgb, var(--sg-background) 78%, #000000 22%) !important;
+    color: var(--sg-text) !important;
+  }
+
+  .sgames-schedule-select-content {
+    border-color: var(--sg-border) !important;
+    background: color-mix(in srgb, var(--sg-surface) 88%, #000000 12%) !important;
+    color: var(--sg-text) !important;
+  }
+
+  .sgames-schedule-entry {
+    border: 1px solid var(--sg-border);
+    background: color-mix(in srgb, var(--sg-surface) 64%, transparent);
+  }
+
+  .sgames-schedule-entry:hover {
+    border-color: color-mix(in srgb, var(--sg-primary) 42%, transparent);
+    background: color-mix(in srgb, var(--sg-primary) 7%, transparent);
+  }
+
+  [data-season-theme="Winter"] .sgames-schedule-page {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.16), transparent 30rem),
+      radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.08), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+  }
+
+  [data-season-theme="Autumn"] .sgames-schedule-page {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.17), transparent 30rem),
+      radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.14), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+  }
+`;
+
 export default function HorarioPage() {
   const [selectedDay, setSelectedDay] =
     useState("todos");
@@ -697,13 +789,14 @@ const mappedEntries =
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#070817] py-12">
+      <div className="sgames-schedule-page min-h-screen py-12">
+        <style>{horarioThemeCss}</style>
         <div className="container mx-auto px-4">
-          <Card className="mx-auto max-w-2xl border-violet-500/20 bg-[#10182b]/80">
+          <Card className="sgames-schedule-card mx-auto max-w-2xl">
             <CardContent className="p-10 text-center">
-              <div className="mx-auto mb-4 h-12 w-12 animate-pulse rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500" />
+              <div className="sgames-schedule-gradient-box mx-auto mb-4 h-12 w-12 animate-pulse rounded-2xl" />
 
-              <p className="text-slate-300">
+              <p className="text-[var(--sg-muted-text)]">
                 Cargando horario oficial...
               </p>
             </CardContent>
@@ -715,18 +808,19 @@ const mappedEntries =
 
   if (!isPublished) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_34rem),radial-gradient(circle_at_top_right,rgba(236,72,153,0.16),transparent_34rem),#070817] py-12">
+      <div className="sgames-schedule-page min-h-screen py-12">
+        <style>{horarioThemeCss}</style>
         <div className="container mx-auto px-4">
           <div className="mb-10 text-center">
             <Badge className="mb-4 border border-yellow-400/30 bg-yellow-400/10 text-yellow-300">
               Horario pendiente
             </Badge>
 
-            <h1 className="mb-4 bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-4xl font-black text-transparent md:text-5xl">
+            <h1 className="sgames-neon-text mb-4 text-4xl font-black md:text-5xl">
               Horario Oficial
             </h1>
 
-            <p className="mx-auto max-w-2xl text-slate-400">
+            <p className="mx-auto max-w-2xl text-[var(--sg-muted-text)]">
               El staff está preparando el programa oficial del evento.
             </p>
           </div>
@@ -735,18 +829,18 @@ const mappedEntries =
             <CardContent className="p-10 text-center">
               <Calendar className="mx-auto mb-4 h-14 w-14 text-yellow-300" />
 
-              <h2 className="mb-3 text-2xl font-black text-white">
+              <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
                 Horario aún no publicado
               </h2>
 
-              <p className="mx-auto mb-6 max-w-xl text-slate-300">
+              <p className="mx-auto mb-6 max-w-xl text-[var(--sg-muted-text)]">
                 {message ||
                   "El equipo de SGames todavía está organizando el horario oficial."}
               </p>
 
               <div className="flex flex-col justify-center gap-3 sm:flex-row">
                 <Link to="/postulacion">
-                  <Button className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400">
+                  <Button className="sgames-primary-button">
                     <ClipboardEdit className="mr-2 h-4 w-4" />
                     Enviar postulación
                   </Button>
@@ -770,27 +864,28 @@ const mappedEntries =
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_34rem),radial-gradient(circle_at_top_right,rgba(236,72,153,0.14),transparent_34rem),linear-gradient(180deg,#0b1022_0%,#070817_48%,#070817_100%)] py-12">
+    <div className="sgames-schedule-page min-h-screen py-12">
+        <style>{horarioThemeCss}</style>
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-10 text-center">
           <div className="mb-4 flex flex-wrap items-center justify-center gap-3">
-            <Badge className="border border-cyan-400/30 bg-cyan-400/10 text-cyan-300">
+            <Badge className="sgames-schedule-badge-primary">
               <CalendarDays className="mr-2 h-4 w-4" />
               31 julio - 2 agosto 2026
             </Badge>
 
-            <Badge className="border border-pink-400/30 bg-pink-400/10 text-pink-300">
+            <Badge className="sgames-schedule-badge-accent">
               <Sparkles className="mr-2 h-4 w-4" />
               Horario sujeto a cambios
             </Badge>
           </div>
 
-          <h1 className="mb-4 bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-4xl font-black text-transparent md:text-5xl">
+          <h1 className="sgames-neon-text mb-4 text-4xl font-black md:text-5xl">
             Horario Oficial
           </h1>
 
-          <p className="mx-auto max-w-2xl text-slate-400">
+          <p className="mx-auto max-w-2xl text-[var(--sg-muted-text)]">
             Programa publicado de{" "}
             <span className="font-semibold text-slate-200">
               {eventName}
@@ -802,7 +897,7 @@ const mappedEntries =
 
         {/* Notice */}
         <Card className="mb-8 border-cyan-400/20 bg-cyan-400/5">
-          <CardContent className="flex flex-col gap-3 p-5 text-sm text-slate-300 md:flex-row md:items-center">
+          <CardContent className="flex flex-col gap-3 p-5 text-sm text-[var(--sg-muted-text)] md:flex-row md:items-center">
             <Info className="h-5 w-5 shrink-0 text-cyan-300" />
 
             <p>
@@ -814,13 +909,13 @@ const mappedEntries =
         </Card>
 
         {/* Filters */}
-        <Card className="mb-8 border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm">
+        <Card className="mb-8 border-[var(--sg-border)] bg-[color-mix(in_srgb,var(--sg-surface)_70%,transparent)] backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <Filter className="h-5 w-5 text-cyan-300" />
 
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-[var(--sg-text)]">
                   Filtros:
                 </span>
               </div>
@@ -830,11 +925,11 @@ const mappedEntries =
                   value={selectedDay}
                   onValueChange={setSelectedDay}
                 >
-                  <SelectTrigger className="border-violet-500/20 bg-[#0b1022] text-white">
+                  <SelectTrigger className="border-[var(--sg-border)] bg-[#0b1022] text-[var(--sg-text)]">
                     <SelectValue placeholder="Todos los días" />
                   </SelectTrigger>
 
-                  <SelectContent className="border-violet-500/20 bg-[#10182b]">
+                  <SelectContent className="border-[var(--sg-border)] bg-[#10182b]">
                     <SelectItem value="todos">
                       Todos los días
                     </SelectItem>
@@ -854,11 +949,11 @@ const mappedEntries =
                   value={selectedGame}
                   onValueChange={setSelectedGame}
                 >
-                  <SelectTrigger className="border-violet-500/20 bg-[#0b1022] text-white">
+                  <SelectTrigger className="border-[var(--sg-border)] bg-[#0b1022] text-[var(--sg-text)]">
                     <SelectValue placeholder="Todos los juegos" />
                   </SelectTrigger>
 
-                  <SelectContent className="border-violet-500/20 bg-[#10182b]">
+                  <SelectContent className="border-[var(--sg-border)] bg-[#10182b]">
                     <SelectItem value="todos">
                       Todos los juegos
                     </SelectItem>
@@ -878,11 +973,11 @@ const mappedEntries =
                   value={selectedPlatform}
                   onValueChange={setSelectedPlatform}
                 >
-                  <SelectTrigger className="border-violet-500/20 bg-[#0b1022] text-white">
+                  <SelectTrigger className="border-[var(--sg-border)] bg-[#0b1022] text-[var(--sg-text)]">
                     <SelectValue placeholder="Todas las plataformas" />
                   </SelectTrigger>
 
-                  <SelectContent className="border-violet-500/20 bg-[#10182b]">
+                  <SelectContent className="border-[var(--sg-border)] bg-[#10182b]">
                     <SelectItem value="todos">
                       Todas las plataformas
                     </SelectItem>
@@ -902,7 +997,7 @@ const mappedEntries =
                   variant="outline"
                   onClick={clearFilters}
                   disabled={!hasActiveFilters}
-                  className="border-violet-500/30 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                  className="border-violet-500/30 bg-white/5 text-[var(--sg-muted-text)] hover:bg-white/10 hover:text-[var(--sg-text)] disabled:opacity-40"
                 >
                   Limpiar filtros
                 </Button>
@@ -914,21 +1009,21 @@ const mappedEntries =
         {/* No entries after filters */}
         {filteredSchedule.length === 0 &&
           schedule.length > 0 && (
-            <Card className="border-violet-500/20 bg-[#10182b]/70">
+            <Card className="sgames-schedule-card">
               <CardContent className="p-10 text-center">
                 <SearchX className="mx-auto mb-4 h-12 w-12 text-slate-500" />
 
-                <h2 className="mb-2 text-2xl font-black text-white">
+                <h2 className="mb-2 text-2xl font-black text-[var(--sg-text)]">
                   No hay resultados con esos filtros
                 </h2>
 
-                <p className="mb-6 text-slate-400">
+                <p className="mb-6 text-[var(--sg-muted-text)]">
                   Prueba cambiando el día, juego o plataforma.
                 </p>
 
                 <Button
                   onClick={clearFilters}
-                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white"
+                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-[var(--sg-text)]"
                 >
                   Limpiar filtros
                 </Button>
@@ -958,7 +1053,7 @@ const mappedEntries =
                   <div>
                     <div className="mb-2 flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_25px_rgba(217,70,239,0.18)]">
-                        <Calendar className="h-5 w-5 text-white" />
+                        <Calendar className="h-5 w-5 text-[var(--sg-text)]" />
                       </div>
 
                       <div>
@@ -966,7 +1061,7 @@ const mappedEntries =
                           {day.shortLabel}
                         </p>
 
-                        <h2 className="text-2xl font-black capitalize text-white md:text-3xl">
+                        <h2 className="text-2xl font-black capitalize text-[var(--sg-text)] md:text-3xl">
                           {day.label}
                         </h2>
                       </div>
@@ -975,7 +1070,7 @@ const mappedEntries =
 
                   <Badge
                     variant="outline"
-                    className="w-fit border-violet-500/30 bg-white/5 text-slate-300"
+                    className="w-fit border-violet-500/30 bg-white/5 text-[var(--sg-muted-text)]"
                   >
                     {dayEntries.length}{" "}
                     {dayEntries.length === 1
@@ -985,7 +1080,7 @@ const mappedEntries =
                 </div>
 
                 {dayEntries.length === 0 ? (
-                  <Card className="border-dashed border-violet-500/20 bg-[#10182b]/40">
+                  <Card className="border-dashed border-[var(--sg-border)] bg-[#10182b]/40">
                     <CardContent className="p-8 text-center text-slate-500">
                       No hay runs programadas para este día con
                       los filtros seleccionados.
@@ -996,7 +1091,7 @@ const mappedEntries =
                     {dayEntries.map((entry) => (
                       <Card
                         key={entry.id}
-                        className={`group border-violet-500/20 bg-[#10182b]/75 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-cyan-400/45 hover:shadow-[0_0_28px_rgba(34,211,238,0.12)] ${
+                        className={`group border-[var(--sg-border)] bg-[#10182b]/75 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-cyan-400/45 hover:shadow-[0_0_28px_rgba(34,211,238,0.12)] ${
                          entry.status === "live"
   ? "border-green-500/50 shadow-lg shadow-green-500/20"
   : entry.status === "preparing"
@@ -1035,7 +1130,7 @@ const mappedEntries =
                                     Runner
                                   </p>
 
-                                  <p className="break-words font-bold text-white">
+                                  <p className="break-words font-bold text-[var(--sg-text)]">
                                     {entry.runner}
                                   </p>
                                 </div>
@@ -1045,11 +1140,11 @@ const mappedEntries =
                                 <Gamepad2 className="mt-1 h-5 w-5 shrink-0 text-violet-300" />
 
                                 <div>
-                                  <p className="break-words text-lg font-black text-white">
+                                  <p className="break-words text-lg font-black text-[var(--sg-text)]">
                                     {entry.game}
                                   </p>
 
-                                  <p className="break-words text-sm text-slate-400">
+                                  <p className="break-words text-sm text-[var(--sg-muted-text)]">
                                     {entry.category}
                                   </p>
 
@@ -1095,22 +1190,22 @@ const mappedEntries =
 
         {/* Empty Schedule */}
         {schedule.length === 0 && (
-          <Card className="mt-8 border-violet-500/20 bg-[#10182b]/70">
+          <Card className="mt-8 border-[var(--sg-border)] bg-[color-mix(in_srgb,var(--sg-surface)_70%,transparent)]">
             <CardContent className="p-10 text-center">
               <CalendarDays className="mx-auto mb-4 h-14 w-14 text-cyan-300" />
 
-              <h2 className="mb-3 text-2xl font-black text-white">
+              <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
                 Horario publicado próximamente
               </h2>
 
-              <p className="mx-auto mb-6 max-w-xl text-slate-400">
+              <p className="mx-auto mb-6 max-w-xl text-[var(--sg-muted-text)]">
                 El horario ya fue habilitado, pero todavía no hay
                 runs agregadas. Vuelve pronto para consultar el
                 programa completo.
               </p>
 
               <Link to="/postulacion">
-                <Button className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white">
+                <Button className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-[var(--sg-text)]">
                   <ClipboardEdit className="mr-2 h-4 w-4" />
                   Enviar postulación
                 </Button>
@@ -1121,14 +1216,14 @@ const mappedEntries =
 
         {/* Bottom CTA */}
         {schedule.length > 0 && (
-          <Card className="mt-12 border-violet-500/20 bg-gradient-to-r from-cyan-400/10 via-violet-500/10 to-pink-500/10">
+          <Card className="mt-12 border-[var(--sg-border)] bg-gradient-to-r from-cyan-400/10 via-violet-500/10 to-pink-500/10">
             <CardContent className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <h3 className="text-xl font-black text-white">
+                <h3 className="text-xl font-black text-[var(--sg-text)]">
                   ¿Quieres formar parte del evento?
                 </h3>
 
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                   Las postulaciones pueden seguir abiertas según
                   la organización del evento.
                 </p>
@@ -1136,7 +1231,7 @@ const mappedEntries =
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link to="/postulacion">
-                  <Button className="w-full bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white sm:w-auto">
+                  <Button className="w-full bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-[var(--sg-text)] sm:w-auto">
                     <ClipboardEdit className="mr-2 h-4 w-4" />
                     Ir a postulaciones
                   </Button>

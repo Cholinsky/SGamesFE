@@ -1,2145 +1,1389 @@
-import { useState, useEffect } from "react";
-import { DateTime } from "luxon";
-import { useForm } from "react-hook-form";
-import { Button } from "../components/ui/button";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Link } from "react-router";
-import { getActivePublicEvent } from "../services/eventService";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { Textarea } from "../components/ui/textarea";
-import {
-  Plus,
-  Trash2,
-  Send,
-  CheckCircle,
-  AlertCircle,
-  CalendarDays,
-  Star,
-  Lock,
-  Globe2,
+  ExternalLink,
   Gamepad2,
+  Share2,
+  Timer,
+  Trophy,
   Users,
+  Monitor,
+  SearchX,
+  Search,
+  ListFilter,
 } from "lucide-react";
-import { toast } from "sonner";
-import { createApplication } from "../services/applicationService";
-import { getSocialNetworks } from "../services/socialNetworkService";
+import { getPublicApprovedApplications } from "../services/applicationService";
+import {
+  ShareModal,
+  type SharePayload,
+} from "../components/ShareModal";
 
-type SocialNetworkCatalog = {
-  id: string;
-  name: string;
-  iconName?: string;
-  baseUrl?: string;
-};
-
-type SocialNetwork = {
-  id: string;
+type PublicApprovedRunSocialNetwork = {
   socialNetworkId: string;
+  name: string;
   url: string;
 };
 
-type Availability = {
-  dayDate: string;
-  label: string;
-  selected: boolean;
-  availableFrom: string;
-  availableTo: string;
-  isPreferred: boolean;
-  notes: string;
+type PublicApprovedRunParticipant = {
+  id?: string;
+  runnerName?: string | null;
+  email?: string | null;
+  discordUser?: string | null;
+  country?: string | null;
+  videoUrl?: string | null;
+  sortOrder?: number | null;
 };
 
-type RunForm = {
+type PublicApprovedRun = {
   id: string;
+  runnerName: string;
   game: string;
   category: string;
-  hours: string;
-  minutes: string;
-  seconds: string;
   platform: string;
-  aspectRatio: string;
-  videoUrl: string;
-  runType: string;
-  raceRunnerName: string;
-  raceEmail: string;
-  raceDiscordUser: string;
-  raceCountry: string;
-  raceVideoUrl: string;
-  notes: string;
+  runType?: string | null;
+  estimatedTimeMinutes: number;
+  estimatedTime: string;
+  youtubeUrl?: string | null;
+  socialNetworks?: PublicApprovedRunSocialNetwork[] | null;
+  participants?: PublicApprovedRunParticipant[] | null;
 };
 
-type FormData = {
+type PublicApprovedRunnerGroup = {
   runnerName: string;
-  email: string;
-  discordUser: string;
-  notes?: string;
-  organizerComments?: string;
+  socialNetworks: PublicApprovedRunSocialNetwork[];
+  runs: PublicApprovedRun[];
 };
 
-const eventDays: Availability[] = [
-  {
-    dayDate: "2026-07-31",
-    label: "Viernes 31 de julio",
-    selected: false,
-    availableFrom: "10:00",
-    availableTo: "23:59",
-    isPreferred: false,
-    notes: "",
-  },
-  {
-    dayDate: "2026-08-01",
-    label: "Sábado 1 de agosto",
-    selected: false,
-    availableFrom: "10:00",
-    availableTo: "23:59",
-    isPreferred: false,
-    notes: "",
-  },
-  {
-    dayDate: "2026-08-02",
-    label: "Domingo 2 de agosto",
-    selected: false,
-    availableFrom: "10:00",
-    availableTo: "23:59",
-    isPreferred: false,
-    notes: "",
-  },
-];
+type RunFormatFilter =
+  | "All"
+  | "Solo"
+  | "Race";
 
-const platformOptions = [
-  "PC",
-  "PlayStation 5",
-  "PlayStation 4",
-  "PlayStation 3",
-  "PlayStation 2",
-  "PlayStation 1",
-  "Xbox Series X/S",
-  "Xbox One",
-  "Xbox 360",
-  "Nintendo Switch",
-  "Nintendo Wii U",
-  "Nintendo Wii",
-  "Nintendo 64",
-  "GameCube",
-  "SNES",
-  "NES",
-  "Game Boy",
-  "Game Boy Advance",
-  "Nintendo DS",
-  "Nintendo 3DS",
-  "Sega Genesis",
-  "Dreamcast",
-  "Móvil",
-  "Otro",
-];
-
-const aspectRatioOptions = [
-  "16:9",
-  "4:3",
-  "21:9",
-  "Vertical",
-];
-
-const MEXICO_TIMEZONE = "America/Mexico_City";
-
-const timezoneOptions = [
-  {
-    value: "America/Mexico_City",
-    label: "México Centro",
-  },
-  {
-    value: "America/Tijuana",
-    label: "México Pacífico / Tijuana",
-  },
-  {
-    value: "America/New_York",
-    label: "Estados Unidos Este",
-  },
-  {
-    value: "America/Chicago",
-    label: "Estados Unidos Centro",
-  },
-  {
-    value: "America/Denver",
-    label: "Estados Unidos Montaña",
-  },
-  {
-    value: "America/Los_Angeles",
-    label: "Estados Unidos Pacífico",
-  },
-  {
-    value: "America/Bogota",
-    label: "Colombia / Perú / Ecuador",
-  },
-  {
-    value: "America/Santiago",
-    label: "Chile",
-  },
-  {
-    value: "America/Argentina/Buenos_Aires",
-    label: "Argentina",
-  },
-  {
-    value: "Europe/Madrid",
-    label: "España",
-  },
-  {
-    value: "Europe/London",
-    label: "Reino Unido",
-  },
-  {
-    value: "Europe/Paris",
-    label: "Francia / Europa Central",
-  },
-  {
-    value: "Asia/Tokyo",
-    label: "Japón",
-  },
-];
-
-function getTimezoneLabel(value: string) {
-  return (
-    timezoneOptions.find(
-      (timezone) =>
-        timezone.value === value
-    )?.label ?? value
-  );
-}
-
-function createId() {
-  if (
-    typeof crypto !== "undefined" &&
-    "randomUUID" in crypto
-  ) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random()}`;
-}
-
-function createEmptyRun(): RunForm {
-  return {
-    id: createId(),
-    game: "",
-    category: "",
-    hours: "",
-    minutes: "",
-    seconds: "",
-    platform: "",
-    aspectRatio: "",
-    videoUrl: "",
-    runType: "Solo",
-    raceRunnerName: "",
-    raceEmail: "",
-    raceDiscordUser: "",
-    raceCountry: "",
-    raceVideoUrl: "",
-    notes: "",
-  };
-}
-
-function toApiTime(value: string) {
-  return `${value}:00`;
-}
-
-function getRunTotalSeconds(run: RunForm) {
-  return (
-    Number(run.hours || 0) * 3600 +
-    Number(run.minutes || 0) * 60 +
-    Number(run.seconds || 0)
-  );
-}
-
-function getRunEstimatedMinutes(run: RunForm) {
-  const totalSeconds =
-    getRunTotalSeconds(run);
-
-  return Math.ceil(
-    totalSeconds / 60
-  );
-}
-
-function isValidVideoUrl(value: string) {
-  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|twitch\.tv)\/.+$/i.test(
-    value
-  );
-}
-
-function convertAvailabilityToMexico(
-  availability: Availability,
-  runnerTimezone: string
+function getNormalizedRunType(
+  run?: PublicApprovedRun | null
 ) {
-  const localStart =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableFrom}:00`,
-      { zone: runnerTimezone }
-    );
+  const value = run?.runType?.trim();
 
-  const localEnd =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableTo}:00`,
-      { zone: runnerTimezone }
-    );
+  if (!value) {
+    return "Solo";
+  }
 
-  const mexicoStart =
-    localStart.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  const mexicoEnd =
-    localEnd.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  return {
-    dayDate:
-      mexicoStart.toFormat(
-        "yyyy-MM-dd"
-      ),
-    availableFrom:
-      mexicoStart.toFormat(
-        "HH:mm:ss"
-      ),
-    availableToDayDate:
-      mexicoEnd.toFormat(
-        "yyyy-MM-dd"
-      ),
-    availableTo:
-      mexicoEnd.toFormat(
-        "HH:mm:ss"
-      ),
-    localDayDate:
-      availability.dayDate,
-    localAvailableFrom:
-      toApiTime(
-        availability.availableFrom
-      ),
-    localAvailableTo:
-      toApiTime(
-        availability.availableTo
-      ),
-    isPreferred:
-      availability.isPreferred,
-    notes:
-      availability.notes.trim() || null,
-  };
+  return value;
 }
 
-function isAvailabilityConversionValid(
-  availability: Availability,
-  runnerTimezone: string
+function isRaceRun(
+  run: PublicApprovedRun
 ) {
-  const localStart =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableFrom}:00`,
-      { zone: runnerTimezone }
-    );
-
-  const localEnd =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableTo}:00`,
-      { zone: runnerTimezone }
-    );
-
-  return (
-    localStart.isValid &&
-    localEnd.isValid
-  );
+  return getNormalizedRunType(run)
+    .toLowerCase() === "race";
 }
 
-function formatConvertedAvailability(
-  availability: Availability,
-  runnerTimezone: string
+function getRunFormatLabel(
+  run: PublicApprovedRun
 ) {
-  const localStart =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableFrom}:00`,
-      { zone: runnerTimezone }
-    );
-
-  const localEnd =
-    DateTime.fromISO(
-      `${availability.dayDate}T${availability.availableTo}:00`,
-      { zone: runnerTimezone }
-    );
-
-  if (!localStart.isValid ||
-      !localEnd.isValid) {
-    return "Horario inválido";
-  }
-
-  const mexicoStart =
-    localStart.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  const mexicoEnd =
-    localEnd.setZone(
-      MEXICO_TIMEZONE
-    );
-
-  const sameDay =
-    mexicoStart.toFormat(
-      "yyyy-MM-dd"
-    ) ===
-    mexicoEnd.toFormat(
-      "yyyy-MM-dd"
-    );
-
-  if (sameDay) {
-    return `${mexicoStart.setLocale(
-      "es-MX"
-    ).toFormat(
-      "cccc d 'de' LLLL"
-    )}, ${mexicoStart.toFormat(
-      "HH:mm"
-    )} - ${mexicoEnd.toFormat(
-      "HH:mm"
-    )}`;
-  }
-
-  return `${mexicoStart.setLocale(
-    "es-MX"
-  ).toFormat(
-    "cccc d 'de' LLLL HH:mm"
-  )} - ${mexicoEnd.setLocale(
-    "es-MX"
-  ).toFormat(
-    "cccc d 'de' LLLL HH:mm"
-  )}`;
+  return isRaceRun(run)
+    ? "Race"
+    : "Individual";
 }
 
+function getRunFormatBadgeClass(
+  run: PublicApprovedRun
+) {
+  return isRaceRun(run)
+    ? "sgames-runs-badge-accent"
+    : "sgames-runs-badge-primary";
+}
 
-const postulacionThemeCss = `
-  .sgames-postulation-page {
-    background:
-      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 14%, transparent), transparent 30rem),
-      radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 13%, transparent), transparent 32rem),
-      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 62%, var(--sg-background) 38%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
-    color: var(--sg-text);
-  }
+function getSortedParticipants(
+  run: PublicApprovedRun
+) {
+  const participants =
+    run.participants?.filter(
+      (participant) =>
+        participant.runnerName?.trim()
+    ) ?? [];
 
-  .sgames-postulation-title {
-    background:
-      linear-gradient(
-        90deg,
-        var(--sg-primary),
-        var(--sg-secondary),
-        var(--sg-accent)
-      );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .sgames-postulation-card {
-    border: 1px solid var(--sg-border);
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--sg-surface) 72%, transparent),
-        color-mix(in srgb, var(--sg-background) 84%, transparent)
-      );
-    box-shadow:
-      0 0 35px rgba(15, 23, 42, 0.25);
-    backdrop-filter: blur(14px);
-  }
-
-  .sgames-postulation-run-card {
-    border: 1px solid color-mix(in srgb, var(--sg-primary) 24%, transparent);
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--sg-surface) 58%, transparent),
-        color-mix(in srgb, var(--sg-background) 76%, transparent)
-      );
-  }
-
-  .sgames-postulation-input {
-    border-color: var(--sg-border) !important;
-    background: color-mix(in srgb, var(--sg-background) 82%, #000000 18%) !important;
-    color: var(--sg-text) !important;
-  }
-
-  .sgames-postulation-input::placeholder {
-    color: color-mix(in srgb, var(--sg-muted-text) 52%, transparent);
-  }
-
-  .sgames-postulation-select-content {
-    border-color: var(--sg-border) !important;
-    background: color-mix(in srgb, var(--sg-surface) 88%, #000000 12%) !important;
-    color: var(--sg-text) !important;
-  }
-
-  .sgames-postulation-muted {
-    color: var(--sg-muted-text);
-  }
-
-  .sgames-postulation-muted-soft {
-    color: color-mix(in srgb, var(--sg-muted-text) 70%, transparent);
-  }
-
-  .sgames-postulation-heading {
-    color: var(--sg-primary);
-  }
-
-  .sgames-postulation-icon-primary {
-    color: var(--sg-primary);
-  }
-
-  .sgames-postulation-icon-secondary {
-    color: var(--sg-secondary);
-  }
-
-  .sgames-postulation-icon-accent {
-    color: var(--sg-accent);
-  }
-
-  .sgames-postulation-info-box {
-    border: 1px solid color-mix(in srgb, var(--sg-secondary) 24%, transparent);
-    background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
-  }
-
-  .sgames-postulation-race-box {
-    border: 1px solid color-mix(in srgb, var(--sg-secondary) 32%, transparent);
-    background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
-  }
-
-  .sgames-postulation-race-player-box {
-    border: 1px solid color-mix(in srgb, var(--sg-primary) 24%, transparent);
-    background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
-  }
-
-  .sgames-postulation-availability-selected {
-    border-color: color-mix(in srgb, var(--sg-primary) 52%, transparent);
-    background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
-  }
-
-  .sgames-postulation-availability-idle {
-    border-color: var(--sg-border);
-    background: color-mix(in srgb, var(--sg-surface) 42%, transparent);
-  }
-
-  .sgames-postulation-converted-box {
-    border: 1px solid color-mix(in srgb, var(--sg-primary) 24%, transparent);
-    background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
-  }
-
-  .sgames-postulation-social-row {
-    border: 1px solid var(--sg-border);
-    background: color-mix(in srgb, var(--sg-surface) 50%, transparent);
-  }
-
-  .sgames-postulation-primary-button {
-    border: 0;
-    background:
-      linear-gradient(
-        90deg,
-        var(--sg-primary),
-        var(--sg-secondary),
-        var(--sg-accent)
-      );
-    color: #ffffff;
-    box-shadow:
-      0 0 28px color-mix(in srgb, var(--sg-accent) 26%, transparent);
-  }
-
-  .sgames-postulation-primary-button:hover {
-    filter: brightness(1.12);
-  }
-
-  .sgames-postulation-outline-button {
-    border-color: color-mix(in srgb, var(--sg-primary) 46%, transparent) !important;
-    background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
-    color: var(--sg-primary) !important;
-  }
-
-  .sgames-postulation-outline-button:hover {
-    border-color: color-mix(in srgb, var(--sg-accent) 58%, transparent) !important;
-    background: color-mix(in srgb, var(--sg-accent) 12%, transparent) !important;
-    color: var(--sg-accent) !important;
-  }
-
-  .sgames-postulation-warning-card {
-    border: 1px solid color-mix(in srgb, #facc15 40%, transparent);
-    background: color-mix(in srgb, #facc15 10%, transparent);
-  }
-`;
-
-export default function PostulacionPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>();
-
-  const [socialNetworks, setSocialNetworks] =
-    useState<SocialNetwork[]>([]);
-
-  const [catalog, setCatalog] =
-    useState<SocialNetworkCatalog[]>([]);
-
-  const [runs, setRuns] =
-    useState<RunForm[]>([
-      createEmptyRun(),
-    ]);
-
-  const [availabilities, setAvailabilities] =
-    useState<Availability[]>(eventDays);
-
-  const [runnerTimezone, setRunnerTimezone] =
-    useState(MEXICO_TIMEZONE);
-
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
-
-  const [submitSuccess, setSubmitSuccess] =
-    useState(false);
-
-  const [loadingEventStatus, setLoadingEventStatus] =
-    useState(true);
-
-  const [applicationsOpen, setApplicationsOpen] =
-    useState(true);
-
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  async function loadInitialData() {
-    await loadSocialNetworks();
-    await loadActiveEventStatus();
-  }
-
-  async function loadActiveEventStatus() {
-    try {
-      setLoadingEventStatus(true);
-
-      const activeEvent =
-        await getActivePublicEvent();
-
-      setApplicationsOpen(
-        activeEvent.applicationsOpen ?? true
-      );
-    } catch (error) {
-      console.error(error);
-
-      setApplicationsOpen(false);
-
-      toast.error(
-        "No fue posible validar si las postulaciones están abiertas"
-      );
-    } finally {
-      setLoadingEventStatus(false);
-    }
-  }
-
-  async function loadSocialNetworks() {
-    try {
-      const data =
-        await getSocialNetworks();
-
-      setCatalog(data);
-    } catch (error) {
-      console.error(error);
-
-      toast.error(
-        "No fue posible cargar las redes sociales"
-      );
-    }
-  }
-
-  const addRun = () => {
-    setRuns((current) => [
-      ...current,
-      createEmptyRun(),
-    ]);
-  };
-
-  const removeRun = (
-    id: string
-  ) => {
-    setRuns((current) => {
-      if (current.length === 1) {
-        toast.error(
-          "Debe existir al menos una run"
-        );
-
-        return current;
-      }
-
-      return current.filter(
-        (run) => run.id !== id
-      );
-    });
-  };
-
-  const updateRun = (
-    id: string,
-    field: keyof RunForm,
-    value: string
-  ) => {
-    setRuns((current) =>
-      current.map((run) =>
-        run.id === id
-          ? {
-              ...run,
-              [field]: value,
-            }
-          : run
-      )
-    );
-  };
-
-  const addSocialNetwork = () => {
-    setSocialNetworks([
-      ...socialNetworks,
+  if (!participants.length) {
+    return [
       {
-        id: createId(),
-        socialNetworkId: "",
-        url: "",
+        runnerName: run.runnerName,
+        videoUrl: run.youtubeUrl,
+        sortOrder: 1,
       },
-    ]);
-  };
+    ];
+  }
 
-  const removeSocialNetwork = (
-    id: string
-  ) => {
-    setSocialNetworks(
-      socialNetworks.filter(
-        (sn) => sn.id !== id
+  return [...participants].sort(
+    (a, b) =>
+      (a.sortOrder ?? 999) -
+      (b.sortOrder ?? 999)
+  );
+}
+
+function getRaceParticipants(
+  run: PublicApprovedRun
+) {
+  if (!isRaceRun(run)) {
+    return [];
+  }
+
+  return getSortedParticipants(run);
+}
+
+function getRunParticipantNames(
+  run: PublicApprovedRun
+) {
+  if (!isRaceRun(run)) {
+    return run.runnerName;
+  }
+
+  const names =
+    getSortedParticipants(run)
+      .map((participant) =>
+        participant.runnerName?.trim()
       )
-    );
-  };
+      .filter(Boolean);
 
-  const updateSocialNetwork = (
-    id: string,
-    field: "socialNetworkId" | "url",
-    value: string
-  ) => {
-    setSocialNetworks(
-      socialNetworks.map((sn) =>
-        sn.id === id
-          ? {
-              ...sn,
-              [field]: value,
-            }
-          : sn
-      )
-    );
-  };
+  if (!names.length) {
+    return run.runnerName;
+  }
 
-  const updateAvailability = (
-    dayDate: string,
-    field: keyof Availability,
-    value: string | boolean
-  ) => {
-    setAvailabilities((current) =>
-      current.map((item) =>
-        item.dayDate === dayDate
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item
-      )
-    );
-  };
+  return names.join(" vs ");
+}
 
-  const resetAvailability = () => {
-    setAvailabilities(eventDays);
-  };
+function getRunShareText(
+  run: PublicApprovedRun
+) {
+  if (isRaceRun(run)) {
+    return `${getRunParticipantNames(run)} participarán en SGames con ${run.game} - ${run.category} en formato Race.`;
+  }
 
-  const resetRuns = () => {
-    setRuns([
-      createEmptyRun(),
-    ]);
-  };
+  return `${run.runnerName} participará en SGames con ${run.game} - ${run.category}.`;
+}
 
-  const validateRuns = () => {
-    if (!runs.length) {
-      toast.error(
-        "Agrega al menos una run"
-      );
+function getRunnerShareText(
+  group: PublicApprovedRunnerGroup
+) {
+  const runNames =
+    group.runs
+      .map((run) => {
+        const format =
+          isRaceRun(run)
+            ? "Race"
+            : "Individual";
 
-      return false;
+        return `${run.game} - ${run.category} (${format})`;
+      })
+      .join(", ");
+
+  return `${group.runnerName} participará en SGames con: ${runNames}.`;
+}
+
+function groupRunsByRunner(
+  runs: PublicApprovedRun[]
+): PublicApprovedRunnerGroup[] {
+  const groups =
+    new Map<string, PublicApprovedRunnerGroup>();
+
+  runs.forEach((run) => {
+    const cleanRunnerName =
+      run.runnerName?.trim() || "Runner sin nombre";
+
+    const key =
+      cleanRunnerName.toLowerCase();
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        runnerName: cleanRunnerName,
+        socialNetworks: [],
+        runs: [],
+      });
     }
 
-    for (let index = 0; index < runs.length; index++) {
-      const run =
-        runs[index];
+    const group =
+      groups.get(key)!;
 
-      const runNumber =
-        index + 1;
+    group.runs.push(run);
 
-      if (!run.game.trim()) {
-        toast.error(
-          `La run #${runNumber} necesita juego`
+    run.socialNetworks?.forEach((social) => {
+      const alreadyExists =
+        group.socialNetworks.some(
+          (item) =>
+            item.socialNetworkId === social.socialNetworkId &&
+            item.url === social.url
         );
 
-        return false;
+      if (!alreadyExists) {
+        group.socialNetworks.push(social);
       }
+    });
+  });
 
-      if (!run.category.trim()) {
-        toast.error(
-          `La run #${runNumber} necesita categoría`
-        );
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      runs: group.runs.sort((a, b) =>
+        a.game.localeCompare(b.game)
+      ),
+    }))
+    .sort((a, b) =>
+      a.runnerName.localeCompare(b.runnerName)
+    );
+}
 
-        return false;
-      }
+function normalizeSearchValue(
+  value?: string | null
+) {
+  return value
+    ?.trim()
+    .toLowerCase() ?? "";
+}
 
-      if (!run.platform.trim()) {
-        toast.error(
-          `La run #${runNumber} necesita plataforma`
-        );
-
-        return false;
-      }
-
-      if (!run.aspectRatio.trim()) {
-        toast.error(
-          `La run #${runNumber} necesita relación de pantalla`
-        );
-
-        return false;
-      }
-
-      if (getRunTotalSeconds(run) <= 0) {
-        toast.error(
-          `La run #${runNumber} necesita un tiempo estimado mayor a 0`
-        );
-
-        return false;
-      }
-
-      if (!run.videoUrl.trim()) {
-        toast.error(
-          `La run #${runNumber} necesita video demostrativo del jugador principal`
-        );
-
-        return false;
-      }
-
-      if (!isValidVideoUrl(
-          run.videoUrl.trim()
-      )) {
-        toast.error(
-          `La run #${runNumber} tiene una URL inválida. Usa un video de YouTube o Twitch`
-        );
-
-        return false;
-      }
-
-      if (run.runType === "Race") {
-        if (!run.raceRunnerName.trim()) {
-          toast.error(
-            `La run #${runNumber} necesita el nombre del jugador 2`
-          );
-
-          return false;
-        }
-
-        if (!run.raceVideoUrl.trim()) {
-          toast.error(
-            `La run #${runNumber} necesita el VOD del jugador 2`
-          );
-
-          return false;
-        }
-
-        if (!isValidVideoUrl(
-            run.raceVideoUrl.trim()
-        )) {
-          toast.error(
-            `La run #${runNumber} tiene una URL inválida en el jugador 2. Usa YouTube o Twitch`
-          );
-
-          return false;
-        }
-      }
-    }
-
+function runMatchesFormat(
+  run: PublicApprovedRun,
+  formatFilter: RunFormatFilter
+) {
+  if (formatFilter === "All") {
     return true;
-  };
+  }
 
-  const onSubmit = async (
-    data: FormData
-  ) => {
-    try {
-      setIsSubmitting(true);
-      setSubmitSuccess(false);
+  if (formatFilter === "Race") {
+    return isRaceRun(run);
+  }
 
-      if (!applicationsOpen) {
-        toast.error(
-          "Las postulaciones están cerradas"
-        );
+  return !isRaceRun(run);
+}
 
-        setIsSubmitting(false);
-        return;
-      }
+function runMatchesSearch(
+  run: PublicApprovedRun,
+  searchText: string
+) {
+  const term =
+    normalizeSearchValue(searchText);
 
-      if (!validateRuns()) {
-        setIsSubmitting(false);
-        return;
-      }
+  if (!term) {
+    return true;
+  }
 
-      const selectedAvailabilities =
-        availabilities.filter(
-          (item) => item.selected
-        );
+  const participantNames =
+    getSortedParticipants(run)
+      .map((participant) =>
+        participant.runnerName ?? ""
+      )
+      .join(" ");
 
-      if (selectedAvailabilities.length === 0) {
-        toast.error(
-          "Selecciona al menos un día disponible para correr"
-        );
+  const searchableText =
+    [
+      run.runnerName,
+      run.game,
+      run.category,
+      run.platform,
+      getRunFormatLabel(run),
+      participantNames,
+    ]
+      .join(" ")
+      .toLowerCase();
 
-        setIsSubmitting(false);
-        return;
-      }
+  return searchableText.includes(term);
+}
 
-      const invalidAvailability =
-        selectedAvailabilities.some(
-          (item) =>
-            !item.availableFrom ||
-            !item.availableTo ||
-            item.availableFrom >= item.availableTo
-        );
+function getUniqueRunnerCount(
+  runs: PublicApprovedRun[]
+) {
+  const names =
+    new Set<string>();
 
-      if (invalidAvailability) {
-        toast.error(
-          "Revisa tus horarios disponibles. La hora inicial debe ser menor que la hora final"
-        );
+  runs.forEach((run) => {
+    if (isRaceRun(run)) {
+      getSortedParticipants(run)
+        .forEach((participant) => {
+          const name =
+            participant.runnerName
+              ?.trim()
+              .toLowerCase();
 
-        setIsSubmitting(false);
-        return;
-      }
-
-      const invalidTimezoneConversion =
-        selectedAvailabilities.some(
-          (item) =>
-            !isAvailabilityConversionValid(
-              item,
-              runnerTimezone
-            )
-        );
-
-      if (invalidTimezoneConversion) {
-        toast.error(
-          "No se pudo convertir correctamente la disponibilidad a México Centro"
-        );
-
-        setIsSubmitting(false);
-        return;
-      }
-
-      const validSocialNetworks =
-        socialNetworks.filter(
-          (x) =>
-            x.socialNetworkId.trim() !== "" &&
-            x.url.trim() !== ""
-        );
-
-      const invalidSocialNetwork =
-        socialNetworks.some(
-          (x) =>
-            (x.socialNetworkId.trim() !== "" &&
-              x.url.trim() === "") ||
-            (x.socialNetworkId.trim() === "" &&
-              x.url.trim() !== "")
-        );
-
-      if (invalidSocialNetwork) {
-        toast.error(
-          "Completa o elimina las redes sociales incompletas"
-        );
-
-        setIsSubmitting(false);
-        return;
-      }
-
-      const combinedNotes =
-        [
-          data.notes,
-          data.organizerComments
-            ? `Comentarios para organizadores: ${data.organizerComments}`
-            : null,
-        ]
-          .filter(Boolean)
-          .join("\n\n");
-
-      const convertedAvailabilities =
-        selectedAvailabilities.map((item) =>
-          convertAvailabilityToMexico(
-            item,
-            runnerTimezone
-          )
-        );
-
-      const applicationRuns =
-        runs.map((run) => {
-          const participants =
-            run.runType === "Race"
-              ? [
-                  {
-                    runnerName:
-                      data.runnerName.trim(),
-
-                    email:
-                      data.email.trim(),
-
-                    discordUser:
-                      data.discordUser?.trim() || null,
-
-                    country:
-                      null,
-
-                    videoUrl:
-                      run.videoUrl.trim(),
-                  },
-                  {
-                    runnerName:
-                      run.raceRunnerName.trim(),
-
-                    email:
-                      run.raceEmail.trim() || null,
-
-                    discordUser:
-                      run.raceDiscordUser.trim() || null,
-
-                    country:
-                      run.raceCountry.trim() || null,
-
-                    videoUrl:
-                      run.raceVideoUrl.trim(),
-                  },
-                ]
-              : [];
-
-          return {
-            gameName:
-              run.game.trim(),
-
-            categoryName:
-              run.category.trim(),
-
-            platformName:
-              run.platform,
-
-            estimatedTimeMinutes:
-              getRunEstimatedMinutes(run),
-
-            aspectRatio:
-              run.aspectRatio,
-
-            youtubeUrl:
-              run.videoUrl.trim(),
-
-            notes:
-              run.notes.trim() || null,
-
-            runType:
-              run.runType,
-
-            participants,
-          };
+          if (name) {
+            names.add(name);
+          }
         });
 
-      const firstRun =
-        applicationRuns[0];
+      return;
+    }
 
-      const payload = {
-        runnerName:
-          data.runnerName.trim(),
+    const name =
+      run.runnerName
+        ?.trim()
+        .toLowerCase();
 
-        email:
-          data.email.trim(),
+    if (name) {
+      names.add(name);
+    }
+  });
 
-        discordUser:
-          data.discordUser?.trim() || null,
+  return names.size;
+}
 
-        runnerTimezone,
+function getRunsPageUrl() {
+  if (typeof window === "undefined") {
+    return "/runs";
+  }
 
-        notes:
-          combinedNotes || null,
+  return `${window.location.origin}/runs`;
+}
 
-        socialNetworks:
-          validSocialNetworks.map((x) => ({
-            socialNetworkId:
-              x.socialNetworkId,
-            url: x.url.trim(),
-          })),
+export default function RunsPage() {
+  const [runs, setRuns] =
+    useState<PublicApprovedRun[]>([]);
 
-        availabilities:
-          convertedAvailabilities,
+  const [loading, setLoading] =
+    useState(true);
 
-        runs:
-          applicationRuns,
+  const [searchText, setSearchText] =
+    useState("");
 
-        // Compatibilidad con backend anterior
-        gameName:
-          firstRun.gameName,
+  const [formatFilter, setFormatFilter] =
+    useState<RunFormatFilter>("All");
 
-        categoryName:
-          firstRun.categoryName,
+  const [shareOpen, setShareOpen] =
+    useState(false);
 
-        platformName:
-          firstRun.platformName,
+  const [sharePayload, setSharePayload] =
+    useState<SharePayload | null>(null);
 
-        estimatedTimeMinutes:
-          firstRun.estimatedTimeMinutes,
+  const filteredRuns =
+    useMemo(
+      () =>
+        runs.filter(
+          (run) =>
+            runMatchesFormat(
+              run,
+              formatFilter
+            ) &&
+            runMatchesSearch(
+              run,
+              searchText
+            )
+        ),
+      [
+        runs,
+        formatFilter,
+        searchText,
+      ]
+    );
 
-        aspectRatio:
-          firstRun.aspectRatio,
+  const runnerGroups =
+    useMemo(
+      () =>
+        groupRunsByRunner(
+          filteredRuns
+        ),
+      [filteredRuns]
+    );
 
-        youtubeUrl:
-          firstRun.youtubeUrl,
+  const stats =
+    useMemo(() => {
+      const raceRuns =
+        runs.filter(isRaceRun).length;
+
+      const individualRuns =
+        runs.length - raceRuns;
+
+      return {
+        totalRuns: runs.length,
+        individualRuns,
+        raceRuns,
+        totalRunners:
+          getUniqueRunnerCount(runs),
       };
+    }, [runs]);
 
-      const result =
-        await createApplication(payload);
+  const hasActiveFilters =
+    searchText.trim() !== "" ||
+    formatFilter !== "All";
 
-      const totalApplications =
-        result?.totalApplications ??
-        applicationRuns.length;
+  useEffect(() => {
+    loadRuns();
+  }, []);
 
-      toast.success(
-        totalApplications > 1
-          ? `¡${totalApplications} postulaciones enviadas con éxito!`
-          : "¡Postulación enviada con éxito!"
+  async function loadRuns() {
+    try {
+      setLoading(true);
+
+      const data =
+        await getPublicApprovedApplications();
+
+      setRuns(
+        Array.isArray(data)
+          ? data
+          : []
       );
-
-      setSubmitSuccess(true);
-
-      reset();
-      resetRuns();
-      setRunnerTimezone(MEXICO_TIMEZONE);
-      setSocialNetworks([]);
-      resetAvailability();
     } catch (error) {
       console.error(error);
-
-      toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : "No se pudo enviar la postulación"
-      );
+      setRuns([]);
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
-  };
-
-  if (loadingEventStatus) {
-    return (
-      <div className="sgames-postulation-page min-h-screen py-12">
-        <style>{postulacionThemeCss}</style>
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl">
-            <Card className="sgames-postulation-card">
-              <CardContent className="p-8 text-center text-[var(--sg-muted-text)]">
-                Verificando estado de postulaciones...
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
   }
 
-  if (!applicationsOpen) {
-    return (
-      <div className="sgames-postulation-page min-h-screen py-12">
-        <style>{postulacionThemeCss}</style>
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl">
-            <Card className="sgames-postulation-warning-card">
-              <CardContent className="p-8 text-center">
-                <Lock className="mx-auto mb-5 h-14 w-14 text-yellow-300" />
-
-                <h1 className="mb-3 text-3xl font-bold text-[var(--sg-text)]">
-                  Postulaciones cerradas
-                </h1>
-
-                <p className="mx-auto mb-6 max-w-xl text-[var(--sg-muted-text)]">
-                  Las postulaciones para esta edición de SGames ya fueron cerradas.
-                  El staff está revisando las propuestas recibidas y preparando el
-                  horario oficial.
-                </p>
-
-                <Link to="/">
-                  <Button
-                    variant="outline"
-                    className="sgames-postulation-outline-button"
-                  >
-                    Volver al inicio
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
+  function openShare(
+    payload: SharePayload
+  ) {
+    setSharePayload(payload);
+    setShareOpen(true);
   }
 
-  return (
-    <div className="sgames-postulation-page min-h-screen py-12">
-      <style>{postulacionThemeCss}</style>
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl">
-          {/* Header */}
-          <div className="mb-8 text-center">
-            <h1 className="sgames-postulation-title mb-4 text-4xl font-bold">
-              Enviar Postulación
-            </h1>
-
-            <p className="text-[var(--sg-muted-text)]">
-              Completa el formulario para postular una o varias runs a SGames
-            </p>
-          </div>
-
-          {/* Success Message */}
-          {submitSuccess && (
-            <div className="mb-6 flex items-center gap-3 rounded-lg border border-green-500/50 bg-green-500/10 p-4">
-              <CheckCircle className="h-6 w-6 text-green-400" />
-
-              <div>
-                <p className="font-semibold text-green-400">
-                  ¡Postulación enviada con éxito!
-                </p>
-
-                <p className="text-sm text-green-400/80">
-                  Revisaremos tus propuestas y te contactaremos pronto.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Form Card */}
-          <Card className="sgames-postulation-card">
-            <CardContent className="p-6">
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="space-y-8"
-              >
-                {/* Información Personal */}
-                <div>
-                  <h3 className="sgames-postulation-heading mb-4 text-xl font-semibold">
-                    Información Personal
-                  </h3>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label
-                        htmlFor="runnerName"
-                        className="text-[var(--sg-muted-text)]"
-                      >
-                        Nombre del runner{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <Input
-                        id="runnerName"
-                        {...register("runnerName", {
-                          required:
-                            "Este campo es requerido",
-                        })}
-                        className="sgames-postulation-input mt-1.5"
-                        placeholder="Tu nombre o alias"
-                      />
-
-                      {errors.runnerName && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.runnerName.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label
-                        htmlFor="email"
-                        className="text-[var(--sg-muted-text)]"
-                      >
-                        Correo electrónico{" "}
-                        <span className="text-red-400">
-                          *
-                        </span>
-                      </Label>
-
-                      <Input
-                        id="email"
-                        type="email"
-                        {...register("email", {
-                          required:
-                            "Este campo es requerido",
-                          pattern: {
-                            value:
-                              /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                            message:
-                              "Correo electrónico inválido",
-                          },
-                        })}
-                        className="sgames-postulation-input mt-1.5"
-                        placeholder="correo@ejemplo.com"
-                      />
-
-                      {errors.email && (
-                        <p className="mt-1 flex items-center gap-1 text-sm text-red-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {errors.email.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label
-                        htmlFor="discordUser"
-                        className="text-[var(--sg-muted-text)]"
-                      >
-                        Usuario de Discord
-                      </Label>
-
-                      <Input
-                        id="discordUser"
-                        {...register("discordUser")}
-                        className="sgames-postulation-input mt-1.5"
-                        placeholder="Ej: Ch0linsky#1234 o ch0linsky"
-                      />
-
-                      <p className="sgames-postulation-muted-soft mt-1 text-xs">
-                        Opcional. Nos ayuda a contactarte más fácilmente.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Runs */}
-                <div>
-                  <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <h3 className="sgames-postulation-heading flex items-center gap-2 text-xl font-semibold">
-                        <Gamepad2 className="h-5 w-5" />
-                        Runs a postular
-                      </h3>
-
-                      <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
-                        Puedes agregar varios juegos. El staff recibirá cada run como una postulación separada.
-                      </p>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addRun}
-                      className="sgames-postulation-outline-button w-fit"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Agregar otra run
-                    </Button>
-                  </div>
-
-                  <div className="space-y-5">
-                    {runs.map((run, index) => (
-                      <div
-                        key={run.id}
-                        className="sgames-postulation-run-card rounded-xl p-4"
-                      >
-                        <div className="mb-4 flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm uppercase tracking-[0.18em] text-[var(--sg-primary)]">
-                              Run #{index + 1}
-                            </p>
-
-                            <h4 className="font-semibold text-[var(--sg-text)]">
-                              {run.game.trim()
-                                ? run.game
-                                : "Nueva run"}
-                            </h4>
-                          </div>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={runs.length === 1}
-                            onClick={() =>
-                              removeRun(run.id)
-                            }
-                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
-                            title="Eliminar run"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <Label className="text-[var(--sg-muted-text)]">
-                              Formato de run{" "}
-                              <span className="text-red-400">
-                                *
-                              </span>
-                            </Label>
-
-                            <Select
-                              value={run.runType}
-                              onValueChange={(value) =>
-                                updateRun(
-                                  run.id,
-                                  "runType",
-                                  value
-                                )
-                              }
-                            >
-                              <SelectTrigger className="sgames-postulation-input mt-1.5">
-                                <SelectValue placeholder="Selecciona formato" />
-                              </SelectTrigger>
-
-                              <SelectContent className="sgames-postulation-select-content">
-                                <SelectItem value="Solo">
-                                  Individual
-                                </SelectItem>
-
-                                <SelectItem value="Race">
-                                  Race / Carrera
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            <p className="sgames-postulation-muted-soft mt-2 text-sm">
-                              En Race, el runner principal será el jugador 1 y podrás agregar el jugador 2.
-                            </p>
-                          </div>
-
-                          <div>
-                            <Label className="text-[var(--sg-muted-text)]">
-                              Juego{" "}
-                              <span className="text-red-400">
-                                *
-                              </span>
-                            </Label>
-
-                            <Input
-                              value={run.game}
-                              onChange={(event) =>
-                                updateRun(
-                                  run.id,
-                                  "game",
-                                  event.target.value
-                                )
-                              }
-                              className="sgames-postulation-input mt-1.5"
-                              placeholder="Nombre del juego"
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-[var(--sg-muted-text)]">
-                              Categoría{" "}
-                              <span className="text-red-400">
-                                *
-                              </span>
-                            </Label>
-
-                            <Input
-                              value={run.category}
-                              onChange={(event) =>
-                                updateRun(
-                                  run.id,
-                                  "category",
-                                  event.target.value
-                                )
-                              }
-                              className="sgames-postulation-input mt-1.5"
-                              placeholder="Ej: Any%, 100%, Glitchless"
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-[var(--sg-muted-text)]">
-                              Tiempo estimado{" "}
-                              <span className="text-red-400">
-                                *
-                              </span>
-                            </Label>
-
-                            <div className="mt-1.5 grid grid-cols-3 gap-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                max="99"
-                                placeholder="HH"
-                                value={run.hours}
-                                onChange={(event) =>
-                                  updateRun(
-                                    run.id,
-                                    "hours",
-                                    event.target.value
-                                  )
-                                }
-                                className="sgames-postulation-input"
-                              />
-
-                              <Input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="MM"
-                                value={run.minutes}
-                                onChange={(event) =>
-                                  updateRun(
-                                    run.id,
-                                    "minutes",
-                                    event.target.value
-                                  )
-                                }
-                                className="sgames-postulation-input"
-                              />
-
-                              <Input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="SS"
-                                value={run.seconds}
-                                onChange={(event) =>
-                                  updateRun(
-                                    run.id,
-                                    "seconds",
-                                    event.target.value
-                                  )
-                                }
-                                className="sgames-postulation-input"
-                              />
-                            </div>
-
-                            <p className="sgames-postulation-muted-soft mt-2 text-sm">
-                              Formato HH:MM:SS
-                            </p>
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                              <Label className="text-[var(--sg-muted-text)]">
-                                Plataforma{" "}
-                                <span className="text-red-400">
-                                  *
-                                </span>
-                              </Label>
-
-                              <Select
-                                value={run.platform}
-                                onValueChange={(value) =>
-                                  updateRun(
-                                    run.id,
-                                    "platform",
-                                    value
-                                  )
-                                }
-                              >
-                                <SelectTrigger className="sgames-postulation-input mt-1.5">
-                                  <SelectValue placeholder="Selecciona plataforma" />
-                                </SelectTrigger>
-
-                                <SelectContent className="sgames-postulation-select-content">
-                                  {platformOptions.map(
-                                    (option) => (
-                                      <SelectItem
-                                        key={option}
-                                        value={option}
-                                      >
-                                        {option}
-                                      </SelectItem>
-                                    )
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label className="text-[var(--sg-muted-text)]">
-                                Relación de pantalla{" "}
-                                <span className="text-red-400">
-                                  *
-                                </span>
-                              </Label>
-
-                              <Select
-                                value={run.aspectRatio}
-                                onValueChange={(value) =>
-                                  updateRun(
-                                    run.id,
-                                    "aspectRatio",
-                                    value
-                                  )
-                                }
-                              >
-                                <SelectTrigger className="sgames-postulation-input mt-1.5">
-                                  <SelectValue placeholder="Selecciona ratio" />
-                                </SelectTrigger>
-
-                                <SelectContent className="sgames-postulation-select-content">
-                                  {aspectRatioOptions.map(
-                                    (option) => (
-                                      <SelectItem
-                                        key={option}
-                                        value={option}
-                                      >
-                                        {option}
-                                      </SelectItem>
-                                    )
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-[var(--sg-muted-text)]">
-                              URL de YouTube o Twitch / VOD del jugador principal{" "}
-                              <span className="text-red-400">
-                                *
-                              </span>
-                            </Label>
-
-                            <Input
-                              value={run.videoUrl}
-                              onChange={(event) =>
-                                updateRun(
-                                  run.id,
-                                  "videoUrl",
-                                  event.target.value
-                                )
-                              }
-                              className="sgames-postulation-input mt-1.5"
-                              placeholder="https://youtube.com/watch?v=... o https://www.twitch.tv/videos/..."
-                            />
-                          </div>
-
-                          {run.runType === "Race" && (
-                            <div className="sgames-postulation-race-box rounded-xl p-4">
-                              <div className="mb-4 flex items-center gap-2">
-                                <Users className="h-5 w-5 text-[var(--sg-secondary)]" />
-
-                                <div>
-                                  <h5 className="font-semibold text-[var(--sg-secondary)]">
-                                    Participantes de la Race
-                                  </h5>
-
-                                  <p className="text-sm text-[var(--sg-muted-text)]">
-                                    El runner principal del formulario será el jugador 1.
-                                    Agrega aquí los datos del jugador 2.
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="sgames-postulation-race-player-box mb-4 rounded-lg p-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
-                                  Jugador 1
-                                </p>
-
-                                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
-                                  Se usará el nombre, correo y Discord de la sección
-                                  Información Personal.
-                                </p>
-
-                                <p className="sgames-postulation-muted-soft mt-2 text-xs">
-                                  El video principal de esta run será el VOD del jugador 1.
-                                </p>
-                              </div>
-
-                              <div className="space-y-4">
-                                <div>
-                                  <Label className="text-[var(--sg-muted-text)]">
-                                    Nombre del jugador 2{" "}
-                                    <span className="text-red-400">
-                                      *
-                                    </span>
-                                  </Label>
-
-                                  <Input
-                                    value={run.raceRunnerName}
-                                    onChange={(event) =>
-                                      updateRun(
-                                        run.id,
-                                        "raceRunnerName",
-                                        event.target.value
-                                      )
-                                    }
-                                    className="sgames-postulation-input mt-1.5"
-                                    placeholder="Alias o nombre del jugador 2"
-                                  />
-                                </div>
-
-                                <div className="grid gap-4 md:grid-cols-2">
-                                  <div>
-                                    <Label className="text-[var(--sg-muted-text)]">
-                                      Correo del jugador 2 (opcional)
-                                    </Label>
-
-                                    <Input
-                                      type="email"
-                                      value={run.raceEmail}
-                                      onChange={(event) =>
-                                        updateRun(
-                                          run.id,
-                                          "raceEmail",
-                                          event.target.value
-                                        )
-                                      }
-                                      className="sgames-postulation-input mt-1.5"
-                                      placeholder="correo@ejemplo.com"
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <Label className="text-[var(--sg-muted-text)]">
-                                      Discord del jugador 2 (opcional)
-                                    </Label>
-
-                                    <Input
-                                      value={run.raceDiscordUser}
-                                      onChange={(event) =>
-                                        updateRun(
-                                          run.id,
-                                          "raceDiscordUser",
-                                          event.target.value
-                                        )
-                                      }
-                                      className="sgames-postulation-input mt-1.5"
-                                      placeholder="Ej: runner2#1234 o runner2"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <Label className="text-[var(--sg-muted-text)]">
-                                    País del jugador 2 (opcional)
-                                  </Label>
-
-                                  <Input
-                                    value={run.raceCountry}
-                                    onChange={(event) =>
-                                      updateRun(
-                                        run.id,
-                                        "raceCountry",
-                                        event.target.value
-                                      )
-                                    }
-                                    className="sgames-postulation-input mt-1.5"
-                                    placeholder="País del jugador 2"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label className="text-[var(--sg-muted-text)]">
-                                    VOD del jugador 2{" "}
-                                    <span className="text-red-400">
-                                      *
-                                    </span>
-                                  </Label>
-
-                                  <Input
-                                    value={run.raceVideoUrl}
-                                    onChange={(event) =>
-                                      updateRun(
-                                        run.id,
-                                        "raceVideoUrl",
-                                        event.target.value
-                                      )
-                                    }
-                                    className="sgames-postulation-input mt-1.5"
-                                    placeholder="https://youtube.com/watch?v=... o https://www.twitch.tv/videos/..."
-                                  />
-
-                                  <p className="sgames-postulation-muted-soft mt-2 text-sm">
-                                    Sólo se aceptan videos de YouTube o Twitch.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          <div>
-                            <Label className="text-[var(--sg-muted-text)]">
-                              Notas de esta run (opcional)
-                            </Label>
-
-                            <Textarea
-                              value={run.notes}
-                              onChange={(event) =>
-                                updateRun(
-                                  run.id,
-                                  "notes",
-                                  event.target.value
-                                )
-                              }
-                              className="sgames-postulation-input mt-1.5 min-h-[90px]"
-                              placeholder="Información específica de esta run..."
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Disponibilidad */}
-                <div>
-                  <div className="mb-4 flex items-center gap-2">
-                    <CalendarDays className="h-5 w-5 text-[var(--sg-primary)]" />
-
-                    <h3 className="sgames-postulation-heading text-xl font-semibold">
-                      Disponibilidad para el evento
-                    </h3>
-                  </div>
-
-                  <div className="sgames-postulation-info-box mb-5 rounded-lg p-4">
-                    <Label className="flex items-center gap-2 text-[var(--sg-muted-text)]">
-                      <Globe2 className="h-4 w-4 text-[var(--sg-secondary)]" />
-                      Zona horaria donde estás capturando tu disponibilidad
-                    </Label>
-
-                    <Select
-                      value={runnerTimezone}
-                      onValueChange={setRunnerTimezone}
-                    >
-                      <SelectTrigger className="sgames-postulation-input mt-1.5">
-                        <SelectValue placeholder="Selecciona tu zona horaria" />
-                      </SelectTrigger>
-
-                      <SelectContent className="sgames-postulation-select-content">
-                        {timezoneOptions.map((timezone) => (
-                          <SelectItem
-                            key={timezone.value}
-                            value={timezone.value}
-                          >
-                            {timezone.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <p className="mt-2 text-sm text-[var(--sg-muted-text)]">
-                      Escribe tus horas en tu horario local. El sistema las convertirá
-                      automáticamente a México Centro para el staff.
-                    </p>
-                  </div>
-
-                  <p className="mb-4 text-sm text-[var(--sg-muted-text)]">
-                    Selecciona los días en los que puedes correr y el rango
-                    de horario aproximado. Actualmente estás capturando en zona:
-                    <span className="font-semibold text-[var(--sg-primary)]">
-                      {" "}
-                      {getTimezoneLabel(runnerTimezone)}
-                    </span>
-                    .
-                  </p>
-
-                  <div className="space-y-4">
-                    {availabilities.map((item) => (
-                      <div
-                        key={item.dayDate}
-                        className={`rounded-lg border p-4 transition-colors ${
-                          item.selected
-                            ? "border-cyan-500/50 bg-cyan-500/10"
-                            : "border-[var(--sg-border)] bg-[color-mix(in_srgb,var(--sg-background)_82%,#000000_18%)]/40"
-                        }`}
-                      >
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                          <label className="flex cursor-pointer items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={item.selected}
-                              onChange={(event) =>
-                                updateAvailability(
-                                  item.dayDate,
-                                  "selected",
-                                  event.target.checked
-                                )
-                              }
-                              className="h-4 w-4 accent-[var(--sg-primary)]"
-                            />
-
-                            <span className="font-semibold text-[var(--sg-text)]">
-                              {item.label}
-                            </span>
-                          </label>
-
-                          {item.selected && (
-                            <label className="flex cursor-pointer items-center gap-2 text-sm text-yellow-300">
-                              <input
-                                type="checkbox"
-                                checked={item.isPreferred}
-                                onChange={(event) =>
-                                  updateAvailability(
-                                    item.dayDate,
-                                    "isPreferred",
-                                    event.target.checked
-                                  )
-                                }
-                                className="h-4 w-4 accent-yellow-400"
-                              />
-
-                              <Star className="h-4 w-4" />
-                              Día preferido
-                            </label>
-                          )}
-                        </div>
-
-                        {item.selected && (
-                          <div className="mt-4 space-y-3">
-                            <div className="grid gap-3 md:grid-cols-2">
-                              <div>
-                                <Label className="text-[var(--sg-muted-text)]">
-                                  Disponible desde
-                                </Label>
-
-                                <Input
-                                  type="time"
-                                  value={item.availableFrom}
-                                  onChange={(event) =>
-                                    updateAvailability(
-                                      item.dayDate,
-                                      "availableFrom",
-                                      event.target.value
-                                    )
-                                  }
-                                  className="sgames-postulation-input mt-1.5"
-                                />
-                              </div>
-
-                              <div>
-                                <Label className="text-[var(--sg-muted-text)]">
-                                  Disponible hasta
-                                </Label>
-
-                                <Input
-                                  type="time"
-                                  value={item.availableTo}
-                                  onChange={(event) =>
-                                    updateAvailability(
-                                      item.dayDate,
-                                      "availableTo",
-                                      event.target.value
-                                    )
-                                  }
-                                  className="sgames-postulation-input mt-1.5"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="sgames-postulation-converted-box rounded-lg p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
-                                Convertido a México Centro
-                              </p>
-
-                              <p className="mt-1 text-sm text-[var(--sg-text)]">
-                                {formatConvertedAvailability(
-                                  item,
-                                  runnerTimezone
-                                )}
-                              </p>
-                            </div>
-
-                            <div>
-                              <Label className="text-[var(--sg-muted-text)]">
-                                Nota para este día (opcional)
-                              </Label>
-
-                              <Input
-                                value={item.notes}
-                                onChange={(event) =>
-                                  updateAvailability(
-                                    item.dayDate,
-                                    "notes",
-                                    event.target.value
-                                  )
-                                }
-                                className="sgames-postulation-input mt-1.5"
-                                placeholder="Ej. Prefiero correr después de las 6 PM"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Redes Sociales */}
-                <div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="sgames-postulation-heading text-xl font-semibold">
-                      Redes Sociales
-                    </h3>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addSocialNetwork}
-                      className="sgames-postulation-outline-button"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Agregar Red Social
-                    </Button>
-                  </div>
-
-                  <p className="mb-4 text-sm text-[var(--sg-muted-text)]">
-                    Las redes sociales son opcionales pero recomendadas para que la
-                    comunidad pueda conocer tu contenido.
-                  </p>
-
-                  {socialNetworks.length === 0 ? (
-                    <p className="text-center text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
-                      No has agregado ninguna red social
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {socialNetworks.map((sn) => (
-                        <div
-                          key={sn.id}
-                          className="sgames-postulation-social-row flex flex-col gap-3 rounded-lg p-4 sm:flex-row"
-                        >
-                          <div className="flex-1">
-                            <Select
-                              value={sn.socialNetworkId}
-                              onValueChange={(value) =>
-                                updateSocialNetwork(
-                                  sn.id,
-                                  "socialNetworkId",
-                                  value
-                                )
-                              }
-                            >
-                              <SelectTrigger className="sgames-postulation-input">
-                                <SelectValue placeholder="Tipo de red" />
-                              </SelectTrigger>
-
-                              <SelectContent className="sgames-postulation-select-content">
-                                {catalog.map((network) => (
-                                  <SelectItem
-                                    key={network.id}
-                                    value={network.id}
-                                  >
-                                    {network.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="flex-[2]">
-                            <Input
-                              value={sn.url}
-                              onChange={(event) =>
-                                updateSocialNetwork(
-                                  sn.id,
-                                  "url",
-                                  event.target.value
-                                )
-                              }
-                              className="sgames-postulation-input"
-                              placeholder="https://..."
-                            />
-                          </div>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              removeSocialNetwork(sn.id)
-                            }
-                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Notas adicionales */}
-                <div>
-                  <Label
-                    htmlFor="notes"
-                    className="text-[var(--sg-muted-text)]"
-                  >
-                    Notas generales (opcional)
-                  </Label>
-
-                  <Textarea
-                    id="notes"
-                    {...register("notes")}
-                    className="sgames-postulation-input mt-1.5 min-h-[100px]"
-                    placeholder="Información general que aplique a todas tus runs..."
-                  />
-                </div>
-
-                {/* Comentarios para organizadores */}
-                <div>
-                  <h3 className="sgames-postulation-heading mb-4 text-xl font-semibold">
-                    Comentarios para Organizadores
-                  </h3>
-
-                  <Label
-                    htmlFor="organizerComments"
-                    className="text-[var(--sg-muted-text)]"
-                  >
-                    Comentarios (opcional)
-                  </Label>
-
-                  <Textarea
-                    id="organizerComments"
-                    {...register("organizerComments")}
-                    className="sgames-postulation-input mt-1.5 min-h-[120px]"
-                    placeholder="Información adicional que quieras compartir con el equipo organizador..."
-                  />
-
-                  <p className="sgames-postulation-muted-soft mt-2 text-sm">
-                    Usa este espacio para compartir información relevante para el equipo
-                    organizador, como restricciones de horario, necesidades especiales, o
-                    cualquier detalle técnico importante.
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isSubmitting}
-                  className="sgames-postulation-primary-button w-full text-lg"
-                >
-                  {isSubmitting ? (
-                    <>Enviando...</>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-5 w-5" />
-                      Enviar{" "}
-                      {runs.length > 1
-                        ? `${runs.length} postulaciones`
-                        : "Postulación"}
-                    </>
-                  )}
-                </Button>
-              </form>
+  function openRunShare(
+    run: PublicApprovedRun
+  ) {
+    openShare({
+      title: isRaceRun(run)
+        ? `Race aprobada: ${run.game}`
+        : `Run aprobada: ${run.game}`,
+      text: getRunShareText(run),
+      url: getRunsPageUrl(),
+    });
+  }
+
+  function openRunnerShare(
+    group: PublicApprovedRunnerGroup
+  ) {
+    openShare({
+      title: `${group.runnerName} en SGames`,
+      text: getRunnerShareText(group),
+      url: getRunsPageUrl(),
+    });
+  }
+
+  function openLineupShare() {
+    openShare({
+      title: "Lineup confirmado de SGames",
+      text: "Ya hay jugadores con runs aprobadas para SGames. Revisa el lineup confirmado.",
+      url: getRunsPageUrl(),
+    });
+  }
+
+  function clearFilters() {
+    setSearchText("");
+    setFormatFilter("All");
+  }
+
+  if (loading) {
+    return (
+      <div className="sgames-runs-page min-h-screen py-12">
+        <style>{`
+          .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 16%, transparent), transparent 30rem),
+              radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 14%, transparent), transparent 32rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+            color: var(--sg-text);
+          }
+
+          .sgames-runs-gradient-box {
+            background:
+              linear-gradient(
+                135deg,
+                var(--sg-primary),
+                var(--sg-secondary),
+                var(--sg-accent)
+              );
+            box-shadow:
+              0 0 35px color-mix(in srgb, var(--sg-accent) 35%, transparent);
+          }
+
+          .sgames-runs-badge-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 11%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-badge-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 12%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-badge-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 11%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-stat-card {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 80%, transparent)
+              );
+            box-shadow:
+              0 0 28px rgba(15, 23, 42, 0.28);
+          }
+
+          .sgames-runs-stat-card-primary {
+            border-color: color-mix(in srgb, var(--sg-primary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-accent {
+            border-color: color-mix(in srgb, var(--sg-accent) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-secondary {
+            border-color: color-mix(in srgb, var(--sg-secondary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+          }
+
+          .sgames-runs-panel {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 82%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(14px);
+          }
+
+          .sgames-runs-input {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 82%, #000000 18%) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-input::placeholder {
+            color: color-mix(in srgb, var(--sg-muted-text) 54%, transparent);
+          }
+
+          .sgames-runs-filter-active {
+            border-color: color-mix(in srgb, var(--sg-primary) 52%, transparent) !important;
+            background: color-mix(in srgb, var(--sg-primary) 20%, transparent) !important;
+            color: var(--sg-primary) !important;
+          }
+
+          .sgames-runs-filter-idle {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 70%, transparent) !important;
+            color: var(--sg-muted-text) !important;
+          }
+
+          .sgames-runs-filter-idle:hover {
+            background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-table {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 84%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.35);
+          }
+
+          .sgames-runs-header-row {
+            border-bottom: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-text) 5%, transparent);
+            color: color-mix(in srgb, var(--sg-muted-text) 70%, transparent);
+          }
+
+          .sgames-runs-row {
+            border-color: color-mix(in srgb, var(--sg-secondary) 18%, transparent);
+          }
+
+          .sgames-runs-row:hover {
+            background: color-mix(in srgb, var(--sg-primary) 5%, transparent);
+          }
+
+          .sgames-run-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-background) 62%, transparent);
+          }
+
+          .sgames-race-participants {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 6%, transparent);
+          }
+
+          .sgames-race-player-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-surface) 70%, transparent);
+          }
+
+          .sgames-runs-pill-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-pill-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-pill-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-pill-primary:hover,
+          .sgames-runs-pill-secondary:hover,
+          .sgames-runs-pill-accent:hover {
+            filter: brightness(1.16);
+          }
+
+          [data-season-theme="Winter"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.16), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
+          [data-season-theme="Winter"] .sgames-runs-panel,
+          [data-season-theme="Winter"] .sgames-runs-table,
+          [data-season-theme="Winter"] .sgames-run-card {
+            box-shadow:
+              0 0 0 1px rgba(103, 232, 249, 0.08),
+              0 0 34px rgba(59, 130, 246, 0.14);
+          }
+
+          [data-season-theme="Autumn"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.17), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.14), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
+        `}</style>
+        <div className="container mx-auto px-4">
+          <Card className="sgames-runs-panel mx-auto max-w-2xl">
+            <CardContent className="p-10 text-center">
+              <div className="sgames-runs-gradient-box mx-auto mb-4 h-12 w-12 animate-pulse rounded-2xl" />
+
+              <p className="text-[var(--sg-muted-text)]">
+                Cargando runs aprobadas...
+              </p>
             </CardContent>
           </Card>
         </div>
       </div>
+    );
+  }
+
+  const filterOptions: {
+    value: RunFormatFilter;
+    label: string;
+    count: number;
+  }[] = [
+    {
+      value: "All",
+      label: "Todos",
+      count: stats.totalRuns,
+    },
+    {
+      value: "Solo",
+      label: "Individual",
+      count: stats.individualRuns,
+    },
+    {
+      value: "Race",
+      label: "Race",
+      count: stats.raceRuns,
+    },
+  ];
+
+  return (
+    <div className="sgames-runs-page min-h-screen py-12">
+
+      <style>
+        {`
+          .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 16%, transparent), transparent 30rem),
+              radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 14%, transparent), transparent 32rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+            color: var(--sg-text);
+          }
+
+          .sgames-runs-gradient-box {
+            background:
+              linear-gradient(
+                135deg,
+                var(--sg-primary),
+                var(--sg-secondary),
+                var(--sg-accent)
+              );
+            box-shadow:
+              0 0 35px color-mix(in srgb, var(--sg-accent) 35%, transparent);
+          }
+
+          .sgames-runs-badge-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 11%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-badge-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 12%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-badge-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 11%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-stat-card {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 80%, transparent)
+              );
+            box-shadow:
+              0 0 28px rgba(15, 23, 42, 0.28);
+          }
+
+          .sgames-runs-stat-card-primary {
+            border-color: color-mix(in srgb, var(--sg-primary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-accent {
+            border-color: color-mix(in srgb, var(--sg-accent) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-secondary {
+            border-color: color-mix(in srgb, var(--sg-secondary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+          }
+
+          .sgames-runs-panel {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 82%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(14px);
+          }
+
+          .sgames-runs-input {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 82%, #000000 18%) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-input::placeholder {
+            color: color-mix(in srgb, var(--sg-muted-text) 54%, transparent);
+          }
+
+          .sgames-runs-filter-active {
+            border-color: color-mix(in srgb, var(--sg-primary) 52%, transparent) !important;
+            background: color-mix(in srgb, var(--sg-primary) 20%, transparent) !important;
+            color: var(--sg-primary) !important;
+          }
+
+          .sgames-runs-filter-idle {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 70%, transparent) !important;
+            color: var(--sg-muted-text) !important;
+          }
+
+          .sgames-runs-filter-idle:hover {
+            background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-table {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 84%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.35);
+          }
+
+          .sgames-runs-header-row {
+            border-bottom: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-text) 5%, transparent);
+            color: color-mix(in srgb, var(--sg-muted-text) 70%, transparent);
+          }
+
+          .sgames-runs-row {
+            border-color: color-mix(in srgb, var(--sg-secondary) 18%, transparent);
+          }
+
+          .sgames-runs-row:hover {
+            background: color-mix(in srgb, var(--sg-primary) 5%, transparent);
+          }
+
+          .sgames-run-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-background) 62%, transparent);
+          }
+
+          .sgames-race-participants {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 6%, transparent);
+          }
+
+          .sgames-race-player-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-surface) 70%, transparent);
+          }
+
+          .sgames-runs-pill-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-pill-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-pill-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-pill-primary:hover,
+          .sgames-runs-pill-secondary:hover,
+          .sgames-runs-pill-accent:hover {
+            filter: brightness(1.16);
+          }
+
+          [data-season-theme="Winter"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.16), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
+          [data-season-theme="Winter"] .sgames-runs-panel,
+          [data-season-theme="Winter"] .sgames-runs-table,
+          [data-season-theme="Winter"] .sgames-run-card {
+            box-shadow:
+              0 0 0 1px rgba(103, 232, 249, 0.08),
+              0 0 34px rgba(59, 130, 246, 0.14);
+          }
+
+          [data-season-theme="Autumn"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.17), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.14), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
+        `}
+      </style>
+
+      <div className="container mx-auto px-4">
+        <div className="mb-10 text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="sgames-runs-gradient-box flex h-16 w-16 items-center justify-center rounded-3xl">
+              <Trophy className="h-8 w-8 text-white" />
+            </div>
+          </div>
+
+          <Badge className="sgames-runs-badge-primary mb-4">
+            Lineup confirmado
+          </Badge>
+
+          <h1 className="sgames-neon-text mb-4 text-4xl font-black md:text-5xl">
+            Runs aprobadas
+          </h1>
+
+          <p className="mx-auto max-w-3xl text-[var(--sg-muted-text)]">
+            Conoce las runs confirmadas para SGames. Aquí podrás ver
+            runners, juegos, categorías, plataformas, tiempos estimados,
+            formato individual o race, VODs y redes para compartir con la
+            comunidad.
+          </p>
+        </div>
+
+        {runs.length === 0 ? (
+          <Card className="sgames-runs-panel mx-auto max-w-2xl">
+            <CardContent className="p-10 text-center">
+              <SearchX className="mx-auto mb-4 h-14 w-14 text-[color-mix(in_srgb,var(--sg-muted-text)_60%,transparent)]" />
+
+              <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
+                Aún no hay runs aprobadas visibles
+              </h2>
+
+              <p className="text-[var(--sg-muted-text)]">
+                Cuando el staff apruebe postulaciones, aparecerán aquí.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="sgames-runs-stat-card rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
+                  Total
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
+                  {stats.totalRuns}
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  runs aprobadas
+                </p>
+              </div>
+
+              <div className="sgames-runs-stat-card sgames-runs-stat-card-primary rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
+                  Individual
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
+                  {stats.individualRuns}
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  runs solo
+                </p>
+              </div>
+
+              <div className="sgames-runs-stat-card sgames-runs-stat-card-accent rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-accent)]">
+                  Race
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
+                  {stats.raceRuns}
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  carreras aprobadas
+                </p>
+              </div>
+
+              <div className="sgames-runs-stat-card sgames-runs-stat-card-secondary rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-secondary)]">
+                  Jugadores
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
+                  {stats.totalRunners}
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  participantes únicos
+                </p>
+              </div>
+            </div>
+
+            <div className="sgames-runs-panel mb-6 rounded-3xl p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <ListFilter className="h-5 w-5 text-[var(--sg-primary)]" />
+
+                <h2 className="text-lg font-black text-[var(--sg-text)]">
+                  Buscar y filtrar
+                </h2>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+                <div>
+                  <label
+                    htmlFor="runs-search"
+                    className="mb-2 block text-sm font-semibold text-[var(--sg-muted-text)]"
+                  >
+                    Buscar por runner, juego, categoría o plataforma
+                  </label>
+
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color-mix(in_srgb,var(--sg-muted-text)_60%,transparent)]" />
+
+                    <Input
+                      id="runs-search"
+                      value={searchText}
+                      onChange={(event) =>
+                        setSearchText(
+                          event.target.value
+                        )
+                      }
+                      className="sgames-runs-input pl-10"
+                      placeholder="Ej. Mario, Any%, PC, runner..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-sm font-semibold text-[var(--sg-muted-text)]">
+                    Formato
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {filterOptions.map((option) => {
+                      const active =
+                        formatFilter === option.value;
+
+                      return (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          variant="outline"
+                          onClick={() =>
+                            setFormatFilter(
+                              option.value
+                            )
+                          }
+                          className={
+                            active
+                              ? "sgames-runs-filter-active"
+                              : "sgames-runs-filter-idle"
+                          }
+                        >
+                          {option.label}
+                          <Badge className="ml-2 bg-white/10 text-[10px] text-[var(--sg-text)]">
+                            {option.count}
+                          </Badge>
+                        </Button>
+                      );
+                    })}
+
+                    {hasActiveFilters && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={clearFilters}
+                        className="text-[var(--sg-muted-text)] hover:bg-white/5 hover:text-[var(--sg-accent)]"
+                      >
+                        Limpiar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
+                Mostrando{" "}
+                <span className="font-semibold text-[var(--sg-primary)]">
+                  {filteredRuns.length}
+                </span>{" "}
+                de{" "}
+                <span className="font-semibold text-[var(--sg-text)]">
+                  {runs.length}
+                </span>{" "}
+                runs aprobadas.
+              </p>
+            </div>
+
+            {filteredRuns.length === 0 ? (
+              <Card className="sgames-runs-panel mx-auto max-w-2xl">
+                <CardContent className="p-10 text-center">
+                  <SearchX className="mx-auto mb-4 h-14 w-14 text-[color-mix(in_srgb,var(--sg-muted-text)_60%,transparent)]" />
+
+                  <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
+                    No encontramos coincidencias
+                  </h2>
+
+                  <p className="mb-6 text-[var(--sg-muted-text)]">
+                    Ajusta la búsqueda o limpia los filtros para volver a ver
+                    todo el lineup.
+                  </p>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="sgames-outline-button"
+                  >
+                    Limpiar filtros
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="sgames-runs-table overflow-hidden rounded-3xl">
+                <div className="sgames-runs-header-row hidden grid-cols-[1fr_2.4fr_1.2fr_0.8fr] gap-4 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] lg:grid">
+                  <span>Jugador</span>
+                  <span>Runs aprobadas</span>
+                  <span>Redes</span>
+                  <span>Compartir</span>
+                </div>
+
+                <div className="divide-y divide-[color-mix(in_srgb,var(--sg-secondary)_18%,transparent)]">
+                  {runnerGroups.map((group) => (
+                    <div
+                      key={group.runnerName}
+                      className="sgames-runs-row grid gap-5 px-5 py-6 transition-colors lg:grid-cols-[1fr_2.4fr_1.2fr_0.8fr] lg:items-start"
+                    >
+                      {/* Jugador */}
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
+                          Jugador
+                        </p>
+
+                        <p className="flex items-center gap-2 text-xl font-black text-[var(--sg-text)]">
+                          <Users className="h-5 w-5 text-[var(--sg-primary)]" />
+                          {group.runnerName}
+                        </p>
+
+                        <Badge className="sgames-runs-badge-secondary mt-3">
+                          {group.runs.length}{" "}
+                          {group.runs.length === 1
+                            ? "run aprobada"
+                            : "runs aprobadas"}
+                        </Badge>
+                      </div>
+
+                      {/* Runs */}
+                      <div>
+                        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
+                          Runs aprobadas
+                        </p>
+
+                        <div className="space-y-3">
+                          {group.runs.map((run) => {
+                            const raceParticipants =
+                              getRaceParticipants(run);
+
+                            return (
+                              <div
+                                key={run.id}
+                                className="sgames-run-card rounded-2xl p-4"
+                              >
+                                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                  <div>
+                                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                                      <Badge
+                                        variant="outline"
+                                        className={getRunFormatBadgeClass(run)}
+                                      >
+                                        {getRunFormatLabel(run)}
+                                      </Badge>
+
+                                      {isRaceRun(run) && (
+                                        <Badge
+                                          variant="outline"
+                                          className="sgames-runs-badge-secondary"
+                                        >
+                                          <Users className="mr-1.5 h-3.5 w-3.5" />
+                                          {raceParticipants.length} jugadores
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    <p className="flex items-center gap-2 font-black text-[var(--sg-text)]">
+                                      <Gamepad2 className="h-4 w-4 text-[var(--sg-secondary)]" />
+                                      {run.game}
+                                    </p>
+
+                                    <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                                      {run.category}
+                                    </p>
+
+                                    {isRaceRun(run) && (
+                                      <p className="mt-2 text-sm font-semibold text-[var(--sg-accent)]">
+                                        {getRunParticipantNames(run)}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-wrap gap-2">
+                                    <Badge
+                                      variant="outline"
+                                      className="sgames-runs-badge-primary"
+                                    >
+                                      <Monitor className="mr-1.5 h-3.5 w-3.5" />
+                                      {run.platform}
+                                    </Badge>
+
+                                    <Badge
+                                      variant="outline"
+                                      className="sgames-runs-badge-accent"
+                                    >
+                                      <Timer className="mr-1.5 h-3.5 w-3.5" />
+                                      {run.estimatedTime}
+                                    </Badge>
+
+                                    {!isRaceRun(run) && run.youtubeUrl && (
+                                      <a
+                                        href={run.youtubeUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="sgames-runs-pill-secondary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+                                      >
+                                        VOD
+                                        <ExternalLink className="h-3 w-3" />
+                                      </a>
+                                    )}
+
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        openRunShare(run)
+                                      }
+                                      className="sgames-runs-pill-accent h-7 rounded-full px-3 text-xs font-semibold"
+                                    >
+                                      Compartir run
+                                      <Share2 className="ml-1 h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                {isRaceRun(run) && (
+                                  <div className="sgames-race-participants mt-4 rounded-2xl p-3">
+                                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-accent)]">
+                                      Participantes de la race
+                                    </p>
+
+                                    <div className="grid gap-3 md:grid-cols-2">
+                                      {raceParticipants.map(
+                                        (participant, participantIndex) => (
+                                          <div
+                                            key={`${run.id}-${participant.sortOrder ?? participantIndex}-${participant.runnerName}`}
+                                            className="sgames-race-player-card rounded-xl p-3"
+                                          >
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                                              Jugador {participantIndex + 1}
+                                            </p>
+
+                                            <p className="mt-1 font-black text-[var(--sg-text)]">
+                                              {participant.runnerName}
+                                            </p>
+
+                                            {participant.country && (
+                                              <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
+                                                {participant.country}
+                                              </p>
+                                            )}
+
+                                            {participant.videoUrl && (
+                                              <a
+                                                href={participant.videoUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-3 inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-[var(--sg-secondary)] hover:bg-violet-500/20"
+                                              >
+                                                VOD jugador {participantIndex + 1}
+                                                <ExternalLink className="h-3 w-3" />
+                                              </a>
+                                            )}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Redes */}
+                      <div>
+                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
+                          Redes
+                        </p>
+
+                        <div className="flex flex-wrap gap-2">
+                          {group.socialNetworks.length > 0 ? (
+                            group.socialNetworks.map((social) => (
+                              <a
+                                key={`${group.runnerName}-${social.socialNetworkId}-${social.url}`}
+                                href={social.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="sgames-runs-pill-primary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+                              >
+                                {social.name}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ))
+                          ) : (
+                            <span className="text-xs text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
+                              Sin redes
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Compartir jugador */}
+                      <div>
+                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
+                          Compartir
+                        </p>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() =>
+                            openRunnerShare(group)
+                          }
+                          className="sgames-runs-pill-accent inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
+                        >
+                          Compartir jugador
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {runs.length > 0 && (
+              <div className="mt-10 text-center">
+                <Button
+                  type="button"
+                  onClick={openLineupShare}
+                  className="sgames-primary-button"
+                >
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Compartir lineup
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <ShareModal
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        payload={sharePayload}
+      />
     </div>
   );
 }
