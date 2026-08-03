@@ -89,18 +89,82 @@ function getSeasonLogoCandidates(
 }
 
 
+
+type SeasonLogoProps = {
+  season: SeasonAssetKey;
+  className: string;
+  fallbackClassName: string;
+  fallbackTextClassName?: string;
+  alt?: string;
+};
+
+function SeasonLogo({
+  season,
+  className,
+  fallbackClassName,
+  fallbackTextClassName = "font-black text-white",
+  alt = "SGames",
+}: SeasonLogoProps) {
+  const [fallbackIndex, setFallbackIndex] =
+    useState(0);
+
+  const [failed, setFailed] =
+    useState(false);
+
+  const candidates =
+    getSeasonLogoCandidates(season);
+
+  const src =
+    candidates[
+      Math.min(
+        fallbackIndex,
+        candidates.length - 1
+      )
+    ];
+
+  useEffect(() => {
+    setFallbackIndex(0);
+    setFailed(false);
+  }, [season]);
+
+  if (failed) {
+    return (
+      <div className={fallbackClassName}>
+        <span className={fallbackTextClassName}>
+          SG
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={`${alt} ${season}`}
+      onError={() => {
+        setFallbackIndex((current) => {
+          if (
+            current <
+            candidates.length - 1
+          ) {
+            return current + 1;
+          }
+
+          setFailed(true);
+          return current;
+        });
+      }}
+      className={className}
+    />
+  );
+}
+
 export function PublicLayout() {
   const [publicSettings, setPublicSettings] =
     useState<PublicSettings | null>(null);
 
   const [activeTheme, setActiveTheme] =
     useState<PublicDesignTheme | null>(null);
-
-  const [logoFallbackIndex, setLogoFallbackIndex] =
-    useState(0);
-
-  const [logoFailed, setLogoFailed] =
-    useState(false);
 
   const location = useLocation();
 
@@ -112,41 +176,9 @@ export function PublicLayout() {
       activeTheme?.seasonKey
     );
 
-  const seasonLogoCandidates =
-    getSeasonLogoCandidates(
-      seasonAssetKey
-    );
-
-  const seasonLogoSrc =
-    seasonLogoCandidates[
-      Math.min(
-        logoFallbackIndex,
-        seasonLogoCandidates.length - 1
-      )
-    ];
-
-  function handleLogoError() {
-    setLogoFallbackIndex((current) => {
-      if (
-        current <
-        seasonLogoCandidates.length - 1
-      ) {
-        return current + 1;
-      }
-
-      setLogoFailed(true);
-      return current;
-    });
-  }
-
   useEffect(() => {
     loadPublicSettings();
   }, []);
-
-  useEffect(() => {
-    setLogoFallbackIndex(0);
-    setLogoFailed(false);
-  }, [seasonAssetKey]);
 
   async function loadPublicSettings() {
     try {
@@ -279,18 +311,12 @@ export function PublicLayout() {
         <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-12">
           <div className="sgames-glass sgames-neon-border w-full max-w-2xl rounded-3xl p-8 text-center md:p-12">
             <div className="sgames-logo-shell mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl">
-              {!logoFailed ? (
-                <img
-                  src={seasonLogoSrc}
-                  alt={`SGames ${seasonAssetKey}`}
-                  onError={handleLogoError}
+                              <SeasonLogo
+                  season={seasonAssetKey}
                   className="h-16 w-16 rounded-2xl object-cover"
+                  fallbackClassName="flex h-16 w-16 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))]"
+                  fallbackTextClassName="text-xl font-black text-white"
                 />
-              ) : (
-                <span className="text-xl font-black text-white">
-                  SG
-                </span>
-              )}
             </div>
 
             <Badge className="sgames-badge-warning mb-5">
@@ -352,18 +378,12 @@ export function PublicLayout() {
             <div className="relative">
               <div className="sgames-logo-glow absolute inset-0 rounded-2xl blur-md transition" />
 
-              {!logoFailed ? (
-                <img
-                  src={seasonLogoSrc}
-                  alt={`SGames ${seasonAssetKey}`}
-                  onError={handleLogoError}
+                              <SeasonLogo
+                  season={seasonAssetKey}
                   className="relative h-12 w-12 rounded-2xl border border-white/20 object-cover"
+                  fallbackClassName="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))]"
+                  fallbackTextClassName="text-sm font-black text-white"
                 />
-              ) : (
-                <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] text-sm font-black text-white">
-                  SG
-                </div>
-              )}
             </div>
 
             <div className="leading-tight">
@@ -526,11 +546,11 @@ export function PublicLayout() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_1fr_1fr]">
             <div>
               <div className="mb-4 flex items-center gap-3">
-                <img
-                  src={seasonLogoSrc}
-                  alt={`SGames ${seasonAssetKey}`}
-                onError={handleLogoError}
+                <SeasonLogo
+                  season={seasonAssetKey}
                   className="h-10 w-10 rounded-xl border border-white/20 object-cover"
+                  fallbackClassName="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))]"
+                  fallbackTextClassName="text-xs font-black text-white"
                 />
 
                 <div>
