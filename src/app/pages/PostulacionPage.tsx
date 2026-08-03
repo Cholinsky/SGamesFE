@@ -415,6 +415,163 @@ function formatConvertedAvailability(
   )}`;
 }
 
+
+const postulacionThemeCss = `
+  .sgames-postulation-page {
+    background:
+      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 14%, transparent), transparent 30rem),
+      radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 13%, transparent), transparent 32rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 62%, var(--sg-background) 38%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+    color: var(--sg-text);
+  }
+
+  .sgames-postulation-title {
+    background:
+      linear-gradient(
+        90deg,
+        var(--sg-primary),
+        var(--sg-secondary),
+        var(--sg-accent)
+      );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .sgames-postulation-card {
+    border: 1px solid var(--sg-border);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--sg-surface) 72%, transparent),
+        color-mix(in srgb, var(--sg-background) 84%, transparent)
+      );
+    box-shadow:
+      0 0 35px rgba(15, 23, 42, 0.25);
+    backdrop-filter: blur(14px);
+  }
+
+  .sgames-postulation-run-card {
+    border: 1px solid color-mix(in srgb, var(--sg-primary) 24%, transparent);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--sg-surface) 58%, transparent),
+        color-mix(in srgb, var(--sg-background) 76%, transparent)
+      );
+  }
+
+  .sgames-postulation-input {
+    border-color: var(--sg-border) !important;
+    background: color-mix(in srgb, var(--sg-background) 82%, #000000 18%) !important;
+    color: var(--sg-text) !important;
+  }
+
+  .sgames-postulation-input::placeholder {
+    color: color-mix(in srgb, var(--sg-muted-text) 52%, transparent);
+  }
+
+  .sgames-postulation-select-content {
+    border-color: var(--sg-border) !important;
+    background: color-mix(in srgb, var(--sg-surface) 88%, #000000 12%) !important;
+    color: var(--sg-text) !important;
+  }
+
+  .sgames-postulation-muted {
+    color: var(--sg-muted-text);
+  }
+
+  .sgames-postulation-muted-soft {
+    color: color-mix(in srgb, var(--sg-muted-text) 70%, transparent);
+  }
+
+  .sgames-postulation-heading {
+    color: var(--sg-primary);
+  }
+
+  .sgames-postulation-icon-primary {
+    color: var(--sg-primary);
+  }
+
+  .sgames-postulation-icon-secondary {
+    color: var(--sg-secondary);
+  }
+
+  .sgames-postulation-icon-accent {
+    color: var(--sg-accent);
+  }
+
+  .sgames-postulation-info-box {
+    border: 1px solid color-mix(in srgb, var(--sg-secondary) 24%, transparent);
+    background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+  }
+
+  .sgames-postulation-race-box {
+    border: 1px solid color-mix(in srgb, var(--sg-secondary) 32%, transparent);
+    background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+  }
+
+  .sgames-postulation-race-player-box {
+    border: 1px solid color-mix(in srgb, var(--sg-primary) 24%, transparent);
+    background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+  }
+
+  .sgames-postulation-availability-selected {
+    border-color: color-mix(in srgb, var(--sg-primary) 52%, transparent);
+    background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+  }
+
+  .sgames-postulation-availability-idle {
+    border-color: var(--sg-border);
+    background: color-mix(in srgb, var(--sg-surface) 42%, transparent);
+  }
+
+  .sgames-postulation-converted-box {
+    border: 1px solid color-mix(in srgb, var(--sg-primary) 24%, transparent);
+    background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+  }
+
+  .sgames-postulation-social-row {
+    border: 1px solid var(--sg-border);
+    background: color-mix(in srgb, var(--sg-surface) 50%, transparent);
+  }
+
+  .sgames-postulation-primary-button {
+    border: 0;
+    background:
+      linear-gradient(
+        90deg,
+        var(--sg-primary),
+        var(--sg-secondary),
+        var(--sg-accent)
+      );
+    color: #ffffff;
+    box-shadow:
+      0 0 28px color-mix(in srgb, var(--sg-accent) 26%, transparent);
+  }
+
+  .sgames-postulation-primary-button:hover {
+    filter: brightness(1.12);
+  }
+
+  .sgames-postulation-outline-button {
+    border-color: color-mix(in srgb, var(--sg-primary) 46%, transparent) !important;
+    background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
+    color: var(--sg-primary) !important;
+  }
+
+  .sgames-postulation-outline-button:hover {
+    border-color: color-mix(in srgb, var(--sg-accent) 58%, transparent) !important;
+    background: color-mix(in srgb, var(--sg-accent) 12%, transparent) !important;
+    color: var(--sg-accent) !important;
+  }
+
+  .sgames-postulation-warning-card {
+    border: 1px solid color-mix(in srgb, #facc15 40%, transparent);
+    background: color-mix(in srgb, #facc15 10%, transparent);
+  }
+`;
+
 export default function PostulacionPage() {
   const {
     register,
@@ -980,11 +1137,12 @@ export default function PostulacionPage() {
 
   if (loadingEventStatus) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+      <div className="sgames-postulation-page min-h-screen py-12">
+        <style>{postulacionThemeCss}</style>
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
-            <Card className="border-gray-800 bg-gray-900/50">
-              <CardContent className="p-8 text-center text-gray-400">
+            <Card className="sgames-postulation-card">
+              <CardContent className="p-8 text-center text-[var(--sg-muted-text)]">
                 Verificando estado de postulaciones...
               </CardContent>
             </Card>
@@ -996,18 +1154,19 @@ export default function PostulacionPage() {
 
   if (!applicationsOpen) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+      <div className="sgames-postulation-page min-h-screen py-12">
+        <style>{postulacionThemeCss}</style>
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
-            <Card className="border-yellow-500/30 bg-yellow-500/10">
+            <Card className="sgames-postulation-warning-card">
               <CardContent className="p-8 text-center">
                 <Lock className="mx-auto mb-5 h-14 w-14 text-yellow-300" />
 
-                <h1 className="mb-3 text-3xl font-bold text-white">
+                <h1 className="mb-3 text-3xl font-bold text-[var(--sg-text)]">
                   Postulaciones cerradas
                 </h1>
 
-                <p className="mx-auto mb-6 max-w-xl text-gray-300">
+                <p className="mx-auto mb-6 max-w-xl text-[var(--sg-muted-text)]">
                   Las postulaciones para esta edición de SGames ya fueron cerradas.
                   El staff está revisando las propuestas recibidas y preparando el
                   horario oficial.
@@ -1016,7 +1175,7 @@ export default function PostulacionPage() {
                 <Link to="/">
                   <Button
                     variant="outline"
-                    className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+                    className="sgames-postulation-outline-button"
                   >
                     Volver al inicio
                   </Button>
@@ -1030,16 +1189,17 @@ export default function PostulacionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+    <div className="sgames-postulation-page min-h-screen py-12">
+      <style>{postulacionThemeCss}</style>
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-3xl">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="mb-4 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-4xl font-bold text-transparent">
+            <h1 className="sgames-postulation-title mb-4 text-4xl font-bold">
               Enviar Postulación
             </h1>
 
-            <p className="text-gray-400">
+            <p className="text-[var(--sg-muted-text)]">
               Completa el formulario para postular una o varias runs a SGames
             </p>
           </div>
@@ -1062,7 +1222,7 @@ export default function PostulacionPage() {
           )}
 
           {/* Form Card */}
-          <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+          <Card className="sgames-postulation-card">
             <CardContent className="p-6">
               <form
                 onSubmit={handleSubmit(onSubmit)}
@@ -1070,7 +1230,7 @@ export default function PostulacionPage() {
               >
                 {/* Información Personal */}
                 <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
+                  <h3 className="sgames-postulation-heading mb-4 text-xl font-semibold">
                     Información Personal
                   </h3>
 
@@ -1078,7 +1238,7 @@ export default function PostulacionPage() {
                     <div>
                       <Label
                         htmlFor="runnerName"
-                        className="text-gray-300"
+                        className="text-[var(--sg-muted-text)]"
                       >
                         Nombre del runner{" "}
                         <span className="text-red-400">
@@ -1092,7 +1252,7 @@ export default function PostulacionPage() {
                           required:
                             "Este campo es requerido",
                         })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                        className="sgames-postulation-input mt-1.5"
                         placeholder="Tu nombre o alias"
                       />
 
@@ -1107,7 +1267,7 @@ export default function PostulacionPage() {
                     <div>
                       <Label
                         htmlFor="email"
-                        className="text-gray-300"
+                        className="text-[var(--sg-muted-text)]"
                       >
                         Correo electrónico{" "}
                         <span className="text-red-400">
@@ -1128,7 +1288,7 @@ export default function PostulacionPage() {
                               "Correo electrónico inválido",
                           },
                         })}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                        className="sgames-postulation-input mt-1.5"
                         placeholder="correo@ejemplo.com"
                       />
 
@@ -1143,7 +1303,7 @@ export default function PostulacionPage() {
                     <div>
                       <Label
                         htmlFor="discordUser"
-                        className="text-gray-300"
+                        className="text-[var(--sg-muted-text)]"
                       >
                         Usuario de Discord
                       </Label>
@@ -1151,11 +1311,11 @@ export default function PostulacionPage() {
                       <Input
                         id="discordUser"
                         {...register("discordUser")}
-                        className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                        className="sgames-postulation-input mt-1.5"
                         placeholder="Ej: Ch0linsky#1234 o ch0linsky"
                       />
 
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="sgames-postulation-muted-soft mt-1 text-xs">
                         Opcional. Nos ayuda a contactarte más fácilmente.
                       </p>
                     </div>
@@ -1166,12 +1326,12 @@ export default function PostulacionPage() {
                 <div>
                   <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <h3 className="flex items-center gap-2 text-xl font-semibold text-cyan-400">
+                      <h3 className="sgames-postulation-heading flex items-center gap-2 text-xl font-semibold">
                         <Gamepad2 className="h-5 w-5" />
                         Runs a postular
                       </h3>
 
-                      <p className="mt-1 text-sm text-gray-400">
+                      <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                         Puedes agregar varios juegos. El staff recibirá cada run como una postulación separada.
                       </p>
                     </div>
@@ -1181,7 +1341,7 @@ export default function PostulacionPage() {
                       variant="outline"
                       size="sm"
                       onClick={addRun}
-                      className="w-fit border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                      className="sgames-postulation-outline-button w-fit"
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       Agregar otra run
@@ -1192,15 +1352,15 @@ export default function PostulacionPage() {
                     {runs.map((run, index) => (
                       <div
                         key={run.id}
-                        className="rounded-xl border border-cyan-500/20 bg-gray-800/40 p-4"
+                        className="sgames-postulation-run-card rounded-xl p-4"
                       >
                         <div className="mb-4 flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-sm uppercase tracking-[0.18em] text-cyan-300">
+                            <p className="text-sm uppercase tracking-[0.18em] text-[var(--sg-primary)]">
                               Run #{index + 1}
                             </p>
 
-                            <h4 className="font-semibold text-white">
+                            <h4 className="font-semibold text-[var(--sg-text)]">
                               {run.game.trim()
                                 ? run.game
                                 : "Nueva run"}
@@ -1224,7 +1384,7 @@ export default function PostulacionPage() {
 
                         <div className="space-y-4">
                           <div>
-                            <Label className="text-gray-300">
+                            <Label className="text-[var(--sg-muted-text)]">
                               Formato de run{" "}
                               <span className="text-red-400">
                                 *
@@ -1241,11 +1401,11 @@ export default function PostulacionPage() {
                                 )
                               }
                             >
-                              <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                              <SelectTrigger className="sgames-postulation-input mt-1.5">
                                 <SelectValue placeholder="Selecciona formato" />
                               </SelectTrigger>
 
-                              <SelectContent className="border-gray-700 bg-gray-800">
+                              <SelectContent className="sgames-postulation-select-content">
                                 <SelectItem value="Solo">
                                   Individual
                                 </SelectItem>
@@ -1256,13 +1416,13 @@ export default function PostulacionPage() {
                               </SelectContent>
                             </Select>
 
-                            <p className="mt-2 text-sm text-gray-500">
+                            <p className="sgames-postulation-muted-soft mt-2 text-sm">
                               En Race, el runner principal será el jugador 1 y podrás agregar el jugador 2.
                             </p>
                           </div>
 
                           <div>
-                            <Label className="text-gray-300">
+                            <Label className="text-[var(--sg-muted-text)]">
                               Juego{" "}
                               <span className="text-red-400">
                                 *
@@ -1278,13 +1438,13 @@ export default function PostulacionPage() {
                                   event.target.value
                                 )
                               }
-                              className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                              className="sgames-postulation-input mt-1.5"
                               placeholder="Nombre del juego"
                             />
                           </div>
 
                           <div>
-                            <Label className="text-gray-300">
+                            <Label className="text-[var(--sg-muted-text)]">
                               Categoría{" "}
                               <span className="text-red-400">
                                 *
@@ -1300,13 +1460,13 @@ export default function PostulacionPage() {
                                   event.target.value
                                 )
                               }
-                              className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                              className="sgames-postulation-input mt-1.5"
                               placeholder="Ej: Any%, 100%, Glitchless"
                             />
                           </div>
 
                           <div>
-                            <Label className="text-gray-300">
+                            <Label className="text-[var(--sg-muted-text)]">
                               Tiempo estimado{" "}
                               <span className="text-red-400">
                                 *
@@ -1327,7 +1487,7 @@ export default function PostulacionPage() {
                                     event.target.value
                                   )
                                 }
-                                className="border-gray-700 bg-gray-800 text-white"
+                                className="sgames-postulation-input"
                               />
 
                               <Input
@@ -1343,7 +1503,7 @@ export default function PostulacionPage() {
                                     event.target.value
                                   )
                                 }
-                                className="border-gray-700 bg-gray-800 text-white"
+                                className="sgames-postulation-input"
                               />
 
                               <Input
@@ -1359,18 +1519,18 @@ export default function PostulacionPage() {
                                     event.target.value
                                   )
                                 }
-                                className="border-gray-700 bg-gray-800 text-white"
+                                className="sgames-postulation-input"
                               />
                             </div>
 
-                            <p className="mt-2 text-sm text-gray-500">
+                            <p className="sgames-postulation-muted-soft mt-2 text-sm">
                               Formato HH:MM:SS
                             </p>
                           </div>
 
                           <div className="grid gap-4 md:grid-cols-2">
                             <div>
-                              <Label className="text-gray-300">
+                              <Label className="text-[var(--sg-muted-text)]">
                                 Plataforma{" "}
                                 <span className="text-red-400">
                                   *
@@ -1387,11 +1547,11 @@ export default function PostulacionPage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                                <SelectTrigger className="sgames-postulation-input mt-1.5">
                                   <SelectValue placeholder="Selecciona plataforma" />
                                 </SelectTrigger>
 
-                                <SelectContent className="border-gray-700 bg-gray-800">
+                                <SelectContent className="sgames-postulation-select-content">
                                   {platformOptions.map(
                                     (option) => (
                                       <SelectItem
@@ -1407,7 +1567,7 @@ export default function PostulacionPage() {
                             </div>
 
                             <div>
-                              <Label className="text-gray-300">
+                              <Label className="text-[var(--sg-muted-text)]">
                                 Relación de pantalla{" "}
                                 <span className="text-red-400">
                                   *
@@ -1424,11 +1584,11 @@ export default function PostulacionPage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                                <SelectTrigger className="sgames-postulation-input mt-1.5">
                                   <SelectValue placeholder="Selecciona ratio" />
                                 </SelectTrigger>
 
-                                <SelectContent className="border-gray-700 bg-gray-800">
+                                <SelectContent className="sgames-postulation-select-content">
                                   {aspectRatioOptions.map(
                                     (option) => (
                                       <SelectItem
@@ -1445,7 +1605,7 @@ export default function PostulacionPage() {
                           </div>
 
                           <div>
-                            <Label className="text-gray-300">
+                            <Label className="text-[var(--sg-muted-text)]">
                               URL de YouTube o Twitch / VOD del jugador principal{" "}
                               <span className="text-red-400">
                                 *
@@ -1461,46 +1621,46 @@ export default function PostulacionPage() {
                                   event.target.value
                                 )
                               }
-                              className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                              className="sgames-postulation-input mt-1.5"
                               placeholder="https://youtube.com/watch?v=... o https://www.twitch.tv/videos/..."
                             />
                           </div>
 
                           {run.runType === "Race" && (
-                            <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-4">
+                            <div className="sgames-postulation-race-box rounded-xl p-4">
                               <div className="mb-4 flex items-center gap-2">
-                                <Users className="h-5 w-5 text-purple-300" />
+                                <Users className="h-5 w-5 text-[var(--sg-secondary)]" />
 
                                 <div>
-                                  <h5 className="font-semibold text-purple-200">
+                                  <h5 className="font-semibold text-[var(--sg-secondary)]">
                                     Participantes de la Race
                                   </h5>
 
-                                  <p className="text-sm text-purple-100/70">
+                                  <p className="text-sm text-[var(--sg-muted-text)]">
                                     El runner principal del formulario será el jugador 1.
                                     Agrega aquí los datos del jugador 2.
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="mb-4 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                              <div className="sgames-postulation-race-player-box mb-4 rounded-lg p-3">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
                                   Jugador 1
                                 </p>
 
-                                <p className="mt-1 text-sm text-gray-300">
+                                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                                   Se usará el nombre, correo y Discord de la sección
                                   Información Personal.
                                 </p>
 
-                                <p className="mt-2 text-xs text-gray-500">
+                                <p className="sgames-postulation-muted-soft mt-2 text-xs">
                                   El video principal de esta run será el VOD del jugador 1.
                                 </p>
                               </div>
 
                               <div className="space-y-4">
                                 <div>
-                                  <Label className="text-gray-300">
+                                  <Label className="text-[var(--sg-muted-text)]">
                                     Nombre del jugador 2{" "}
                                     <span className="text-red-400">
                                       *
@@ -1516,14 +1676,14 @@ export default function PostulacionPage() {
                                         event.target.value
                                       )
                                     }
-                                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                    className="sgames-postulation-input mt-1.5"
                                     placeholder="Alias o nombre del jugador 2"
                                   />
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-2">
                                   <div>
-                                    <Label className="text-gray-300">
+                                    <Label className="text-[var(--sg-muted-text)]">
                                       Correo del jugador 2 (opcional)
                                     </Label>
 
@@ -1537,13 +1697,13 @@ export default function PostulacionPage() {
                                           event.target.value
                                         )
                                       }
-                                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                      className="sgames-postulation-input mt-1.5"
                                       placeholder="correo@ejemplo.com"
                                     />
                                   </div>
 
                                   <div>
-                                    <Label className="text-gray-300">
+                                    <Label className="text-[var(--sg-muted-text)]">
                                       Discord del jugador 2 (opcional)
                                     </Label>
 
@@ -1556,14 +1716,14 @@ export default function PostulacionPage() {
                                           event.target.value
                                         )
                                       }
-                                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                      className="sgames-postulation-input mt-1.5"
                                       placeholder="Ej: runner2#1234 o runner2"
                                     />
                                   </div>
                                 </div>
 
                                 <div>
-                                  <Label className="text-gray-300">
+                                  <Label className="text-[var(--sg-muted-text)]">
                                     País del jugador 2 (opcional)
                                   </Label>
 
@@ -1576,13 +1736,13 @@ export default function PostulacionPage() {
                                         event.target.value
                                       )
                                     }
-                                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                    className="sgames-postulation-input mt-1.5"
                                     placeholder="País del jugador 2"
                                   />
                                 </div>
 
                                 <div>
-                                  <Label className="text-gray-300">
+                                  <Label className="text-[var(--sg-muted-text)]">
                                     VOD del jugador 2{" "}
                                     <span className="text-red-400">
                                       *
@@ -1598,11 +1758,11 @@ export default function PostulacionPage() {
                                         event.target.value
                                       )
                                     }
-                                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                    className="sgames-postulation-input mt-1.5"
                                     placeholder="https://youtube.com/watch?v=... o https://www.twitch.tv/videos/..."
                                   />
 
-                                  <p className="mt-2 text-sm text-gray-500">
+                                  <p className="sgames-postulation-muted-soft mt-2 text-sm">
                                     Sólo se aceptan videos de YouTube o Twitch.
                                   </p>
                                 </div>
@@ -1611,7 +1771,7 @@ export default function PostulacionPage() {
                           )}
 
                           <div>
-                            <Label className="text-gray-300">
+                            <Label className="text-[var(--sg-muted-text)]">
                               Notas de esta run (opcional)
                             </Label>
 
@@ -1624,7 +1784,7 @@ export default function PostulacionPage() {
                                   event.target.value
                                 )
                               }
-                              className="mt-1.5 min-h-[90px] border-gray-700 bg-gray-800 text-white"
+                              className="sgames-postulation-input mt-1.5 min-h-[90px]"
                               placeholder="Información específica de esta run..."
                             />
                           </div>
@@ -1637,16 +1797,16 @@ export default function PostulacionPage() {
                 {/* Disponibilidad */}
                 <div>
                   <div className="mb-4 flex items-center gap-2">
-                    <CalendarDays className="h-5 w-5 text-cyan-400" />
+                    <CalendarDays className="h-5 w-5 text-[var(--sg-primary)]" />
 
-                    <h3 className="text-xl font-semibold text-cyan-400">
+                    <h3 className="sgames-postulation-heading text-xl font-semibold">
                       Disponibilidad para el evento
                     </h3>
                   </div>
 
-                  <div className="mb-5 rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
-                    <Label className="flex items-center gap-2 text-gray-300">
-                      <Globe2 className="h-4 w-4 text-purple-300" />
+                  <div className="sgames-postulation-info-box mb-5 rounded-lg p-4">
+                    <Label className="flex items-center gap-2 text-[var(--sg-muted-text)]">
+                      <Globe2 className="h-4 w-4 text-[var(--sg-secondary)]" />
                       Zona horaria donde estás capturando tu disponibilidad
                     </Label>
 
@@ -1654,11 +1814,11 @@ export default function PostulacionPage() {
                       value={runnerTimezone}
                       onValueChange={setRunnerTimezone}
                     >
-                      <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                      <SelectTrigger className="sgames-postulation-input mt-1.5">
                         <SelectValue placeholder="Selecciona tu zona horaria" />
                       </SelectTrigger>
 
-                      <SelectContent className="border-gray-700 bg-gray-800">
+                      <SelectContent className="sgames-postulation-select-content">
                         {timezoneOptions.map((timezone) => (
                           <SelectItem
                             key={timezone.value}
@@ -1670,16 +1830,16 @@ export default function PostulacionPage() {
                       </SelectContent>
                     </Select>
 
-                    <p className="mt-2 text-sm text-purple-100/80">
+                    <p className="mt-2 text-sm text-[var(--sg-muted-text)]">
                       Escribe tus horas en tu horario local. El sistema las convertirá
                       automáticamente a México Centro para el staff.
                     </p>
                   </div>
 
-                  <p className="mb-4 text-sm text-gray-400">
+                  <p className="mb-4 text-sm text-[var(--sg-muted-text)]">
                     Selecciona los días en los que puedes correr y el rango
                     de horario aproximado. Actualmente estás capturando en zona:
-                    <span className="font-semibold text-cyan-300">
+                    <span className="font-semibold text-[var(--sg-primary)]">
                       {" "}
                       {getTimezoneLabel(runnerTimezone)}
                     </span>
@@ -1693,7 +1853,7 @@ export default function PostulacionPage() {
                         className={`rounded-lg border p-4 transition-colors ${
                           item.selected
                             ? "border-cyan-500/50 bg-cyan-500/10"
-                            : "border-gray-800 bg-gray-800/40"
+                            : "border-[var(--sg-border)] bg-[color-mix(in_srgb,var(--sg-background)_82%,#000000_18%)]/40"
                         }`}
                       >
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1708,10 +1868,10 @@ export default function PostulacionPage() {
                                   event.target.checked
                                 )
                               }
-                              className="h-4 w-4 accent-cyan-500"
+                              className="h-4 w-4 accent-[var(--sg-primary)]"
                             />
 
-                            <span className="font-semibold text-white">
+                            <span className="font-semibold text-[var(--sg-text)]">
                               {item.label}
                             </span>
                           </label>
@@ -1741,7 +1901,7 @@ export default function PostulacionPage() {
                           <div className="mt-4 space-y-3">
                             <div className="grid gap-3 md:grid-cols-2">
                               <div>
-                                <Label className="text-gray-300">
+                                <Label className="text-[var(--sg-muted-text)]">
                                   Disponible desde
                                 </Label>
 
@@ -1755,12 +1915,12 @@ export default function PostulacionPage() {
                                       event.target.value
                                     )
                                   }
-                                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                  className="sgames-postulation-input mt-1.5"
                                 />
                               </div>
 
                               <div>
-                                <Label className="text-gray-300">
+                                <Label className="text-[var(--sg-muted-text)]">
                                   Disponible hasta
                                 </Label>
 
@@ -1774,17 +1934,17 @@ export default function PostulacionPage() {
                                       event.target.value
                                     )
                                   }
-                                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                  className="sgames-postulation-input mt-1.5"
                                 />
                               </div>
                             </div>
 
-                            <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                            <div className="sgames-postulation-converted-box rounded-lg p-3">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
                                 Convertido a México Centro
                               </p>
 
-                              <p className="mt-1 text-sm text-cyan-50">
+                              <p className="mt-1 text-sm text-[var(--sg-text)]">
                                 {formatConvertedAvailability(
                                   item,
                                   runnerTimezone
@@ -1793,7 +1953,7 @@ export default function PostulacionPage() {
                             </div>
 
                             <div>
-                              <Label className="text-gray-300">
+                              <Label className="text-[var(--sg-muted-text)]">
                                 Nota para este día (opcional)
                               </Label>
 
@@ -1806,7 +1966,7 @@ export default function PostulacionPage() {
                                     event.target.value
                                   )
                                 }
-                                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                                className="sgames-postulation-input mt-1.5"
                                 placeholder="Ej. Prefiero correr después de las 6 PM"
                               />
                             </div>
@@ -1820,7 +1980,7 @@ export default function PostulacionPage() {
                 {/* Redes Sociales */}
                 <div>
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-cyan-400">
+                    <h3 className="sgames-postulation-heading text-xl font-semibold">
                       Redes Sociales
                     </h3>
 
@@ -1829,20 +1989,20 @@ export default function PostulacionPage() {
                       variant="outline"
                       size="sm"
                       onClick={addSocialNetwork}
-                      className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+                      className="sgames-postulation-outline-button"
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       Agregar Red Social
                     </Button>
                   </div>
 
-                  <p className="mb-4 text-sm text-gray-400">
+                  <p className="mb-4 text-sm text-[var(--sg-muted-text)]">
                     Las redes sociales son opcionales pero recomendadas para que la
                     comunidad pueda conocer tu contenido.
                   </p>
 
                   {socialNetworks.length === 0 ? (
-                    <p className="text-center text-gray-500">
+                    <p className="text-center text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
                       No has agregado ninguna red social
                     </p>
                   ) : (
@@ -1850,7 +2010,7 @@ export default function PostulacionPage() {
                       {socialNetworks.map((sn) => (
                         <div
                           key={sn.id}
-                          className="flex flex-col gap-3 rounded-lg border border-gray-700 bg-gray-800/50 p-4 sm:flex-row"
+                          className="sgames-postulation-social-row flex flex-col gap-3 rounded-lg p-4 sm:flex-row"
                         >
                           <div className="flex-1">
                             <Select
@@ -1863,11 +2023,11 @@ export default function PostulacionPage() {
                                 )
                               }
                             >
-                              <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                              <SelectTrigger className="sgames-postulation-input">
                                 <SelectValue placeholder="Tipo de red" />
                               </SelectTrigger>
 
-                              <SelectContent className="border-gray-700 bg-gray-800">
+                              <SelectContent className="sgames-postulation-select-content">
                                 {catalog.map((network) => (
                                   <SelectItem
                                     key={network.id}
@@ -1890,7 +2050,7 @@ export default function PostulacionPage() {
                                   event.target.value
                                 )
                               }
-                              className="border-gray-700 bg-gray-800 text-white"
+                              className="sgames-postulation-input"
                               placeholder="https://..."
                             />
                           </div>
@@ -1916,7 +2076,7 @@ export default function PostulacionPage() {
                 <div>
                   <Label
                     htmlFor="notes"
-                    className="text-gray-300"
+                    className="text-[var(--sg-muted-text)]"
                   >
                     Notas generales (opcional)
                   </Label>
@@ -1924,20 +2084,20 @@ export default function PostulacionPage() {
                   <Textarea
                     id="notes"
                     {...register("notes")}
-                    className="mt-1.5 min-h-[100px] border-gray-700 bg-gray-800 text-white"
+                    className="sgames-postulation-input mt-1.5 min-h-[100px]"
                     placeholder="Información general que aplique a todas tus runs..."
                   />
                 </div>
 
                 {/* Comentarios para organizadores */}
                 <div>
-                  <h3 className="mb-4 text-xl font-semibold text-cyan-400">
+                  <h3 className="sgames-postulation-heading mb-4 text-xl font-semibold">
                     Comentarios para Organizadores
                   </h3>
 
                   <Label
                     htmlFor="organizerComments"
-                    className="text-gray-300"
+                    className="text-[var(--sg-muted-text)]"
                   >
                     Comentarios (opcional)
                   </Label>
@@ -1945,11 +2105,11 @@ export default function PostulacionPage() {
                   <Textarea
                     id="organizerComments"
                     {...register("organizerComments")}
-                    className="mt-1.5 min-h-[120px] border-gray-700 bg-gray-800 text-white"
+                    className="sgames-postulation-input mt-1.5 min-h-[120px]"
                     placeholder="Información adicional que quieras compartir con el equipo organizador..."
                   />
 
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="sgames-postulation-muted-soft mt-2 text-sm">
                     Usa este espacio para compartir información relevante para el equipo
                     organizador, como restricciones de horario, necesidades especiales, o
                     cualquier detalle técnico importante.
@@ -1961,7 +2121,7 @@ export default function PostulacionPage() {
                   type="submit"
                   size="lg"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-lg hover:from-cyan-600 hover:to-purple-700"
+                  className="sgames-postulation-primary-button w-full text-lg"
                 >
                   {isSubmitting ? (
                     <>Enviando...</>
