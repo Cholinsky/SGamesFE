@@ -278,9 +278,9 @@ async function loadPublicRunners() {
       : publicRunners;
 
   return (
-    <div className="overflow-hidden bg-[#070817]">
+    <div className="overflow-hidden bg-[var(--sg-background)]">
       {/* Hero Section */}
-      <section className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[#070817] py-20 lg:py-28">
+      <section className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[var(--sg-background)] py-20 lg:py-28">
         {/* Video Background */}
         <video
           className="absolute inset-0 h-full w-full object-cover opacity-70"
@@ -294,27 +294,27 @@ async function loadPublicRunners() {
         />
 
         {/* Video Overlays */}
-        <div className="absolute inset-0 bg-[#050713]/70" />
+        <div className="absolute inset-0 bg-black/70" />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.24),transparent_35%),linear-gradient(180deg,rgba(7,8,23,0.30)_0%,rgba(7,8,23,0.72)_70%,#070817_100%)]" />
+        <div className="absolute inset-0 opacity-95" style={{ background: "var(--sg-hero-gradient)" }} />
 
         <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
 
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#070817] to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--sg-background)] to-transparent" />
 
-        <div className="absolute left-8 top-20 hidden text-cyan-300/30 lg:block">
+        <div className="absolute left-8 top-20 hidden text-[var(--sg-primary)] opacity-40 lg:block">
           <div className="font-mono text-sm">
             00:15:42.31
           </div>
         </div>
 
-        <div className="absolute right-12 top-32 hidden text-pink-300/30 lg:block">
+        <div className="absolute right-12 top-32 hidden text-[var(--sg-accent)] opacity-40 lg:block">
           <div className="font-mono text-sm">
             PB: 00:14:58
           </div>
         </div>
 
-        <div className="absolute bottom-24 left-16 hidden text-violet-300/30 lg:block">
+        <div className="absolute bottom-24 left-16 hidden text-[var(--sg-secondary)] opacity-40 lg:block">
           <div className="font-mono text-sm">
             RUN READY
           </div>
@@ -324,30 +324,30 @@ async function loadPublicRunners() {
           <div className="mx-auto max-w-5xl">
             <div className="mb-8 flex justify-center">
               <div className="relative">
-                <div className="absolute inset-0 rounded-[2rem] bg-pink-500/45 blur-2xl" />
+                <div className="absolute inset-0 rounded-[2rem] bg-[var(--sg-accent)]/40 blur-2xl" />
 
                 <img
                   src={logoSgames}
                   alt="Logo de SGames"
-                  className="relative h-36 w-36 rounded-[2rem] border border-white/25 object-cover shadow-[0_0_55px_rgba(217,70,239,0.55)] md:h-44 md:w-44"
+                  className="sgames-logo-shadow relative h-36 w-36 rounded-[2rem] border border-white/25 object-cover md:h-44 md:w-44"
                 />
               </div>
             </div>
 
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em] text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em] text-[var(--sg-primary)]">
               Speedrun Event
             </p>
 
-            <h1 className="mb-6 bg-gradient-to-r from-cyan-200 via-violet-200 to-pink-200 bg-clip-text text-5xl font-black tracking-tight text-transparent drop-shadow-[0_0_28px_rgba(217,70,239,0.35)] md:text-7xl lg:text-8xl">
+            <h1 className="sgames-neon-text mb-6 text-5xl font-black tracking-tight md:text-7xl lg:text-8xl">
               SGames
             </h1>
 
-            <p className="mx-auto mb-4 max-w-3xl text-lg text-slate-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-xl lg:text-2xl">
+            <p className="mx-auto mb-4 max-w-3xl text-lg text-[var(--sg-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-xl lg:text-2xl">
               Un evento comunitario para reunir speedrunners
               de distintos juegos, categorías y plataformas.
             </p>
 
-            <p className="mx-auto mb-8 max-w-2xl text-sm text-slate-300 drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
+            <p className="mx-auto mb-8 max-w-2xl text-sm text-[var(--sg-muted-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
               Del 31 de julio al 2 de agosto de 2026.
               Postula tu run, comparte tu talento y forma parte
               del lineup.
@@ -358,7 +358,7 @@ async function loadPublicRunners() {
                 <Link to="/postulacion">
                   <Button
                     size="lg"
-                    className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-base font-bold text-white shadow-[0_0_32px_rgba(217,70,239,0.45)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+                    className="sgames-primary-button text-base font-bold sgames-neon-border"
                   >
                     <Zap className="mr-2 h-5 w-5" />
                     Enviar Postulación
@@ -379,7 +379,7 @@ async function loadPublicRunners() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-cyan-300/50 bg-[#070817]/55 text-base font-bold text-cyan-100 backdrop-blur-md hover:border-pink-300/70 hover:bg-pink-500/15 hover:text-pink-100"
+                  className="sgames-outline-button text-base font-bold backdrop-blur-md"
                 >
                   Ver Horario
                 </Button>
@@ -388,17 +388,17 @@ async function loadPublicRunners() {
           </div>
 
           <div className="mt-16 flex justify-center">
-            <ChevronDown className="h-8 w-8 animate-bounce text-cyan-200 drop-shadow-[0_0_14px_rgba(34,211,238,0.7)]" />
+            <ChevronDown className="h-8 w-8 animate-bounce text-[var(--sg-primary)]" />
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="bg-[#070817] py-20">
+      <section className="bg-[var(--sg-background)] py-20">
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-black text-white md:text-4xl">
+          <h2 className="mb-12 text-center text-3xl font-black text-[var(--sg-text)] md:text-4xl">
             ¿Por qué participar en{" "}
-            <span className="bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-transparent">
+            <span className="sgames-neon-text">
               SGames
             </span>
             ?
@@ -411,18 +411,18 @@ async function loadPublicRunners() {
               return (
                 <Card
                   key={index}
-                  className="group border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-pink-400/50 hover:shadow-[0_0_30px_rgba(217,70,239,0.18)]"
+                  className="sgames-glass group transition-all hover:-translate-y-1 hover:border-[var(--sg-accent)]/50 hover:shadow-xl"
                 >
                   <CardContent className="p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_22px_rgba(56,189,248,0.25)]">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] sgames-neon-border">
                       <Icon className="h-6 w-6 text-white" />
                     </div>
 
-                    <h3 className="mb-2 text-xl font-bold text-white">
+                    <h3 className="mb-2 text-xl font-bold text-[var(--sg-text)]">
                       {feature.title}
                     </h3>
 
-                    <p className="text-sm leading-relaxed text-slate-400">
+                    <p className="text-sm leading-relaxed text-[var(--sg-muted-text)]">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -434,14 +434,14 @@ async function loadPublicRunners() {
       </section>
 
       {/* Event Info Section */}
-      <section className="border-y border-violet-500/20 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.16),transparent_55%)] py-16">
+      <section className="border-y border-[var(--sg-border)] py-16" style={{ background: "var(--sg-card-gradient)" }}>
         <div className="container mx-auto px-4">
           <div className="mb-10 text-center">
-            <h2 className="text-3xl font-black text-white md:text-4xl">
+            <h2 className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
               Información del evento
             </h2>
 
-            <p className="mt-3 text-slate-400">
+            <p className="mt-3 text-[var(--sg-muted-text)]">
               Datos base para participantes y espectadores.
             </p>
           </div>
@@ -453,19 +453,19 @@ async function loadPublicRunners() {
               return (
                 <div
                   key={index}
-                  className="rounded-2xl border border-violet-500/20 bg-[#10182b]/70 p-6 shadow-[0_0_30px_rgba(15,23,42,0.35)]"
+                  className="sgames-glass rounded-2xl p-6 shadow-[0_0_30px_rgba(15,23,42,0.35)]"
                 >
-                  <Icon className="mb-4 h-7 w-7 text-cyan-300" />
+                  <Icon className="mb-4 h-7 w-7 text-[var(--sg-primary)]" />
 
-                  <p className="mb-2 text-sm uppercase tracking-[0.2em] text-slate-500">
+                  <p className="mb-2 text-sm uppercase tracking-[0.2em] text-[var(--sg-muted-text)] opacity-70">
                     {item.title}
                   </p>
 
-                  <p className="mb-3 text-xl font-black text-white">
+                  <p className="mb-3 text-xl font-black text-[var(--sg-text)]">
                     {item.value}
                   </p>
 
-                  <p className="text-sm leading-relaxed text-slate-400">
+                  <p className="text-sm leading-relaxed text-[var(--sg-muted-text)]">
                     {item.description}
                   </p>
                 </div>
@@ -477,20 +477,20 @@ async function loadPublicRunners() {
 
             {/* Official Announcements Section */}
 {publicPosts.length > 0 && (
-  <section className="bg-[#070817] py-20">
+  <section className="bg-[var(--sg-background)] py-20">
     <div className="container mx-auto px-4">
       <div className="mb-12 text-center">
         <div className="mb-4 flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_28px_rgba(217,70,239,0.30)]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] sgames-neon-border">
             <Megaphone className="h-7 w-7 text-white" />
           </div>
         </div>
 
-        <h2 className="text-3xl font-black text-white md:text-4xl">
+        <h2 className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
           Anuncios oficiales
         </h2>
 
-        <p className="mx-auto mt-3 max-w-2xl text-slate-400">
+        <p className="mx-auto mt-3 max-w-2xl text-[var(--sg-muted-text)]">
           Noticias, avisos y actualizaciones importantes del staff de SGames.
         </p>
       </div>
@@ -512,39 +512,39 @@ async function loadPublicRunners() {
                 openPost(post);
               }
             }}
-            className="group cursor-pointer border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(56,189,248,0.16)]"
+            className="sgames-glass group cursor-pointer transition-all hover:-translate-y-1 hover:border-[var(--sg-primary)]/50 hover:shadow-xl"
           >
             <CardContent className="p-6">
               <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--sg-primary)]/10 text-[var(--sg-primary)]">
                   <Newspaper className="h-5 w-5" />
                 </div>
 
                 {post.category && (
-                  <span className="rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-pink-200">
+                  <span className="rounded-full border border-[var(--sg-accent)]/30 bg-[var(--sg-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--sg-accent)]">
                     {post.category}
                   </span>
                 )}
               </div>
 
-              <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+              <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--sg-muted-text)] opacity-70">
                 {formatPostDate(
                   post.publishDate ??
                     post.createdAt
                 )}
               </p>
 
-              <h3 className="mb-3 text-xl font-black text-white transition-colors group-hover:text-cyan-200">
+              <h3 className="mb-3 text-xl font-black text-[var(--sg-text)] transition-colors group-hover:text-[var(--sg-primary)]">
                 {post.title}
               </h3>
 
-              <p className="text-sm leading-relaxed text-slate-400">
+              <p className="text-sm leading-relaxed text-[var(--sg-muted-text)]">
                 {getPostPreview(
                   post.content
                 )}
               </p>
 
-              <p className="mt-5 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
+              <p className="mt-5 text-sm font-semibold text-[var(--sg-primary)] transition-colors group-hover:text-[var(--sg-accent)]">
                 Ver anuncio completo
               </p>
             </CardContent>
@@ -557,7 +557,7 @@ async function loadPublicRunners() {
 
 
 {publicRunners.length > 0 && (
-  <section className="bg-[#070817] py-20">
+  <section className="bg-[var(--sg-background)] py-20">
     <style>
       {`
         @keyframes sgames-runner-carousel-scroll {
@@ -590,24 +590,24 @@ async function loadPublicRunners() {
     <div className="container mx-auto px-4">
       <div className="mb-12 text-center">
         <div className="mb-4 flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_28px_rgba(217,70,239,0.30)]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] sgames-neon-border">
             <Users className="h-7 w-7 text-white" />
           </div>
         </div>
 
-        <h2 className="text-3xl font-black text-white md:text-4xl">
+        <h2 className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
           Runners participantes
         </h2>
 
-        <p className="mx-auto mt-3 max-w-2xl text-slate-400">
+        <p className="mx-auto mt-3 max-w-2xl text-[var(--sg-muted-text)]">
           Conoce a todos los runners que formarán parte de esta primera maratón.
           El carrusel se pausa al pasar el cursor o enfocar una tarjeta.
         </p>
       </div>
 
       <div className="sgames-runner-carousel relative overflow-hidden py-3">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#070817] to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#070817] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[var(--sg-background)] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[var(--sg-background)] to-transparent" />
 
         <div
           className={`flex w-max gap-4 ${
@@ -630,9 +630,9 @@ async function loadPublicRunners() {
                   openRunner(runner);
                 }
               }}
-              className="group w-[230px] shrink-0 cursor-pointer overflow-hidden border-violet-500/20 bg-[#10182b]/70 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_0_24px_rgba(56,189,248,0.14)] sm:w-[250px] lg:w-[270px]"
+              className="sgames-glass group w-[230px] shrink-0 cursor-pointer overflow-hidden transition-all hover:-translate-y-1 hover:border-[var(--sg-primary)]/50 hover:shadow-xl sm:w-[250px] lg:w-[270px]"
             >
-              <div className="aspect-square bg-[#070817]">
+              <div className="aspect-square bg-[var(--sg-background)]">
                 {runner.photoUrl ? (
                   <img
                     src={runner.photoUrl}
@@ -650,27 +650,27 @@ async function loadPublicRunners() {
               </div>
 
               <CardContent className="p-4">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
                   Runner
                 </p>
 
-                <h3 className="line-clamp-1 text-lg font-black text-white">
+                <h3 className="line-clamp-1 text-lg font-black text-[var(--sg-text)]">
                   {runner.displayName}
                 </h3>
 
                 {runner.country && (
-                  <p className="mt-1 line-clamp-1 text-xs text-slate-400">
+                  <p className="mt-1 line-clamp-1 text-xs text-[var(--sg-muted-text)]">
                     {runner.country}
                   </p>
                 )}
 
                 {runner.bio && (
-                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-400">
+                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-[var(--sg-muted-text)]">
                     {runner.bio}
                   </p>
                 )}
 
-                <p className="mt-4 text-xs font-semibold text-cyan-300 transition-colors group-hover:text-pink-200">
+                <p className="mt-4 text-xs font-semibold text-[var(--sg-primary)] transition-colors group-hover:text-[var(--sg-accent)]">
                   Ver perfil completo
                 </p>
               </CardContent>
@@ -687,25 +687,25 @@ async function loadPublicRunners() {
   open={postDialogOpen}
   onOpenChange={setPostDialogOpen}
 >
-  <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white">
-    <DialogHeader className="border-b border-violet-500/20 px-6 py-5">
+  <DialogContent className="sgames-glass max-h-[90vh] w-[95vw] max-w-2xl overflow-hidden p-0 text-[var(--sg-text)]">
+    <DialogHeader className="border-b border-[var(--sg-border)] px-6 py-5">
       <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--sg-primary)]/10 text-[var(--sg-primary)]">
           <Megaphone className="h-5 w-5" />
         </div>
 
         {selectedPost?.category && (
-          <span className="rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-pink-200">
+          <span className="rounded-full border border-[var(--sg-accent)]/30 bg-[var(--sg-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--sg-accent)]">
             {selectedPost.category}
           </span>
         )}
       </div>
 
-      <DialogTitle className="text-2xl font-black text-white">
+      <DialogTitle className="text-2xl font-black text-[var(--sg-text)]">
         {selectedPost?.title}
       </DialogTitle>
 
-      <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-500">
+      <p className="mt-2 text-sm uppercase tracking-[0.18em] text-[var(--sg-muted-text)] opacity-70">
         {formatPostDate(
           selectedPost?.publishDate ??
             selectedPost?.createdAt
@@ -715,23 +715,23 @@ async function loadPublicRunners() {
 
     <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
       {selectedPost?.content?.trim() ? (
-        <p className="whitespace-pre-wrap break-words text-base leading-relaxed text-slate-300">
+        <p className="whitespace-pre-wrap break-words text-base leading-relaxed text-[var(--sg-muted-text)]">
           {selectedPost.content}
         </p>
       ) : (
-        <p className="text-slate-400">
+        <p className="text-[var(--sg-muted-text)]">
           Este anuncio no tiene contenido adicional.
         </p>
       )}
     </div>
 
-    <DialogFooter className="border-t border-violet-500/20 px-6 py-4">
+    <DialogFooter className="border-t border-[var(--sg-border)] px-6 py-4">
       <Button
         variant="outline"
         onClick={() =>
           setPostDialogOpen(false)
         }
-        className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+        className="border-[var(--sg-primary)]/40 text-[var(--sg-primary)] hover:bg-[var(--sg-primary)]/10"
       >
         Cerrar
       </Button>
@@ -744,18 +744,18 @@ async function loadPublicRunners() {
   open={runnerDialogOpen}
   onOpenChange={setRunnerDialogOpen}
 >
-  <DialogContent className="flex h-[92vh] w-[calc(100vw-2rem)] flex-col overflow-hidden border-violet-500/30 bg-[#0b1022] p-0 text-white sm:max-w-[1200px] xl:max-w-[1280px]">
-    <DialogHeader className="shrink-0 border-b border-violet-500/20 px-6 py-5">
+  <DialogContent className="sgames-glass flex h-[92vh] w-[calc(100vw-2rem)] flex-col overflow-hidden p-0 text-[var(--sg-text)] sm:max-w-[1200px] xl:max-w-[1280px]">
+    <DialogHeader className="shrink-0 border-b border-[var(--sg-border)] px-6 py-5">
       <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--sg-primary)]">
           Perfil del runner
         </p>
 
-        <DialogTitle className="text-3xl font-black text-white md:text-4xl">
+        <DialogTitle className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
           {selectedRunner?.displayName}
         </DialogTitle>
 
-        <DialogDescription className="mt-2 text-sm text-slate-400">
+        <DialogDescription className="mt-2 text-sm text-[var(--sg-muted-text)]">
           {selectedRunner?.country
             ? selectedRunner.country
             : "Runner participante de SGames"}
@@ -766,8 +766,8 @@ async function loadPublicRunners() {
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
       <div className="grid gap-0 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[430px_minmax(0,1fr)]">
         {/* Imagen */}
-        <div className="min-w-0 border-b border-violet-500/20 bg-[#070817] p-5 lg:border-b-0 lg:border-r lg:border-violet-500/20">
-          <div className="mx-auto aspect-[4/5] max-h-[66vh] overflow-hidden rounded-3xl border border-violet-500/25 bg-black/40 shadow-[0_0_35px_rgba(56,189,248,0.10)]">
+        <div className="min-w-0 border-b border-[var(--sg-border)] bg-[var(--sg-background)] p-5 lg:border-b-0 lg:border-r lg:border-[var(--sg-border)]">
+          <div className="mx-auto aspect-[4/5] max-h-[66vh] overflow-hidden rounded-3xl border border-[var(--sg-border)] bg-black/40 shadow-[0_0_35px_rgba(56,189,248,0.10)]">
             {selectedRunner?.photoUrl ? (
               <img
                 src={selectedRunner.photoUrl}
@@ -784,37 +784,37 @@ async function loadPublicRunners() {
 
         {/* Info + video */}
         <div className="min-w-0 space-y-5 p-5 md:p-6">
-          <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">
+          <div className="sgames-glass rounded-3xl p-5">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--sg-primary)]">
               Presentación
             </p>
 
-            <h3 className="text-2xl font-black text-white">
+            <h3 className="text-2xl font-black text-[var(--sg-text)]">
               {selectedRunner?.displayName}
             </h3>
 
             {selectedRunner?.bio ? (
-              <p className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-slate-300">
+              <p className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-[var(--sg-muted-text)]">
                 {selectedRunner.bio}
               </p>
             ) : (
-              <p className="mt-4 text-slate-500">
+              <p className="mt-4 text-[var(--sg-muted-text)] opacity-70">
                 Este runner todavía no tiene presentación escrita.
               </p>
             )}
           </div>
 
-          <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-300">
+          <div className="sgames-glass rounded-3xl p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--sg-accent)]">
               Video
             </p>
 
-            <h3 className="mt-1 mb-4 text-2xl font-black text-white">
+            <h3 className="mt-1 mb-4 text-2xl font-black text-[var(--sg-text)]">
               Video de presentación
             </h3>
 
             {selectedRunner?.presentationVideoUrl ? (
-              <div className="overflow-hidden rounded-2xl border border-pink-400/20 bg-black">
+              <div className="overflow-hidden rounded-2xl border border-[var(--sg-accent)]/20 bg-black">
                 <video
                   src={selectedRunner.presentationVideoUrl}
                   controls
@@ -828,11 +828,11 @@ async function loadPublicRunners() {
             ) : (
               <div className="flex aspect-video items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-black/30 text-center">
                 <div>
-                  <p className="font-semibold text-white">
+                  <p className="font-semibold text-[var(--sg-text)]">
                     Sin video de presentación
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-[var(--sg-muted-text)] opacity-70">
                     Cuando el staff suba un video, aparecerá aquí.
                   </p>
                 </div>
@@ -841,8 +841,8 @@ async function loadPublicRunners() {
           </div>
 
           {selectedRunner?.socialLinks?.length ? (
-            <div className="rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5">
-              <p className="mb-3 text-sm font-semibold text-cyan-300">
+            <div className="sgames-glass rounded-3xl p-5">
+              <p className="mb-3 text-sm font-semibold text-[var(--sg-primary)]">
                 Redes sociales
               </p>
 
@@ -853,7 +853,7 @@ async function loadPublicRunners() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                    className="rounded-full border border-[var(--sg-primary)]/30 bg-[var(--sg-primary)]/10 px-4 py-2 text-sm font-semibold text-[var(--sg-primary)] hover:bg-[var(--sg-primary)]/20"
                   >
                     {link.name}
                   </a>
@@ -865,11 +865,11 @@ async function loadPublicRunners() {
       </div>
     </div>
 
-    <DialogFooter className="shrink-0 border-t border-violet-500/20 px-6 py-4">
+    <DialogFooter className="shrink-0 border-t border-[var(--sg-border)] px-6 py-4">
       <Button
         variant="outline"
         onClick={() => setRunnerDialogOpen(false)}
-        className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+        className="border-[var(--sg-primary)]/40 text-[var(--sg-primary)] hover:bg-[var(--sg-primary)]/10"
       >
         Cerrar
       </Button>
@@ -881,10 +881,10 @@ async function loadPublicRunners() {
       {/* FAQ Section */}
       <section
         id="faq"
-        className="bg-[#070817] py-20"
+        className="bg-[var(--sg-background)] py-20"
       >
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-black text-white md:text-4xl">
+          <h2 className="mb-12 text-center text-3xl font-black text-[var(--sg-text)] md:text-4xl">
             Preguntas Frecuentes
           </h2>
 
@@ -898,13 +898,13 @@ async function loadPublicRunners() {
                 <AccordionItem
                   key={index}
                   value={`item-${index}`}
-                  className="rounded-2xl border border-violet-500/20 bg-[#10182b]/70 px-6"
+                  className="sgames-glass rounded-2xl px-6"
                 >
-                  <AccordionTrigger className="text-left text-lg font-bold text-white hover:text-cyan-300">
+                  <AccordionTrigger className="text-left text-lg font-bold text-[var(--sg-text)] hover:text-[var(--sg-primary)]">
                     {faq.question}
                   </AccordionTrigger>
 
-                  <AccordionContent className="leading-relaxed text-slate-400">
+                  <AccordionContent className="leading-relaxed text-[var(--sg-muted-text)]">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -915,17 +915,17 @@ async function loadPublicRunners() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,rgba(34,211,238,0.14),rgba(168,85,247,0.18),rgba(236,72,153,0.14))] py-20">
-        <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.16)_0,transparent_25%),radial-gradient(circle_at_80%_30%,rgba(236,72,153,0.2)_0,transparent_25%)]" />
+      <section className="relative overflow-hidden py-20" style={{ background: "var(--sg-card-gradient)" }}>
+        <div className="absolute inset-0 opacity-30" style={{ background: "var(--sg-hero-gradient)" }} />
 
         <div className="container relative mx-auto px-4 text-center">
-          <Heart className="mx-auto mb-6 h-16 w-16 text-pink-300" />
+          <Heart className="mx-auto mb-6 h-16 w-16 text-[var(--sg-accent)]" />
 
-          <h2 className="mb-4 text-3xl font-black text-white md:text-4xl">
+          <h2 className="mb-4 text-3xl font-black text-[var(--sg-text)] md:text-4xl">
             ¿Listo para mostrar tu run?
           </h2>
 
-          <p className="mx-auto mb-8 max-w-2xl text-lg text-slate-300">
+          <p className="mx-auto mb-8 max-w-2xl text-lg text-[var(--sg-muted-text)]">
             Envía tu postulación y ayúdanos a construir un
             lineup variado, entretenido y memorable.
           </p>
@@ -934,7 +934,7 @@ async function loadPublicRunners() {
             <Link to="/postulacion">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-lg font-bold text-white shadow-[0_0_28px_rgba(217,70,239,0.35)] hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+                className="sgames-primary-button text-lg font-bold sgames-neon-border"
               >
                 <Zap className="mr-2 h-5 w-5" />
                 Enviar mi Postulación
