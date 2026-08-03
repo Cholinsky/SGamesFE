@@ -4,6 +4,7 @@ import { getPublicPosts } from "../services/postService";
 import { Link } from "react-router";
 import { Button } from "../components/ui/button";
 import { getPublicRunnerProfiles } from "../services/runnerProfileService";
+import { getActiveDesignTheme } from "../services/publicDesignThemeService";
 import {
   Play,
   Users,
@@ -60,6 +61,78 @@ type PublicRunnerProfile = {
   }[];
 };
 
+
+type SeasonAssetKey =
+  | "Summer"
+  | "Fall"
+  | "Winter";
+
+function normalizeSeasonAssetKey(
+  seasonKey?: string | null
+): SeasonAssetKey {
+  const cleanSeason =
+    seasonKey?.trim().toLowerCase();
+
+  if (cleanSeason === "winter") {
+    return "Winter";
+  }
+
+  if (
+    cleanSeason === "autumn" ||
+    cleanSeason === "fall"
+  ) {
+    return "Fall";
+  }
+
+  return "Summer";
+}
+
+function getSeasonVideoSrc(
+  season: SeasonAssetKey
+) {
+  switch (season) {
+    case "Winter":
+      return "/videos/SGW.mp4";
+
+    case "Fall":
+      return "/videos/SGF.mp4";
+
+    default:
+      return "/videos/SGS.mp4";
+  }
+}
+
+function getSeasonLogoBaseName(
+  season: SeasonAssetKey
+) {
+  switch (season) {
+    case "Winter":
+      return "LogoWinter";
+
+    case "Fall":
+      return "LogoFall";
+
+    default:
+      return "LogoSummer";
+  }
+}
+
+function getSeasonLogoCandidates(
+  season: SeasonAssetKey,
+  fallbackLogo: string
+) {
+  const logoName =
+    getSeasonLogoBaseName(season);
+
+  return [
+    `/logos/${logoName}.png`,
+    `/logos/${logoName}.webp`,
+    `/logos/${logoName}.jpg`,
+    `/logos/${logoName}.jpeg`,
+    fallbackLogo,
+  ];
+}
+
 function formatPostDate(
   value?: string | null
 ) {
@@ -91,88 +164,15 @@ function getPostPreview(
   return `${cleanContent.slice(0, 170)}...`;
 }
 
-
-const homeSeasonThemeCss = `
-  .sgames-home-page {
-    background: var(--sg-background);
-    color: var(--sg-text);
-  }
-
-  .sgames-home-hero {
-    background: var(--sg-background);
-  }
-
-  .sgames-home-hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 220ms ease;
-  }
-
-  .sgames-home-video-dim {
-    background: color-mix(in srgb, var(--sg-background) 72%, #000000 28%);
-  }
-
-  .sgames-home-grid {
-    opacity: 0.34;
-  }
-
-  .sgames-home-soft-section {
-    background: var(--sg-background);
-  }
-
-  .sgames-home-card-gradient {
-    background: var(--sg-card-gradient);
-  }
-
-  [data-season-theme="Autumn"] .sgames-home-hero::before {
-    opacity: 1;
-    background:
-      radial-gradient(circle at 15% 18%, rgba(249, 115, 22, 0.16), transparent 24rem),
-      radial-gradient(circle at 86% 20%, rgba(185, 28, 28, 0.14), transparent 26rem),
-      linear-gradient(180deg, rgba(18, 8, 7, 0.10), rgba(18, 8, 7, 0.44));
-  }
-
-  [data-season-theme="Autumn"] .sgames-home-grid {
-    background-image:
-      linear-gradient(rgba(255, 247, 237, 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 247, 237, 0.045) 1px, transparent 1px);
-  }
-
-  [data-season-theme="Winter"] .sgames-home-page {
-    background:
-      radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.14), transparent 28rem),
-      radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 30rem),
-      radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.09), transparent 34rem),
-      var(--sg-background);
-  }
-
-  [data-season-theme="Winter"] .sgames-home-hero::before {
-    opacity: 1;
-    background:
-      radial-gradient(circle at 16% 16%, rgba(103, 232, 249, 0.18), transparent 24rem),
-      radial-gradient(circle at 84% 18%, rgba(59, 130, 246, 0.16), transparent 28rem),
-      linear-gradient(180deg, rgba(5, 8, 22, 0.04), rgba(5, 8, 22, 0.48));
-  }
-
-  [data-season-theme="Winter"] .sgames-home-grid {
-    background-image:
-      linear-gradient(rgba(248, 251, 255, 0.055) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(248, 251, 255, 0.055) 1px, transparent 1px);
-  }
-
-  [data-season-theme="Winter"] .sgames-home-frost-border {
-    box-shadow:
-      0 0 0 1px rgba(103, 232, 249, 0.18),
-      0 0 34px rgba(59, 130, 246, 0.18);
-  }
-`;
-
 export default function HomePage() {
   const [applicationsOpen, setApplicationsOpen] =
     useState(true);
+
+  const [activeSeasonKey, setActiveSeasonKey] =
+    useState<string>("Summer");
+
+  const [logoFallbackIndex, setLogoFallbackIndex] =
+    useState(0);
 
   const [publicPosts, setPublicPosts] =
     useState<PublicPost[]>([]);
@@ -220,10 +220,25 @@ async function loadPublicRunners() {
 }
   async function loadHomeData() {
     await Promise.all([
-  loadActiveEventStatus(),
-  loadPublicPosts(),
-  loadPublicRunners(),
-]);
+      loadActiveEventStatus(),
+      loadPublicPosts(),
+      loadPublicRunners(),
+      loadActiveTheme(),
+    ]);
+  }
+
+  async function loadActiveTheme() {
+    try {
+      const theme =
+        await getActiveDesignTheme();
+
+      setActiveSeasonKey(
+        theme?.seasonKey ?? "Summer"
+      );
+    } catch (error) {
+      console.error(error);
+      setActiveSeasonKey("Summer");
+    }
   }
 
   async function loadActiveEventStatus() {
@@ -356,15 +371,39 @@ async function loadPublicRunners() {
         ]
       : publicRunners;
 
+  const seasonAssetKey =
+    normalizeSeasonAssetKey(activeSeasonKey);
+
+  const seasonVideoSrc =
+    getSeasonVideoSrc(seasonAssetKey);
+
+  const seasonLogoCandidates =
+    getSeasonLogoCandidates(
+      seasonAssetKey,
+      logoSgames
+    );
+
+  const seasonLogoSrc =
+    seasonLogoCandidates[
+      Math.min(
+        logoFallbackIndex,
+        seasonLogoCandidates.length - 1
+      )
+    ];
+
+  useEffect(() => {
+    setLogoFallbackIndex(0);
+  }, [seasonAssetKey]);
+
   return (
-    <div className="sgames-home-page overflow-hidden bg-[var(--sg-background)]">
-      <style>{homeSeasonThemeCss}</style>
+    <div className="overflow-hidden bg-[var(--sg-background)]">
       {/* Hero Section */}
-      <section className="sgames-home-hero relative min-h-[calc(100vh-72px)] overflow-hidden bg-[var(--sg-background)] py-20 lg:py-28">
+      <section className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[var(--sg-background)] py-20 lg:py-28">
         {/* Video Background */}
         <video
+          key={seasonVideoSrc}
           className="absolute inset-0 h-full w-full object-cover opacity-70"
-          src="/videos/SGF.mp4"
+          src={seasonVideoSrc}
           autoPlay
           muted
           loop
@@ -374,11 +413,11 @@ async function loadPublicRunners() {
         />
 
         {/* Video Overlays */}
-        <div className="sgames-home-video-dim absolute inset-0" />
+        <div className="absolute inset-0 bg-black/70" />
 
         <div className="absolute inset-0 opacity-95" style={{ background: "var(--sg-hero-gradient)" }} />
 
-        <div className="sgames-home-grid absolute inset-0 opacity-35 [background-size:48px_48px]" />
+        <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
 
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--sg-background)] to-transparent" />
 
@@ -407,8 +446,16 @@ async function loadPublicRunners() {
                 <div className="absolute inset-0 rounded-[2rem] bg-[var(--sg-accent)]/40 blur-2xl" />
 
                 <img
-                  src={logoSgames}
-                  alt="Logo de SGames"
+                  src={seasonLogoSrc}
+                  alt={`Logo de SGames ${seasonAssetKey}`}
+                  onError={() => {
+                    setLogoFallbackIndex((current) =>
+                      current <
+                      seasonLogoCandidates.length - 1
+                        ? current + 1
+                        : current
+                    );
+                  }}
                   className="sgames-logo-shadow relative h-36 w-36 rounded-[2rem] border border-white/25 object-cover md:h-44 md:w-44"
                 />
               </div>
@@ -491,7 +538,7 @@ async function loadPublicRunners() {
               return (
                 <Card
                   key={index}
-                  className="sgames-glass sgames-home-frost-border group transition-all hover:-translate-y-1 hover:border-[var(--sg-accent)]/50 hover:shadow-xl"
+                  className="sgames-glass group transition-all hover:-translate-y-1 hover:border-[var(--sg-accent)]/50 hover:shadow-xl"
                 >
                   <CardContent className="p-6">
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] sgames-neon-border">
