@@ -3,7 +3,6 @@ import { Menu, X, Shield } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { useState, useEffect } from "react";
-import logoSgames from "../../assets/logo-sgames.jpeg";
 import {
   Twitch,
   Youtube,
@@ -22,6 +21,68 @@ import {
   type PublicDesignTheme,
 } from "../services/publicDesignThemeService";
 
+
+type SeasonAssetKey =
+  | "Summer"
+  | "Fall"
+  | "Winter";
+
+function normalizeSeasonAssetKey(
+  seasonKey?: string | null
+): SeasonAssetKey {
+  const cleanSeason =
+    seasonKey?.trim().toLowerCase();
+
+  if (cleanSeason === "winter") {
+    return "Winter";
+  }
+
+  if (
+    cleanSeason === "autumn" ||
+    cleanSeason === "fall"
+  ) {
+    return "Fall";
+  }
+
+  return "Summer";
+}
+
+function getSeasonLogoBaseName(
+  season: SeasonAssetKey
+) {
+  switch (season) {
+    case "Winter":
+      return "LogoWinter";
+
+    case "Fall":
+      return "LogoFall";
+
+    default:
+      return "LogoSummer";
+  }
+}
+
+function getSeasonLogoCandidates(
+  season: SeasonAssetKey
+) {
+  const logoName =
+    getSeasonLogoBaseName(season);
+
+  return [
+    `/logos/${logoName}.png`,
+    `/logos/${logoName}.webp`,
+    `/logos/${logoName}.jpg`,
+    `/logos/${logoName}.jpeg`,
+    `/logos/${logoName}.PNG`,
+    "/logos/LogoSummer.png",
+    "/logos/LogoSummer.webp",
+    "/logos/LogoSummer.jpg",
+    "/logos/LogoSummer.jpeg",
+    "/logos/LogoSummer.PNG",
+  ];
+}
+
+
 export function PublicLayout() {
   const [publicSettings, setPublicSettings] =
     useState<PublicSettings | null>(null);
@@ -29,14 +90,48 @@ export function PublicLayout() {
   const [activeTheme, setActiveTheme] =
     useState<PublicDesignTheme | null>(null);
 
+  const [logoFallbackIndex, setLogoFallbackIndex] =
+    useState(0);
+
   const location = useLocation();
 
   const [mobileMenuOpen, setMobileMenuOpen] =
     useState(false);
 
+  const seasonAssetKey =
+    normalizeSeasonAssetKey(
+      activeTheme?.seasonKey
+    );
+
+  const seasonLogoCandidates =
+    getSeasonLogoCandidates(
+      seasonAssetKey
+    );
+
+  const seasonLogoSrc =
+    seasonLogoCandidates[
+      Math.min(
+        logoFallbackIndex,
+        seasonLogoCandidates.length - 1
+      )
+    ];
+
+  function handleLogoError() {
+    setLogoFallbackIndex((current) =>
+      current <
+      seasonLogoCandidates.length - 1
+        ? current + 1
+        : current
+    );
+  }
+
   useEffect(() => {
     loadPublicSettings();
   }, []);
+
+  useEffect(() => {
+    setLogoFallbackIndex(0);
+  }, [seasonAssetKey]);
 
   async function loadPublicSettings() {
     try {
@@ -170,8 +265,9 @@ export function PublicLayout() {
           <div className="sgames-glass sgames-neon-border w-full max-w-2xl rounded-3xl p-8 text-center md:p-12">
             <div className="sgames-logo-shell mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl">
               <img
-                src={logoSgames}
-                alt="SGames"
+                src={seasonLogoSrc}
+                alt={`SGames ${seasonAssetKey}`}
+                onError={handleLogoError}
                 className="h-16 w-16 rounded-2xl object-cover"
               />
             </div>
@@ -236,8 +332,9 @@ export function PublicLayout() {
               <div className="sgames-logo-glow absolute inset-0 rounded-2xl blur-md transition" />
 
               <img
-                src={logoSgames}
-                alt="SGames"
+                src={seasonLogoSrc}
+                alt={`SGames ${seasonAssetKey}`}
+                onError={handleLogoError}
                 className="relative h-12 w-12 rounded-2xl border border-white/20 object-cover"
               />
             </div>
@@ -403,8 +500,9 @@ export function PublicLayout() {
             <div>
               <div className="mb-4 flex items-center gap-3">
                 <img
-                  src={logoSgames}
-                  alt="SGames"
+                  src={seasonLogoSrc}
+                  alt={`SGames ${seasonAssetKey}`}
+                onError={handleLogoError}
                   className="h-10 w-10 rounded-xl border border-white/20 object-cover"
                 />
 

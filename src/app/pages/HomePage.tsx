@@ -27,7 +27,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../components/ui/accordion";
-import logoSgames from "../../assets/logo-sgames.jpeg";
 import {
   Dialog,
   DialogContent,
@@ -118,8 +117,7 @@ function getSeasonLogoBaseName(
 }
 
 function getSeasonLogoCandidates(
-  season: SeasonAssetKey,
-  fallbackLogo: string
+  season: SeasonAssetKey
 ) {
   const logoName =
     getSeasonLogoBaseName(season);
@@ -129,7 +127,12 @@ function getSeasonLogoCandidates(
     `/logos/${logoName}.webp`,
     `/logos/${logoName}.jpg`,
     `/logos/${logoName}.jpeg`,
-    fallbackLogo,
+    `/logos/${logoName}.PNG`,
+    "/logos/LogoSummer.png",
+    "/logos/LogoSummer.webp",
+    "/logos/LogoSummer.jpg",
+    "/logos/LogoSummer.jpeg",
+    "/logos/LogoSummer.PNG",
   ];
 }
 
@@ -379,8 +382,7 @@ async function loadPublicRunners() {
 
   const seasonLogoCandidates =
     getSeasonLogoCandidates(
-      seasonAssetKey,
-      logoSgames
+      seasonAssetKey
     );
 
   const seasonLogoSrc =
