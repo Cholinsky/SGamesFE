@@ -97,8 +97,8 @@ function getRunFormatBadgeClass(
   run: PublicApprovedRun
 ) {
   return isRaceRun(run)
-    ? "border-pink-400/30 bg-pink-500/10 text-pink-200"
-    : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200";
+    ? "sgames-runs-badge-accent"
+    : "sgames-runs-badge-primary";
 }
 
 function getSortedParticipants(
@@ -476,13 +476,13 @@ export default function RunsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#070817] py-12">
+      <div className="sgames-runs-page min-h-screen py-12">
         <div className="container mx-auto px-4">
-          <Card className="mx-auto max-w-2xl border-violet-500/20 bg-[#10182b]/80">
+          <Card className="sgames-runs-panel mx-auto max-w-2xl">
             <CardContent className="p-10 text-center">
-              <div className="mx-auto mb-4 h-12 w-12 animate-pulse rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500" />
+              <div className="sgames-runs-gradient-box mx-auto mb-4 h-12 w-12 animate-pulse rounded-2xl" />
 
-              <p className="text-slate-300">
+              <p className="text-[var(--sg-muted-text)]">
                 Cargando runs aprobadas...
               </p>
             </CardContent>
@@ -515,24 +515,199 @@ export default function RunsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_34rem),radial-gradient(circle_at_top_right,rgba(236,72,153,0.14),transparent_34rem),linear-gradient(180deg,#0b1022_0%,#070817_48%,#070817_100%)] py-12">
+    <div className="sgames-runs-page min-h-screen py-12">
+
+      <style>
+        {`
+          .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 16%, transparent), transparent 30rem),
+              radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 14%, transparent), transparent 32rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+            color: var(--sg-text);
+          }
+
+          .sgames-runs-gradient-box {
+            background:
+              linear-gradient(
+                135deg,
+                var(--sg-primary),
+                var(--sg-secondary),
+                var(--sg-accent)
+              );
+            box-shadow:
+              0 0 35px color-mix(in srgb, var(--sg-accent) 35%, transparent);
+          }
+
+          .sgames-runs-badge-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 11%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-badge-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 12%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-badge-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 11%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-stat-card {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 80%, transparent)
+              );
+            box-shadow:
+              0 0 28px rgba(15, 23, 42, 0.28);
+          }
+
+          .sgames-runs-stat-card-primary {
+            border-color: color-mix(in srgb, var(--sg-primary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-accent {
+            border-color: color-mix(in srgb, var(--sg-accent) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-secondary {
+            border-color: color-mix(in srgb, var(--sg-secondary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+          }
+
+          .sgames-runs-panel {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 82%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(14px);
+          }
+
+          .sgames-runs-input {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 82%, #000000 18%) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-input::placeholder {
+            color: color-mix(in srgb, var(--sg-muted-text) 54%, transparent);
+          }
+
+          .sgames-runs-filter-active {
+            border-color: color-mix(in srgb, var(--sg-primary) 52%, transparent) !important;
+            background: color-mix(in srgb, var(--sg-primary) 20%, transparent) !important;
+            color: var(--sg-primary) !important;
+          }
+
+          .sgames-runs-filter-idle {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 70%, transparent) !important;
+            color: var(--sg-muted-text) !important;
+          }
+
+          .sgames-runs-filter-idle:hover {
+            background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-table {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 84%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.35);
+          }
+
+          .sgames-runs-header-row {
+            border-bottom: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-text) 5%, transparent);
+            color: color-mix(in srgb, var(--sg-muted-text) 70%, transparent);
+          }
+
+          .sgames-runs-row {
+            border-color: color-mix(in srgb, var(--sg-secondary) 18%, transparent);
+          }
+
+          .sgames-runs-row:hover {
+            background: color-mix(in srgb, var(--sg-primary) 5%, transparent);
+          }
+
+          .sgames-run-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-background) 62%, transparent);
+          }
+
+          .sgames-race-participants {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 6%, transparent);
+          }
+
+          .sgames-race-player-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-surface) 70%, transparent);
+          }
+
+          .sgames-runs-pill-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-pill-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-pill-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-pill-primary:hover,
+          .sgames-runs-pill-secondary:hover,
+          .sgames-runs-pill-accent:hover {
+            filter: brightness(1.16);
+          }
+        `}
+      </style>
+
       <div className="container mx-auto px-4">
         <div className="mb-10 text-center">
           <div className="mb-4 flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_35px_rgba(217,70,239,0.35)]">
+            <div className="sgames-runs-gradient-box flex h-16 w-16 items-center justify-center rounded-3xl">
               <Trophy className="h-8 w-8 text-white" />
             </div>
           </div>
 
-          <Badge className="mb-4 border border-cyan-400/30 bg-cyan-400/10 text-cyan-300">
+          <Badge className="sgames-runs-badge-primary mb-4">
             Lineup confirmado
           </Badge>
 
-          <h1 className="mb-4 bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 bg-clip-text text-4xl font-black text-transparent md:text-5xl">
+          <h1 className="sgames-neon-text mb-4 text-4xl font-black md:text-5xl">
             Runs aprobadas
           </h1>
 
-          <p className="mx-auto max-w-3xl text-slate-400">
+          <p className="mx-auto max-w-3xl text-[var(--sg-muted-text)]">
             Conoce las runs confirmadas para SGames. Aquí podrás ver
             runners, juegos, categorías, plataformas, tiempos estimados,
             formato individual o race, VODs y redes para compartir con la
@@ -541,15 +716,15 @@ export default function RunsPage() {
         </div>
 
         {runs.length === 0 ? (
-          <Card className="mx-auto max-w-2xl border-violet-500/20 bg-[#10182b]/70">
+          <Card className="sgames-runs-panel mx-auto max-w-2xl">
             <CardContent className="p-10 text-center">
-              <SearchX className="mx-auto mb-4 h-14 w-14 text-slate-500" />
+              <SearchX className="mx-auto mb-4 h-14 w-14 text-[color-mix(in_srgb,var(--sg-muted-text)_60%,transparent)]" />
 
-              <h2 className="mb-3 text-2xl font-black text-white">
+              <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
                 Aún no hay runs aprobadas visibles
               </h2>
 
-              <p className="text-slate-400">
+              <p className="text-[var(--sg-muted-text)]">
                 Cuando el staff apruebe postulaciones, aparecerán aquí.
               </p>
             </CardContent>
@@ -557,68 +732,68 @@ export default function RunsPage() {
         ) : (
           <>
             <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-violet-500/20 bg-[#10182b]/70 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              <div className="sgames-runs-stat-card rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
                   Total
                 </p>
 
-                <p className="mt-2 text-3xl font-black text-white">
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
                   {stats.totalRuns}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                   runs aprobadas
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">
+              <div className="sgames-runs-stat-card sgames-runs-stat-card-primary rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
                   Individual
                 </p>
 
-                <p className="mt-2 text-3xl font-black text-white">
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
                   {stats.individualRuns}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                   runs solo
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-pink-400/20 bg-pink-500/10 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-300">
+              <div className="sgames-runs-stat-card sgames-runs-stat-card-accent rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-accent)]">
                   Race
                 </p>
 
-                <p className="mt-2 text-3xl font-black text-white">
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
                   {stats.raceRuns}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                   carreras aprobadas
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-300">
+              <div className="sgames-runs-stat-card sgames-runs-stat-card-secondary rounded-2xl p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-secondary)]">
                   Jugadores
                 </p>
 
-                <p className="mt-2 text-3xl font-black text-white">
+                <p className="mt-2 text-3xl font-black text-[var(--sg-text)]">
                   {stats.totalRunners}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                   participantes únicos
                 </p>
               </div>
             </div>
 
-            <div className="mb-6 rounded-3xl border border-violet-500/20 bg-[#10182b]/70 p-5 shadow-[0_0_35px_rgba(15,23,42,0.25)]">
+            <div className="sgames-runs-panel mb-6 rounded-3xl p-5">
               <div className="mb-4 flex items-center gap-2">
-                <ListFilter className="h-5 w-5 text-cyan-300" />
+                <ListFilter className="h-5 w-5 text-[var(--sg-primary)]" />
 
-                <h2 className="text-lg font-black text-white">
+                <h2 className="text-lg font-black text-[var(--sg-text)]">
                   Buscar y filtrar
                 </h2>
               </div>
@@ -627,13 +802,13 @@ export default function RunsPage() {
                 <div>
                   <label
                     htmlFor="runs-search"
-                    className="mb-2 block text-sm font-semibold text-slate-300"
+                    className="mb-2 block text-sm font-semibold text-[var(--sg-muted-text)]"
                   >
                     Buscar por runner, juego, categoría o plataforma
                   </label>
 
                   <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color-mix(in_srgb,var(--sg-muted-text)_60%,transparent)]" />
 
                     <Input
                       id="runs-search"
@@ -643,14 +818,14 @@ export default function RunsPage() {
                           event.target.value
                         )
                       }
-                      className="border-violet-500/20 bg-[#070817] pl-10 text-white placeholder:text-slate-600"
+                      className="sgames-runs-input pl-10"
                       placeholder="Ej. Mario, Any%, PC, runner..."
                     />
                   </div>
                 </div>
 
                 <div>
-                  <p className="mb-2 text-sm font-semibold text-slate-300">
+                  <p className="mb-2 text-sm font-semibold text-[var(--sg-muted-text)]">
                     Formato
                   </p>
 
@@ -671,12 +846,12 @@ export default function RunsPage() {
                           }
                           className={
                             active
-                              ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/25"
-                              : "border-violet-500/20 bg-[#070817]/70 text-slate-300 hover:bg-white/5 hover:text-white"
+                              ? "sgames-runs-filter-active"
+                              : "sgames-runs-filter-idle"
                           }
                         >
                           {option.label}
-                          <Badge className="ml-2 bg-white/10 text-[10px] text-white">
+                          <Badge className="ml-2 bg-white/10 text-[10px] text-[var(--sg-text)]">
                             {option.count}
                           </Badge>
                         </Button>
@@ -688,7 +863,7 @@ export default function RunsPage() {
                         type="button"
                         variant="ghost"
                         onClick={clearFilters}
-                        className="text-slate-400 hover:bg-white/5 hover:text-pink-200"
+                        className="text-[var(--sg-muted-text)] hover:bg-white/5 hover:text-[var(--sg-accent)]"
                       >
                         Limpiar
                       </Button>
@@ -697,13 +872,13 @@ export default function RunsPage() {
                 </div>
               </div>
 
-              <p className="mt-4 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
                 Mostrando{" "}
-                <span className="font-semibold text-cyan-300">
+                <span className="font-semibold text-[var(--sg-primary)]">
                   {filteredRuns.length}
                 </span>{" "}
                 de{" "}
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-[var(--sg-text)]">
                   {runs.length}
                 </span>{" "}
                 runs aprobadas.
@@ -711,15 +886,15 @@ export default function RunsPage() {
             </div>
 
             {filteredRuns.length === 0 ? (
-              <Card className="mx-auto max-w-2xl border-violet-500/20 bg-[#10182b]/70">
+              <Card className="sgames-runs-panel mx-auto max-w-2xl">
                 <CardContent className="p-10 text-center">
-                  <SearchX className="mx-auto mb-4 h-14 w-14 text-slate-500" />
+                  <SearchX className="mx-auto mb-4 h-14 w-14 text-[color-mix(in_srgb,var(--sg-muted-text)_60%,transparent)]" />
 
-                  <h2 className="mb-3 text-2xl font-black text-white">
+                  <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
                     No encontramos coincidencias
                   </h2>
 
-                  <p className="mb-6 text-slate-400">
+                  <p className="mb-6 text-[var(--sg-muted-text)]">
                     Ajusta la búsqueda o limpia los filtros para volver a ver
                     todo el lineup.
                   </p>
@@ -728,39 +903,39 @@ export default function RunsPage() {
                     type="button"
                     variant="outline"
                     onClick={clearFilters}
-                    className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+                    className="sgames-outline-button"
                   >
                     Limpiar filtros
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="overflow-hidden rounded-3xl border border-violet-500/20 bg-[#10182b]/70 shadow-[0_0_35px_rgba(15,23,42,0.35)]">
-                <div className="hidden grid-cols-[1fr_2.4fr_1.2fr_0.8fr] gap-4 border-b border-violet-500/20 bg-white/5 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 lg:grid">
+              <div className="sgames-runs-table overflow-hidden rounded-3xl">
+                <div className="sgames-runs-header-row hidden grid-cols-[1fr_2.4fr_1.2fr_0.8fr] gap-4 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] lg:grid">
                   <span>Jugador</span>
                   <span>Runs aprobadas</span>
                   <span>Redes</span>
                   <span>Compartir</span>
                 </div>
 
-                <div className="divide-y divide-violet-500/15">
+                <div className="divide-y divide-[color-mix(in_srgb,var(--sg-secondary)_18%,transparent)]">
                   {runnerGroups.map((group) => (
                     <div
                       key={group.runnerName}
-                      className="grid gap-5 px-5 py-6 transition-colors hover:bg-cyan-500/5 lg:grid-cols-[1fr_2.4fr_1.2fr_0.8fr] lg:items-start"
+                      className="sgames-runs-row grid gap-5 px-5 py-6 transition-colors lg:grid-cols-[1fr_2.4fr_1.2fr_0.8fr] lg:items-start"
                     >
                       {/* Jugador */}
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
                           Jugador
                         </p>
 
-                        <p className="flex items-center gap-2 text-xl font-black text-white">
-                          <Users className="h-5 w-5 text-cyan-300" />
+                        <p className="flex items-center gap-2 text-xl font-black text-[var(--sg-text)]">
+                          <Users className="h-5 w-5 text-[var(--sg-primary)]" />
                           {group.runnerName}
                         </p>
 
-                        <Badge className="mt-3 bg-violet-500/20 text-violet-300">
+                        <Badge className="sgames-runs-badge-secondary mt-3">
                           {group.runs.length}{" "}
                           {group.runs.length === 1
                             ? "run aprobada"
@@ -770,7 +945,7 @@ export default function RunsPage() {
 
                       {/* Runs */}
                       <div>
-                        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
                           Runs aprobadas
                         </p>
 
@@ -782,7 +957,7 @@ export default function RunsPage() {
                             return (
                               <div
                                 key={run.id}
-                                className="rounded-2xl border border-violet-500/20 bg-[#070817]/60 p-4"
+                                className="sgames-run-card rounded-2xl p-4"
                               >
                                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                                   <div>
@@ -797,7 +972,7 @@ export default function RunsPage() {
                                       {isRaceRun(run) && (
                                         <Badge
                                           variant="outline"
-                                          className="border-violet-400/30 bg-violet-500/10 text-violet-200"
+                                          className="sgames-runs-badge-secondary"
                                         >
                                           <Users className="mr-1.5 h-3.5 w-3.5" />
                                           {raceParticipants.length} jugadores
@@ -805,17 +980,17 @@ export default function RunsPage() {
                                       )}
                                     </div>
 
-                                    <p className="flex items-center gap-2 font-black text-white">
-                                      <Gamepad2 className="h-4 w-4 text-violet-300" />
+                                    <p className="flex items-center gap-2 font-black text-[var(--sg-text)]">
+                                      <Gamepad2 className="h-4 w-4 text-[var(--sg-secondary)]" />
                                       {run.game}
                                     </p>
 
-                                    <p className="mt-1 text-sm text-slate-400">
+                                    <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                                       {run.category}
                                     </p>
 
                                     {isRaceRun(run) && (
-                                      <p className="mt-2 text-sm font-semibold text-pink-200">
+                                      <p className="mt-2 text-sm font-semibold text-[var(--sg-accent)]">
                                         {getRunParticipantNames(run)}
                                       </p>
                                     )}
@@ -824,7 +999,7 @@ export default function RunsPage() {
                                   <div className="flex flex-wrap gap-2">
                                     <Badge
                                       variant="outline"
-                                      className="border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+                                      className="sgames-runs-badge-primary"
                                     >
                                       <Monitor className="mr-1.5 h-3.5 w-3.5" />
                                       {run.platform}
@@ -832,7 +1007,7 @@ export default function RunsPage() {
 
                                     <Badge
                                       variant="outline"
-                                      className="border-pink-400/30 bg-pink-400/10 text-pink-200"
+                                      className="sgames-runs-badge-accent"
                                     >
                                       <Timer className="mr-1.5 h-3.5 w-3.5" />
                                       {run.estimatedTime}
@@ -843,7 +1018,7 @@ export default function RunsPage() {
                                         href={run.youtubeUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
+                                        className="sgames-runs-pill-secondary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
                                       >
                                         VOD
                                         <ExternalLink className="h-3 w-3" />
@@ -857,7 +1032,7 @@ export default function RunsPage() {
                                       onClick={() =>
                                         openRunShare(run)
                                       }
-                                      className="h-7 rounded-full border-pink-400/30 bg-pink-500/10 px-3 text-xs font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
+                                      className="sgames-runs-pill-accent h-7 rounded-full px-3 text-xs font-semibold"
                                     >
                                       Compartir run
                                       <Share2 className="ml-1 h-3 w-3" />
@@ -866,8 +1041,8 @@ export default function RunsPage() {
                                 </div>
 
                                 {isRaceRun(run) && (
-                                  <div className="mt-4 rounded-2xl border border-pink-400/20 bg-pink-500/5 p-3">
-                                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-pink-200">
+                                  <div className="sgames-race-participants mt-4 rounded-2xl p-3">
+                                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[var(--sg-accent)]">
                                       Participantes de la race
                                     </p>
 
@@ -876,18 +1051,18 @@ export default function RunsPage() {
                                         (participant, participantIndex) => (
                                           <div
                                             key={`${run.id}-${participant.sortOrder ?? participantIndex}-${participant.runnerName}`}
-                                            className="rounded-xl border border-violet-500/20 bg-[#10182b]/70 p-3"
+                                            className="sgames-race-player-card rounded-xl p-3"
                                           >
                                             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
                                               Jugador {participantIndex + 1}
                                             </p>
 
-                                            <p className="mt-1 font-black text-white">
+                                            <p className="mt-1 font-black text-[var(--sg-text)]">
                                               {participant.runnerName}
                                             </p>
 
                                             {participant.country && (
-                                              <p className="mt-1 text-xs text-slate-400">
+                                              <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
                                                 {participant.country}
                                               </p>
                                             )}
@@ -897,7 +1072,7 @@ export default function RunsPage() {
                                                 href={participant.videoUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="mt-3 inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200 hover:bg-violet-500/20"
+                                                className="mt-3 inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-[var(--sg-secondary)] hover:bg-violet-500/20"
                                               >
                                                 VOD jugador {participantIndex + 1}
                                                 <ExternalLink className="h-3 w-3" />
@@ -917,7 +1092,7 @@ export default function RunsPage() {
 
                       {/* Redes */}
                       <div>
-                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
                           Redes
                         </p>
 
@@ -929,14 +1104,14 @@ export default function RunsPage() {
                                 href={social.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                                className="sgames-runs-pill-primary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
                               >
                                 {social.name}
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                             ))
                           ) : (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
                               Sin redes
                             </span>
                           )}
@@ -945,7 +1120,7 @@ export default function RunsPage() {
 
                       {/* Compartir jugador */}
                       <div>
-                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-cyan-300 lg:hidden">
+                        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--sg-primary)] lg:hidden">
                           Compartir
                         </p>
 
@@ -955,7 +1130,7 @@ export default function RunsPage() {
                           onClick={() =>
                             openRunnerShare(group)
                           }
-                          className="inline-flex items-center gap-2 rounded-xl border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm font-semibold text-pink-200 hover:bg-pink-500/20 hover:text-pink-100"
+                          className="sgames-runs-pill-accent inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
                         >
                           Compartir jugador
                           <Share2 className="h-4 w-4" />
@@ -972,7 +1147,7 @@ export default function RunsPage() {
                 <Button
                   type="button"
                   onClick={openLineupShare}
-                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white hover:from-cyan-300 hover:via-violet-400 hover:to-pink-400"
+                  className="sgames-primary-button"
                 >
                   <Share2 className="mr-2 h-4 w-4" />
                   Compartir lineup

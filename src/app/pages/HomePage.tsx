@@ -284,7 +284,7 @@ async function loadPublicRunners() {
         {/* Video Background */}
         <video
           className="absolute inset-0 h-full w-full object-cover opacity-70"
-          src="/videos/Super Games Fall.mp4"
+          src="/videos/SGF.mp4"
           autoPlay
           muted
           loop
