@@ -49,6 +49,7 @@ import {
   unpublishSchedule,
   getActiveEvent,
   deleteScheduleEntry,
+  deleteScheduleEntriesByEvent,
   updateScheduleEntryStatus,
   type ScheduleEntryManualStatus,
 } from "../../services/scheduleService";
@@ -198,6 +199,17 @@ function sortScheduleByTime(
   });
 
   return sortedSchedule;
+}
+
+function getScheduleItemsCount(
+  schedule: DaySchedule
+) {
+  return Object.values(schedule)
+    .reduce(
+      (total, items) =>
+        total + items.length,
+      0
+    );
 }
 function getManualStatusLabel(
   status?: string | null
@@ -620,6 +632,12 @@ export default function AdminHorarios() {
 const [itemToDelete, setItemToDelete] =
   useState<ScheduleItem | null>(null);
 
+const [clearScheduleDialogOpen, setClearScheduleDialogOpen] =
+  useState(false);
+
+const [clearScheduleConfirmation, setClearScheduleConfirmation] =
+  useState("");
+
   useEffect(() => {
     loadSchedule();
   }, []);
@@ -985,6 +1003,78 @@ const handleConfirmDelete = async () => {
   }
 };
 
+function handleOpenClearSchedule() {
+  if (!activeEventId) {
+    toast.error("No hay evento activo");
+    return;
+  }
+
+  const totalItems =
+    getScheduleItemsCount(schedule);
+
+  if (totalItems === 0) {
+    toast.error(
+      "El horario ya está vacío"
+    );
+
+    return;
+  }
+
+  setClearScheduleConfirmation("");
+  setClearScheduleDialogOpen(true);
+}
+
+async function handleConfirmClearSchedule() {
+  if (!activeEventId) {
+    toast.error("No hay evento activo");
+    return;
+  }
+
+  if (clearScheduleConfirmation !== "BORRAR HORARIO") {
+    toast.error(
+      "Escribe BORRAR HORARIO para confirmar"
+    );
+
+    return;
+  }
+
+  try {
+    const result =
+      await deleteScheduleEntriesByEvent(
+        activeEventId
+      );
+
+    setSchedule((current) => {
+      const emptySchedule: DaySchedule = {};
+
+      Object.keys(current).forEach((day) => {
+        emptySchedule[day] = [];
+      });
+
+      return emptySchedule;
+    });
+
+    setClearScheduleDialogOpen(false);
+    setClearScheduleConfirmation("");
+
+    toast.success(
+      result?.deletedEntries !== undefined
+        ? `Horario eliminado correctamente. ${result.deletedEntries} entradas borradas.`
+        : "Horario eliminado correctamente"
+    );
+
+    await loadSchedule();
+  } catch (error) {
+    console.error(error);
+
+    toast.error(
+      error instanceof Error && error.message
+        ? error.message
+        : "No se pudo borrar el horario completo"
+    );
+  }
+}
+
 const handleUnpublish = async () => {
   if (!activeEventId) {
     toast.error("No hay evento activo");
@@ -1169,6 +1259,17 @@ async function handleStatusChange(
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleOpenClearSchedule}
+              disabled={getScheduleItemsCount(schedule) === 0}
+              className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Borrar horario completo
+            </Button>
+
             {isPublished ? (
               <Badge className="bg-green-500/20 text-green-400">
                 Publicado
@@ -1293,6 +1394,86 @@ async function handleStatusChange(
                 className="bg-red-600 text-white hover:bg-red-700"
               >
                 Eliminar del horario
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Clear Full Schedule Confirmation */}
+        <AlertDialog
+          open={clearScheduleDialogOpen}
+          onOpenChange={setClearScheduleDialogOpen}
+        >
+          <AlertDialogContent className="border-red-500/30 bg-gray-900 text-white">
+            <AlertDialogHeader>
+              <div className="mb-2 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
+                  <AlertTriangle className="h-5 w-5 text-red-400" />
+                </div>
+
+                <AlertDialogTitle>
+                  Borrar horario completo
+                </AlertDialogTitle>
+              </div>
+
+              <AlertDialogDescription className="space-y-4 text-gray-400">
+                <p>
+                  Esta acción borrará todas las entradas del horario del evento
+                  activo. Las postulaciones, runners, juegos, categorías,
+                  plataformas y el evento no serán eliminados.
+                </p>
+
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+                  Se eliminarán{" "}
+                  <span className="font-semibold text-white">
+                    {getScheduleItemsCount(schedule)}
+                  </span>{" "}
+                  entradas del horario.
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="clearScheduleConfirmation"
+                    className="text-gray-300"
+                  >
+                    Escribe{" "}
+                    <span className="font-semibold text-red-300">
+                      BORRAR HORARIO
+                    </span>{" "}
+                    para confirmar
+                  </Label>
+
+                  <Input
+                    id="clearScheduleConfirmation"
+                    value={clearScheduleConfirmation}
+                    onChange={(event) =>
+                      setClearScheduleConfirmation(
+                        event.target.value
+                      )
+                    }
+                    className="mt-2 border-gray-700 bg-gray-800 text-white"
+                    placeholder="BORRAR HORARIO"
+                  />
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white"
+                onClick={() =>
+                  setClearScheduleConfirmation("")
+                }
+              >
+                Cancelar
+              </AlertDialogCancel>
+
+              <AlertDialogAction
+                onClick={handleConfirmClearSchedule}
+                disabled={clearScheduleConfirmation !== "BORRAR HORARIO"}
+                className="bg-red-600 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Borrar horario completo
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

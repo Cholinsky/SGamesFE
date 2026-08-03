@@ -252,6 +252,29 @@ export async function deleteScheduleEntry(
   return await readJsonResponse(response);
 }
 
+export async function deleteScheduleEntriesByEvent(
+  eventId: string
+) {
+  const response = await fetch(
+    `${API_URL}/Schedule/entries/event/${eventId}`,
+    {
+      method: "DELETE",
+      headers: getHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error deleting schedule entries"
+      )
+    );
+  }
+
+  return await readJsonResponse(response);
+}
+
 export async function unpublishSchedule(
   eventId: string
 ) {
