@@ -599,6 +599,21 @@ export default function AdminHorarios() {
   const [editTime, setEditTime] =
     useState("");
 
+  const [editRunner, setEditRunner] =
+    useState("");
+
+  const [editGame, setEditGame] =
+    useState("");
+
+  const [editCategory, setEditCategory] =
+    useState("");
+
+  const [editPlatform, setEditPlatform] =
+    useState("");
+
+  const [editDurationMinutes, setEditDurationMinutes] =
+    useState("");
+
     const [deleteDialogOpen, setDeleteDialogOpen] =
   useState(false);
 
@@ -805,6 +820,13 @@ statusNote:
   ) => {
     setEditingItem(item);
     setEditTime(item.time);
+    setEditRunner(item.runner);
+    setEditGame(item.game);
+    setEditCategory(item.category);
+    setEditPlatform(item.platform);
+    setEditDurationMinutes(
+      String(item.durationMinutes)
+    );
     setEditDialogOpen(true);
   };
 
@@ -813,9 +835,67 @@ statusNote:
       return;
     }
 
+    const cleanRunner =
+      editRunner.trim();
+
+    const cleanGame =
+      editGame.trim();
+
+    const cleanCategory =
+      editCategory.trim();
+
+    const cleanPlatform =
+      editPlatform.trim();
+
+    const durationMinutes =
+      Number(editDurationMinutes);
+
     if (!editTime) {
       toast.error(
         "Selecciona una hora válida"
+      );
+
+      return;
+    }
+
+    if (!cleanRunner) {
+      toast.error(
+        "El runner no puede quedar vacío"
+      );
+
+      return;
+    }
+
+    if (!cleanGame) {
+      toast.error(
+        "El juego no puede quedar vacío"
+      );
+
+      return;
+    }
+
+    if (!cleanCategory) {
+      toast.error(
+        "La categoría no puede quedar vacía"
+      );
+
+      return;
+    }
+
+    if (!cleanPlatform) {
+      toast.error(
+        "La plataforma no puede quedar vacía"
+      );
+
+      return;
+    }
+
+    if (
+      !Number.isFinite(durationMinutes) ||
+      durationMinutes <= 0
+    ) {
+      toast.error(
+        "La duración debe ser mayor a 0 minutos"
       );
 
       return;
@@ -832,6 +912,13 @@ statusNote:
               ? {
                   ...item,
                   time: editTime,
+                  runner: cleanRunner,
+                  game: cleanGame,
+                  category: cleanCategory,
+                  platform: cleanPlatform,
+                  durationMinutes,
+                  duration:
+                    formatDuration(durationMinutes),
                 }
               : item
           );
@@ -841,7 +928,7 @@ statusNote:
     });
 
     toast.success(
-      "Horario actualizado y ordenado por hora. Recuerda guardar el borrador."
+      "Run actualizada y ordenada por hora. Recuerda guardar el borrador."
     );
 
     setEditDialogOpen(false);
@@ -957,6 +1044,18 @@ const handleUnpublish = async () => {
 
                 positionOrder:
                   index + 1,
+
+                runnerName:
+                  item.runner,
+
+                gameName:
+                  item.game,
+
+                categoryName:
+                  item.category,
+
+                platformName:
+                  item.platform,
               }
             )
           );
@@ -1213,49 +1312,147 @@ async function handleStatusChange(
 
             {editingItem && (
               <div className="space-y-4">
-                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                  <p className="mb-1 text-sm text-gray-400">
-                    Runner
-                  </p>
-
-                  <p className="font-medium text-white">
-                    {editingItem.runner}
+                <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4">
+                  <p className="text-sm text-cyan-100/80">
+                    Estos cambios se aplican al horario localmente. Para
+                    persistirlos en backend, presiona
+                    <span className="font-semibold text-white">
+                      {" "}Guardar Borrador
+                    </span>
+                    .
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                  <p className="mb-1 text-sm text-gray-400">
-                    Juego
-                  </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label
+                      htmlFor="editTime"
+                      className="text-gray-300"
+                    >
+                      Hora de inicio
+                    </Label>
 
-                  <p className="font-medium text-white">
-                    {editingItem.game}
-                  </p>
+                    <Input
+                      id="editTime"
+                      type="time"
+                      value={editTime}
+                      onChange={(e) =>
+                        setEditTime(
+                          e.target.value
+                        )
+                      }
+                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                    />
+                  </div>
 
-                  <p className="text-sm text-gray-400">
-                    {editingItem.category}
-                  </p>
+                  <div>
+                    <Label
+                      htmlFor="editDurationMinutes"
+                      className="text-gray-300"
+                    >
+                      Duración en minutos
+                    </Label>
+
+                    <Input
+                      id="editDurationMinutes"
+                      type="number"
+                      min="1"
+                      value={editDurationMinutes}
+                      onChange={(e) =>
+                        setEditDurationMinutes(
+                          e.target.value
+                        )
+                      }
+                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                      placeholder="Ej: 45"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <Label
-                    htmlFor="editTime"
+                    htmlFor="editRunner"
                     className="text-gray-300"
                   >
-                    Hora de inicio
+                    Runner
                   </Label>
 
                   <Input
-                    id="editTime"
-                    type="time"
-                    value={editTime}
+                    id="editRunner"
+                    value={editRunner}
                     onChange={(e) =>
-                      setEditTime(
+                      setEditRunner(
                         e.target.value
                       )
                     }
                     className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                    placeholder="Nombre o alias del runner"
                   />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="editGame"
+                    className="text-gray-300"
+                  >
+                    Juego
+                  </Label>
+
+                  <Input
+                    id="editGame"
+                    value={editGame}
+                    onChange={(e) =>
+                      setEditGame(
+                        e.target.value
+                      )
+                    }
+                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                    placeholder="Nombre del juego"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label
+                      htmlFor="editCategory"
+                      className="text-gray-300"
+                    >
+                      Categoría
+                    </Label>
+
+                    <Input
+                      id="editCategory"
+                      value={editCategory}
+                      onChange={(e) =>
+                        setEditCategory(
+                          e.target.value
+                        )
+                      }
+                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                      placeholder="Ej: Any%, 100%, Glitchless"
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="editPlatform"
+                      className="text-gray-300"
+                    >
+                      Plataforma
+                    </Label>
+
+                    <Input
+                      id="editPlatform"
+                      value={editPlatform}
+                      onChange={(e) =>
+                        setEditPlatform(
+                          e.target.value
+                        )
+                      }
+                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                      placeholder="Ej: PC, Nintendo Switch"
+                    />
+                  </div>
                 </div>
               </div>
             )}

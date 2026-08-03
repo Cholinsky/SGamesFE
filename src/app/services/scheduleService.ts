@@ -1,6 +1,61 @@
 import { API_URL } from "../config/api";
 import { getHeaders } from "./authservice";
 
+async function getErrorMessage(
+  response: Response,
+  fallbackMessage: string
+) {
+  const responseText =
+    await response.text();
+
+  if (!responseText) {
+    return fallbackMessage;
+  }
+
+  try {
+    const parsed =
+      JSON.parse(responseText);
+
+    if (typeof parsed === "string") {
+      return parsed;
+    }
+
+    if (parsed?.message) {
+      return parsed.message;
+    }
+
+    if (parsed?.title) {
+      return parsed.title;
+    }
+
+    if (parsed?.errors) {
+      const messages =
+        Object.values(parsed.errors)
+          .flat()
+          .filter(Boolean);
+
+      if (messages.length > 0) {
+        return messages.join("\n");
+      }
+    }
+  } catch {
+    // Si no es JSON, se usa el texto directo del backend.
+  }
+
+  return responseText;
+}
+
+async function readJsonResponse(
+  response: Response
+) {
+  const responseText =
+    await response.text();
+
+  return responseText
+    ? JSON.parse(responseText)
+    : null;
+}
+
 export async function getScheduleDays() {
   const response = await fetch(
     `${API_URL}/Schedule/days`,
@@ -10,7 +65,12 @@ export async function getScheduleDays() {
   );
 
   if (!response.ok) {
-    throw new Error("Error loading schedule days");
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading schedule days"
+      )
+    );
   }
 
   return await response.json();
@@ -25,7 +85,12 @@ export async function getScheduleEntries() {
   );
 
   if (!response.ok) {
-    throw new Error("Error loading schedule entries");
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading schedule entries"
+      )
+    );
   }
 
   return await response.json();
@@ -44,10 +109,15 @@ export async function createScheduleEntry(
   );
 
   if (!response.ok) {
-    throw new Error("Error creating schedule entry");
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error creating schedule entry"
+      )
+    );
   }
 
-  return await response.json();
+  return await readJsonResponse(response);
 }
 
 export async function updateScheduleEntry(
@@ -65,11 +135,14 @@ export async function updateScheduleEntry(
 
   if (!response.ok) {
     throw new Error(
-      "Error updating schedule entry"
+      await getErrorMessage(
+        response,
+        "Error updating schedule entry"
+      )
     );
   }
 
-  return await response.json();
+  return await readJsonResponse(response);
 }
 
 export async function publishSchedule(
@@ -85,11 +158,14 @@ export async function publishSchedule(
 
   if (!response.ok) {
     throw new Error(
-      "Error publishing schedule"
+      await getErrorMessage(
+        response,
+        "Error publishing schedule"
+      )
     );
   }
 
-  return await response.json();
+  return await readJsonResponse(response);
 }
 
 export async function getPublicSchedule(
@@ -101,7 +177,10 @@ export async function getPublicSchedule(
 
   if (!response.ok) {
     throw new Error(
-      "Error loading public schedule"
+      await getErrorMessage(
+        response,
+        "Error loading public schedule"
+      )
     );
   }
 
@@ -120,7 +199,10 @@ export async function getEventById(
 
   if (!response.ok) {
     throw new Error(
-      "Error loading event"
+      await getErrorMessage(
+        response,
+        "Error loading event"
+      )
     );
   }
 
@@ -136,7 +218,12 @@ export async function getActiveEvent() {
   );
 
   if (!response.ok) {
-    throw new Error("Error loading active event");
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading active event"
+      )
+    );
   }
 
   return await response.json();
@@ -155,11 +242,14 @@ export async function deleteScheduleEntry(
 
   if (!response.ok) {
     throw new Error(
-      "Error deleting schedule entry"
+      await getErrorMessage(
+        response,
+        "Error deleting schedule entry"
+      )
     );
   }
 
-  return await response.json();
+  return await readJsonResponse(response);
 }
 
 export async function unpublishSchedule(
@@ -175,12 +265,16 @@ export async function unpublishSchedule(
 
   if (!response.ok) {
     throw new Error(
-      "Error unpublishing schedule"
+      await getErrorMessage(
+        response,
+        "Error unpublishing schedule"
+      )
     );
   }
 
-  return await response.json();
+  return await readJsonResponse(response);
 }
+
 export type ScheduleEntryManualStatus =
   | "preparing"
   | "live"
@@ -202,14 +296,13 @@ export async function updateScheduleEntryStatus(
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error updating schedule entry status"
+      await getErrorMessage(
+        response,
+        "Error updating schedule entry status"
+      )
     );
   }
 
   return await response.json();
 }
-
