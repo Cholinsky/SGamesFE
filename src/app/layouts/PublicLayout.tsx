@@ -16,11 +16,18 @@ import {
   getPublicSettings,
   type PublicSettings,
 } from "../services/publicSettingsService";
+import {
+  getActiveDesignTheme,
+  type PublicDesignTheme,
+} from "../services/publicDesignThemeService";
 
 export function PublicLayout() {
 
   const [publicSettings, setPublicSettings] =
   useState<PublicSettings | null>(null);
+
+  const [activeTheme, setActiveTheme] =
+    useState<PublicDesignTheme | null>(null);
 
 useEffect(() => {
   loadPublicSettings();
@@ -28,15 +35,76 @@ useEffect(() => {
 
 async function loadPublicSettings() {
   try {
-    const data =
-      await getPublicSettings();
+    const [settingsData, themeData] =
+      await Promise.all([
+        getPublicSettings(),
+        getActiveDesignTheme(),
+      ]);
 
-    setPublicSettings(data);
+    setPublicSettings(settingsData);
+    setActiveTheme(themeData);
   } catch (error) {
     console.error(error);
     setPublicSettings(null);
+    setActiveTheme(null);
   }
 }
+
+useEffect(() => {
+  if (!activeTheme) {
+    return;
+  }
+
+  const root =
+    document.documentElement;
+
+  root.style.setProperty(
+    "--sg-primary",
+    activeTheme.primaryColor
+  );
+  root.style.setProperty(
+    "--sg-secondary",
+    activeTheme.secondaryColor
+  );
+  root.style.setProperty(
+    "--sg-accent",
+    activeTheme.accentColor
+  );
+  root.style.setProperty(
+    "--sg-background",
+    activeTheme.backgroundColor
+  );
+  root.style.setProperty(
+    "--sg-surface",
+    activeTheme.surfaceColor
+  );
+  root.style.setProperty(
+    "--sg-text",
+    activeTheme.textColor
+  );
+  root.style.setProperty(
+    "--sg-muted-text",
+    activeTheme.mutedTextColor
+  );
+  root.style.setProperty(
+    "--sg-border",
+    activeTheme.borderColor
+  );
+
+  if (activeTheme.heroGradient) {
+    root.style.setProperty(
+      "--sg-hero-gradient",
+      activeTheme.heroGradient
+    );
+  }
+
+  if (activeTheme.cardGradient) {
+    root.style.setProperty(
+      "--sg-card-gradient",
+      activeTheme.cardGradient
+    );
+  }
+}, [activeTheme]);
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] =
     useState(false);
@@ -143,7 +211,10 @@ const officialSocialLinks = [
   }
 
   return (
-    <div className="min-h-screen bg-[#070817] text-white">
+    <div
+      className="min-h-screen bg-[#070817] text-white"
+      data-season-theme={activeTheme?.seasonKey ?? "Summer"}
+    >
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-violet-500/20 bg-[#0b1022]/95 shadow-[0_0_35px_rgba(88,28,135,0.25)] backdrop-blur-xl">
         <nav className="container mx-auto flex items-center justify-between px-4 py-3">

@@ -22,6 +22,7 @@ import {
   Settings,
   Eye,
   EyeOff,
+  Palette,
   ShieldCheck,
   Twitch,
   Youtube,
@@ -32,12 +33,17 @@ import {
   getActiveEvent,
   updateEvent,
   updatePublicRunsVisibility,
+  updateEventSeason,
 } from "../../services/eventService";
 import {
   createSettings,
   getSettings,
   updateSettings,
 } from "../../services/settingsService";
+import {
+  getDesignThemes,
+  type DesignTheme,
+} from "../../services/designThemeService";
 
 type EventConfig = {
   id: string;
@@ -51,6 +57,7 @@ type EventConfig = {
   isPublished: boolean;
   applicationsOpen: boolean;
   publicRunsVisible: boolean;
+  seasonKey: string;
 };
 
 type SettingsConfig = {
@@ -110,6 +117,7 @@ export default function AdminConfiguracion() {
       isPublished: false,
       applicationsOpen: true,
       publicRunsVisible: true,
+      seasonKey: "Summer",
     });
 
   const [settingsConfig, setSettingsConfig] =
@@ -134,6 +142,9 @@ export default function AdminConfiguracion() {
 
   const [savingSettings, setSavingSettings] =
     useState(false);
+
+  const [designThemes, setDesignThemes] =
+    useState<DesignTheme[]>([]);
 
   useEffect(() => {
     loadConfiguration();
@@ -168,7 +179,18 @@ export default function AdminConfiguracion() {
           activeEvent.applicationsOpen ?? true,
         publicRunsVisible:
           activeEvent.publicRunsVisible ?? true,
+        seasonKey:
+          activeEvent.seasonKey ?? "Summer",
       });
+
+      const themes =
+        await getDesignThemes();
+
+      setDesignThemes(
+        Array.isArray(themes)
+          ? themes
+          : []
+      );
 
       const settings =
         await getSettings();
@@ -242,6 +264,29 @@ export default function AdminConfiguracion() {
     }));
   }
 
+  function getSeasonLabel(
+    seasonKey: string
+  ) {
+    switch (seasonKey) {
+      case "Winter":
+        return "Invierno";
+
+      case "Autumn":
+        return "Otoño";
+
+      default:
+        return "Verano";
+    }
+  }
+
+  function getSelectedTheme() {
+    return designThemes.find(
+      (theme) =>
+        theme.seasonKey ===
+        eventConfig.seasonKey
+    );
+  }
+
   function updateSettingsField(
     field: keyof SettingsConfig,
     value: string | boolean
@@ -310,6 +355,11 @@ export default function AdminConfiguracion() {
             applicationsOpen:
               eventConfig.applicationsOpen,
         }
+      );
+
+      await updateEventSeason(
+        eventConfig.id,
+        eventConfig.seasonKey
       );
 
       toast.success(
@@ -477,7 +527,7 @@ export default function AdminConfiguracion() {
       </div>
 
       {/* Estado Operativo */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <Card className="border-gray-800 bg-gray-900/50">
           <CardContent className="flex items-center justify-between p-6">
             <div>
@@ -585,6 +635,24 @@ export default function AdminConfiguracion() {
             ) : (
               <EyeOff className="h-8 w-8 text-red-400" />
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-800 bg-gray-900/50">
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm text-gray-400">
+                Temporada
+              </p>
+
+              <div className="mt-2">
+                <Badge className="bg-orange-500/20 text-orange-300">
+                  {getSeasonLabel(eventConfig.seasonKey)}
+                </Badge>
+              </div>
+            </div>
+
+            <Palette className="h-8 w-8 text-orange-300" />
           </CardContent>
         </Card>
 
@@ -755,7 +823,97 @@ export default function AdminConfiguracion() {
               </div>
             </div>
 
-                      <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
+                      <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 p-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="flex-1">
+                <p className="font-semibold text-white">
+                  Temporada oficial del evento
+                </p>
+
+                <p className="mt-1 text-sm text-orange-100/80">
+                  SGames tendrá tres ediciones oficiales al año:
+                  Invierno en febrero, Verano en junio/julio y Otoño en octubre.
+                  El diseño público se tomará de esta temporada.
+                </p>
+
+                <div className="mt-4">
+                  <Label
+                    htmlFor="seasonKey"
+                    className="text-gray-300"
+                  >
+                    Temporada
+                  </Label>
+
+                  <select
+                    id="seasonKey"
+                    value={eventConfig.seasonKey}
+                    onChange={(event) =>
+                      updateEventField(
+                        "seasonKey",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none transition focus:border-orange-400"
+                  >
+                    <option value="Winter">
+                      Invierno / Febrero
+                    </option>
+                    <option value="Summer">
+                      Verano / Junio-Julio
+                    </option>
+                    <option value="Autumn">
+                      Otoño / Octubre
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="min-w-[220px] rounded-lg border border-orange-400/20 bg-gray-950/40 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-orange-200">
+                  Diseño aplicado
+                </p>
+
+                <p className="mt-2 text-lg font-bold text-white">
+                  {getSelectedTheme()?.name ??
+                    getSeasonLabel(eventConfig.seasonKey)}
+                </p>
+
+                <div className="mt-4 flex gap-2">
+                  {getSelectedTheme() ? (
+                    <>
+                      <span
+                        className="h-8 w-8 rounded-full border border-white/20"
+                        style={{
+                          backgroundColor:
+                            getSelectedTheme()?.primaryColor,
+                        }}
+                      />
+                      <span
+                        className="h-8 w-8 rounded-full border border-white/20"
+                        style={{
+                          backgroundColor:
+                            getSelectedTheme()?.secondaryColor,
+                        }}
+                      />
+                      <span
+                        className="h-8 w-8 rounded-full border border-white/20"
+                        style={{
+                          backgroundColor:
+                            getSelectedTheme()?.accentColor,
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-400">
+                      Tema pendiente de cargar
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="font-semibold text-white">

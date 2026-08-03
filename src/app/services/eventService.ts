@@ -71,6 +71,32 @@ export async function updatePublicRunsVisibility(
   return await response.json();
 }
 
+
+export async function updateEventSeason(
+  id: string,
+  seasonKey: string
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Events/${id}/season/${seasonKey}`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    const error =
+      await response.text();
+
+    throw new Error(
+      error || "Error updating event season"
+    );
+  }
+
+  return await response.json();
+}
+
 export async function getActivePublicEvent() {
   const response =
     await fetch(
