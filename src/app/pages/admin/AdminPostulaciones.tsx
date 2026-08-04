@@ -210,14 +210,14 @@ function getRunTypeBadge(
 ) {
   if (runType === "Race") {
     return (
-      <Badge className="bg-pink-500/20 text-pink-300">
+      <Badge className="bg-[var(--sg-admin-accent-soft)] text-[var(--sg-accent)]">
         Race
       </Badge>
     );
   }
 
   return (
-    <Badge className="bg-cyan-500/20 text-cyan-300">
+    <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
       Individual
     </Badge>
   );
@@ -598,30 +598,30 @@ export default function AdminPostulaciones() {
     <div className="sgames-admin-page space-y-6">
       {/* Header */}
       <div>
-        <h1 className="mb-2 text-3xl font-bold text-white">
+        <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
           Gestión de Postulaciones
         </h1>
 
-        <p className="text-gray-400">
+        <p className="text-[var(--sg-muted-text)]">
           Administra todas las postulaciones del evento
         </p>
       </div>
 
       {/* Filters */}
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
         <CardContent className="p-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-cyan-400" />
+              <Filter className="h-5 w-5 text-[var(--sg-primary)]" />
 
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-[var(--sg-text)]">
                 Filtros y búsqueda:
               </span>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--sg-admin-muted-soft)]" />
 
                 <Input
                   placeholder="Buscar por runner, juego o categoría..."
@@ -629,7 +629,7 @@ export default function AdminPostulaciones() {
                   onChange={(e) =>
                     setSearchTerm(e.target.value)
                   }
-                  className="border-gray-700 bg-gray-800 pl-10 text-white"
+                  className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] pl-10 text-[var(--sg-text)]"
                 />
               </div>
 
@@ -637,11 +637,11 @@ export default function AdminPostulaciones() {
                 value={statusFilter}
                 onValueChange={setStatusFilter}
               >
-                <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                <SelectTrigger className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
 
-                <SelectContent className="border-gray-700 bg-gray-800">
+                <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
                   <SelectItem value="todos">
                     Todos los estados
                   </SelectItem>
@@ -661,11 +661,11 @@ export default function AdminPostulaciones() {
                 value={platformFilter}
                 onValueChange={setPlatformFilter}
               >
-                <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                <SelectTrigger className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
                   <SelectValue placeholder="Plataforma" />
                 </SelectTrigger>
 
-                <SelectContent className="border-gray-700 bg-gray-800">
+                <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
                   <SelectItem value="todos">
                     Todas las plataformas
                   </SelectItem>
@@ -686,37 +686,37 @@ export default function AdminPostulaciones() {
       </Card>
 
       {/* Table */}
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-800 hover:bg-gray-800/50">
-                  <TableHead className="text-gray-400">
+                <TableRow className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Runner
                   </TableHead>
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Juego
                   </TableHead>
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Categoría
                   </TableHead>
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Plataforma
                   </TableHead>
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Estimado
                   </TableHead>
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Formato
                   </TableHead>
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Estado
                   </TableHead>
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Fecha
                   </TableHead>
-                  <TableHead className="text-right text-gray-400">
+                  <TableHead className="text-right text-[var(--sg-muted-text)]">
                     Acciones
                   </TableHead>
                 </TableRow>
@@ -727,7 +727,7 @@ export default function AdminPostulaciones() {
                   <TableRow>
                     <TableCell
                       colSpan={9}
-                      className="text-center text-gray-500"
+                      className="text-center text-[var(--sg-admin-muted-soft)]"
                     >
                       No se encontraron postulaciones
                     </TableCell>
@@ -737,25 +737,25 @@ export default function AdminPostulaciones() {
                     (postulacion) => (
                       <TableRow
                         key={postulacion.id}
-                        className="border-gray-800 hover:bg-gray-800/50"
+                        className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]"
                       >
-                        <TableCell className="font-medium text-white">
+                        <TableCell className="font-medium text-[var(--sg-text)]">
                           {postulacion.runnerName}
                         </TableCell>
 
-                        <TableCell className="text-gray-300">
+                        <TableCell className="text-[var(--sg-muted-text)]">
                           {postulacion.game}
                         </TableCell>
 
-                        <TableCell className="text-gray-400">
+                        <TableCell className="text-[var(--sg-muted-text)]">
                           {postulacion.category}
                         </TableCell>
 
-                        <TableCell className="text-gray-400">
+                        <TableCell className="text-[var(--sg-muted-text)]">
                           {postulacion.platform || "-"}
                         </TableCell>
 
-                        <TableCell className="font-mono text-sm text-cyan-300">
+                        <TableCell className="font-mono text-sm text-[var(--sg-primary)]">
                           {getEstimatedDisplay(postulacion)}
                         </TableCell>
 
@@ -769,7 +769,7 @@ export default function AdminPostulaciones() {
                           )}
                         </TableCell>
 
-                        <TableCell className="text-gray-400">
+                        <TableCell className="text-[var(--sg-muted-text)]">
                           {formatSubmittedDate(
                             postulacion.submittedAt
                           )}
@@ -785,7 +785,7 @@ export default function AdminPostulaciones() {
                                   postulacion
                                 )
                               }
-                              className="text-cyan-400 hover:bg-cyan-500/10"
+                              className="text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
                               title="Ver detalle"
                             >
                               <Eye className="h-4 w-4" />
@@ -852,7 +852,7 @@ export default function AdminPostulaciones() {
                                     postulacion
                                   )
                                 }
-                                className="text-purple-400 hover:bg-purple-500/10"
+                                className="text-[var(--sg-secondary)] hover:bg-[var(--sg-admin-secondary-soft)]"
                                 title="Agregar al horario"
                               >
                                 <Calendar className="h-4 w-4" />
@@ -875,8 +875,8 @@ export default function AdminPostulaciones() {
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
       >
-        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-3xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
-          <DialogHeader className="shrink-0 border-b border-gray-800 px-6 py-4">
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-3xl flex-col overflow-hidden border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] p-0 text-[var(--sg-text)]">
+          <DialogHeader className="shrink-0 border-b border-[var(--sg-admin-border)] px-6 py-4">
             <DialogTitle className="text-2xl">
               Detalle de Postulación
             </DialogTitle>
@@ -889,43 +889,43 @@ export default function AdminPostulaciones() {
                   selectedPostulacion.status
                 )}
 
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-[var(--sg-muted-text)]">
                   {formatSubmittedDate(
                     selectedPostulacion.submittedAt
                   )}
                 </span>
               </div>
 
-              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                <h3 className="mb-3 font-semibold text-cyan-400">
+              <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                <h3 className="mb-3 font-semibold text-[var(--sg-primary)]">
                   Información del Runner
                 </h3>
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Nombre:
                     </span>
-                    <p className="break-words text-white">
+                    <p className="break-words text-[var(--sg-text)]">
                       {selectedPostulacion.runnerName}
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Correo:
                     </span>
-                    <p className="break-all text-white">
+                    <p className="break-all text-[var(--sg-text)]">
                       {selectedPostulacion.email}
                     </p>
                   </div>
 
                   {selectedPostulacion.discordUser && (
                     <div>
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-[var(--sg-muted-text)]">
                         Discord:
                       </span>
-                      <p className="break-words text-white">
+                      <p className="break-words text-[var(--sg-text)]">
                         {selectedPostulacion.discordUser}
                       </p>
                     </div>
@@ -933,26 +933,26 @@ export default function AdminPostulaciones() {
 
                   {selectedPostulacion.country && (
                     <div>
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-[var(--sg-muted-text)]">
                         País:
                       </span>
-                      <p className="break-words text-white">
+                      <p className="break-words text-[var(--sg-text)]">
                         {selectedPostulacion.country}
                       </p>
                     </div>
                   )}
 
                   <div className="md:col-span-2">
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Zona horaria del runner:
                     </span>
 
-                    <p className="mt-1 flex items-center gap-2 break-words text-white">
-                      <Globe2 className="h-4 w-4 text-purple-300" />
+                    <p className="mt-1 flex items-center gap-2 break-words text-[var(--sg-text)]">
+                      <Globe2 className="h-4 w-4 text-[var(--sg-secondary)]" />
                       {getTimezoneLabel(
                         selectedPostulacion.runnerTimezone
                       )}
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-[var(--sg-admin-muted-soft)]">
                         ({selectedPostulacion.runnerTimezone ?? "America/Mexico_City"})
                       </span>
                     </p>
@@ -960,50 +960,50 @@ export default function AdminPostulaciones() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                <h3 className="mb-3 font-semibold text-cyan-400">
+              <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                <h3 className="mb-3 font-semibold text-[var(--sg-primary)]">
                   Información del Speedrun
                 </h3>
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Evento:
                     </span>
-                    <p className="break-words text-white">
+                    <p className="break-words text-[var(--sg-text)]">
                       {selectedPostulacion.event}
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Juego:
                     </span>
-                    <p className="break-words text-white">
+                    <p className="break-words text-[var(--sg-text)]">
                       {selectedPostulacion.game}
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Categoría:
                     </span>
-                    <p className="break-words text-white">
+                    <p className="break-words text-[var(--sg-text)]">
                       {selectedPostulacion.category}
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Plataforma:
                     </span>
-                    <p className="break-words text-white">
+                    <p className="break-words text-[var(--sg-text)]">
                       {selectedPostulacion.platform}
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Formato:
                     </span>
                     <div className="mt-1">
@@ -1012,10 +1012,10 @@ export default function AdminPostulaciones() {
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Tiempo estimado:
                     </span>
-                    <p className="text-white">
+                    <p className="text-[var(--sg-text)]">
                       {formatEstimatedTime(
                         selectedPostulacion.estimatedTimeMinutes
                       )}
@@ -1023,10 +1023,10 @@ export default function AdminPostulaciones() {
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Relación de pantalla:
                     </span>
-                    <p className="text-white">
+                    <p className="text-[var(--sg-text)]">
                       {selectedPostulacion.aspectRatio}
                     </p>
                   </div>
@@ -1035,8 +1035,8 @@ export default function AdminPostulaciones() {
 
               {(selectedPostulacion.runType === "Race" ||
                 (selectedPostulacion.participants?.length ?? 0) > 0) && (
-                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-400">
+                <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-[var(--sg-primary)]">
                     <Users className="h-5 w-5" />
                     Participantes
                   </h3>
@@ -1047,41 +1047,41 @@ export default function AdminPostulaciones() {
                         (participant, index) => (
                           <div
                             key={participant.id}
-                            className="rounded-lg border border-gray-700 bg-gray-900/60 p-4"
+                            className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]/60 p-4"
                           >
                             <div className="mb-3 flex items-center justify-between gap-3">
                               <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-pink-300">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-accent)]">
                                   Jugador {index + 1}
                                 </p>
 
-                                <p className="mt-1 break-words text-lg font-bold text-white">
+                                <p className="mt-1 break-words text-lg font-bold text-[var(--sg-text)]">
                                   {participant.runnerName}
                                 </p>
                               </div>
 
-                              <Badge className="bg-pink-500/20 text-pink-300">
+                              <Badge className="bg-[var(--sg-admin-accent-soft)] text-[var(--sg-accent)]">
                                 Race
                               </Badge>
                             </div>
 
                             {participant.email && (
-                              <p className="break-all text-sm text-gray-400">
-                                <span className="text-gray-500">Correo:</span>{" "}
+                              <p className="break-all text-sm text-[var(--sg-muted-text)]">
+                                <span className="text-[var(--sg-admin-muted-soft)]">Correo:</span>{" "}
                                 {participant.email}
                               </p>
                             )}
 
                             {participant.discordUser && (
-                              <p className="break-words text-sm text-gray-400">
-                                <span className="text-gray-500">Discord:</span>{" "}
+                              <p className="break-words text-sm text-[var(--sg-muted-text)]">
+                                <span className="text-[var(--sg-admin-muted-soft)]">Discord:</span>{" "}
                                 {participant.discordUser}
                               </p>
                             )}
 
                             {participant.country && (
-                              <p className="break-words text-sm text-gray-400">
-                                <span className="text-gray-500">País:</span>{" "}
+                              <p className="break-words text-sm text-[var(--sg-muted-text)]">
+                                <span className="text-[var(--sg-admin-muted-soft)]">País:</span>{" "}
                                 {participant.country}
                               </p>
                             )}
@@ -1090,7 +1090,7 @@ export default function AdminPostulaciones() {
                               href={participant.videoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-3 inline-flex max-w-full items-center gap-2 break-all text-sm text-cyan-400 hover:text-cyan-300"
+                              className="mt-3 inline-flex max-w-full items-center gap-2 break-all text-sm text-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
                             >
                               <ExternalLink className="h-4 w-4 shrink-0" />
                               <span className="break-all">
@@ -1102,15 +1102,15 @@ export default function AdminPostulaciones() {
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-[var(--sg-admin-muted-soft)]">
                       Esta race no tiene participantes registrados.
                     </p>
                   )}
                 </div>
               )}
 
-              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-400">
+              <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold text-[var(--sg-primary)]">
                   <CalendarDays className="h-5 w-5" />
                   Disponibilidad del Runner
                 </h3>
@@ -1121,16 +1121,16 @@ export default function AdminPostulaciones() {
                       (availability) => (
                         <div
                           key={availability.id}
-                          className="rounded-lg border border-gray-700 bg-gray-900/60 p-3"
+                          className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]/60 p-3"
                         >
                           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
                                 Convertido a México Centro
                               </p>
 
-                              <p className="mt-1 flex items-center gap-2 text-sm text-white">
-                                <Clock3 className="h-4 w-4 text-cyan-400" />
+                              <p className="mt-1 flex items-center gap-2 text-sm text-[var(--sg-text)]">
+                                <Clock3 className="h-4 w-4 text-[var(--sg-primary)]" />
                                 {formatAvailabilityRange(
                                   availability.dayDate,
                                   availability.availableFrom,
@@ -1139,12 +1139,12 @@ export default function AdminPostulaciones() {
                                 )}
                               </p>
 
-                              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-purple-300">
+                              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-secondary)]">
                                 Horario original del runner
                               </p>
 
-                              <p className="mt-1 flex items-center gap-2 text-sm text-gray-300">
-                                <Globe2 className="h-4 w-4 text-purple-300" />
+                              <p className="mt-1 flex items-center gap-2 text-sm text-[var(--sg-muted-text)]">
+                                <Globe2 className="h-4 w-4 text-[var(--sg-secondary)]" />
                                 {formatAvailabilityRange(
                                   availability.localDayDate ??
                                     availability.dayDate,
@@ -1167,7 +1167,7 @@ export default function AdminPostulaciones() {
                           </div>
 
                           {availability.notes && (
-                            <p className="mt-3 text-sm text-gray-400">
+                            <p className="mt-3 text-sm text-[var(--sg-muted-text)]">
                               {availability.notes}
                             </p>
                           )}
@@ -1176,15 +1176,15 @@ export default function AdminPostulaciones() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-[var(--sg-admin-muted-soft)]">
                     Esta postulación no tiene disponibilidad registrada.
                   </p>
                 )}
               </div>
 
               {selectedPostulacion.youtubeUrl && (
-                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                  <h3 className="mb-3 font-semibold text-cyan-400">
+                <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                  <h3 className="mb-3 font-semibold text-[var(--sg-primary)]">
                     Video demostrativo
                   </h3>
 
@@ -1192,7 +1192,7 @@ export default function AdminPostulaciones() {
                     href={selectedPostulacion.youtubeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex max-w-full items-center gap-2 break-all text-cyan-400 hover:text-cyan-300"
+                    className="inline-flex max-w-full items-center gap-2 break-all text-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
                   >
                     <ExternalLink className="h-4 w-4 shrink-0" />
                     <span className="break-all">
@@ -1203,8 +1203,8 @@ export default function AdminPostulaciones() {
               )}
 
               {selectedPostulacion.socialNetworks?.length > 0 && (
-                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                  <h3 className="mb-3 font-semibold text-cyan-400">
+                <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                  <h3 className="mb-3 font-semibold text-[var(--sg-primary)]">
                     Redes Sociales
                   </h3>
 
@@ -1215,7 +1215,7 @@ export default function AdminPostulaciones() {
                           key={sn.socialNetworkId}
                           className="space-y-1"
                         >
-                          <span className="text-sm text-gray-400">
+                          <span className="text-sm text-[var(--sg-muted-text)]">
                             {sn.name}
                           </span>
 
@@ -1223,7 +1223,7 @@ export default function AdminPostulaciones() {
                             href={sn.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block break-all text-sm text-cyan-400 hover:text-cyan-300"
+                            className="block break-all text-sm text-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
                           >
                             {sn.url}
                           </a>
@@ -1235,12 +1235,12 @@ export default function AdminPostulaciones() {
               )}
 
               {selectedPostulacion.notes && (
-                <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                  <h3 className="mb-3 font-semibold text-cyan-400">
+                <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                  <h3 className="mb-3 font-semibold text-[var(--sg-primary)]">
                     Notas
                   </h3>
 
-                  <p className="whitespace-pre-wrap break-words text-gray-300">
+                  <p className="whitespace-pre-wrap break-words text-[var(--sg-muted-text)]">
                     {selectedPostulacion.notes}
                   </p>
                 </div>
@@ -1248,13 +1248,13 @@ export default function AdminPostulaciones() {
             </div>
           )}
 
-          <DialogFooter className="shrink-0 border-t border-gray-800 px-6 py-4">
+          <DialogFooter className="shrink-0 border-t border-[var(--sg-admin-border)] px-6 py-4">
             <Button
               variant="outline"
               onClick={() =>
                 setDetailDialogOpen(false)
               }
-              className="border-gray-700"
+              className="border-[var(--sg-admin-border)]"
             >
               Cerrar
             </Button>
@@ -1267,8 +1267,8 @@ export default function AdminPostulaciones() {
         open={scheduleDialogOpen}
         onOpenChange={setScheduleDialogOpen}
       >
-        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
-          <DialogHeader className="shrink-0 border-b border-gray-800 px-6 py-4">
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-xl flex-col overflow-hidden border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] p-0 text-[var(--sg-text)]">
+          <DialogHeader className="shrink-0 border-b border-[var(--sg-admin-border)] px-6 py-4">
             <DialogTitle>
               Agregar al Horario
             </DialogTitle>
@@ -1276,30 +1276,30 @@ export default function AdminPostulaciones() {
 
           {scheduleApplication && (
             <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
-              <div className="rounded-lg border border-gray-800 bg-gray-800/50 p-4">
-                <p className="text-sm text-gray-400">
+              <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                <p className="text-sm text-[var(--sg-muted-text)]">
                   Run
                 </p>
 
-                <p className="font-medium text-white">
+                <p className="font-medium text-[var(--sg-text)]">
                   {scheduleApplication.game} -{" "}
                   {scheduleApplication.category}
                 </p>
 
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-[var(--sg-muted-text)]">
                   Runner:{" "}
                   {scheduleApplication.runnerName}
                 </p>
               </div>
 
               {scheduleApplication.availabilities?.length > 0 && (
-                <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-4">
-                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-cyan-300">
+                <div className="rounded-lg border border-cyan-500/30 bg-[var(--sg-admin-primary-softer)] p-4">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-[var(--sg-primary)]">
                     <CalendarDays className="h-5 w-5" />
                     Disponibilidad declarada
                   </h3>
 
-                  <p className="mb-3 text-xs text-cyan-100/80">
+                  <p className="mb-3 text-xs text-[var(--sg-muted-text)]">
                     Programa usando el horario convertido a México Centro.
                   </p>
 
@@ -1308,15 +1308,15 @@ export default function AdminPostulaciones() {
                       (availability) => (
                         <div
                           key={availability.id}
-                          className="rounded-md border border-cyan-500/20 bg-gray-900/50 p-3"
+                          className="rounded-md border border-cyan-500/20 bg-[var(--sg-admin-card-bg)] p-3"
                         >
                           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--sg-primary)]">
                                 México Centro
                               </p>
 
-                              <p className="mt-1 text-sm text-white">
+                              <p className="mt-1 text-sm text-[var(--sg-text)]">
                                 {formatAvailabilityRange(
                                   availability.dayDate,
                                   availability.availableFrom,
@@ -1325,7 +1325,7 @@ export default function AdminPostulaciones() {
                                 )}
                               </p>
 
-                              <p className="mt-2 text-xs text-gray-400">
+                              <p className="mt-2 text-xs text-[var(--sg-muted-text)]">
                                 Runner ({getTimezoneLabel(
                                   scheduleApplication.runnerTimezone
                                 )}): {formatAvailabilityRange(
@@ -1350,7 +1350,7 @@ export default function AdminPostulaciones() {
                           </div>
 
                           {availability.notes && (
-                            <p className="mt-2 text-xs text-gray-400">
+                            <p className="mt-2 text-xs text-[var(--sg-muted-text)]">
                               {availability.notes}
                             </p>
                           )}
@@ -1362,7 +1362,7 @@ export default function AdminPostulaciones() {
               )}
 
               <div>
-                <Label className="text-gray-300">
+                <Label className="text-[var(--sg-muted-text)]">
                   Día del horario
                 </Label>
 
@@ -1370,11 +1370,11 @@ export default function AdminPostulaciones() {
                   value={selectedScheduleDayId}
                   onValueChange={setSelectedScheduleDayId}
                 >
-                  <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                  <SelectTrigger className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
                     <SelectValue placeholder="Selecciona un día" />
                   </SelectTrigger>
 
-                  <SelectContent className="border-gray-700 bg-gray-800">
+                  <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
                     {scheduleDays.map((day) => (
                       <SelectItem
                         key={day.id}
@@ -1392,7 +1392,7 @@ export default function AdminPostulaciones() {
               <div>
                 <Label
                   htmlFor="scheduleStartTime"
-                  className="text-gray-300"
+                  className="text-[var(--sg-muted-text)]"
                 >
                   Hora de inicio
                 </Label>
@@ -1406,26 +1406,26 @@ export default function AdminPostulaciones() {
                       e.target.value
                     )
                   }
-                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 />
               </div>
             </div>
           )}
 
-          <DialogFooter className="shrink-0 border-t border-gray-800 px-6 py-4">
+          <DialogFooter className="shrink-0 border-t border-[var(--sg-admin-border)] px-6 py-4">
             <Button
               variant="outline"
               onClick={() =>
                 setScheduleDialogOpen(false)
               }
-              className="border-gray-700"
+              className="border-[var(--sg-admin-border)]"
             >
               Cancelar
             </Button>
 
             <Button
               onClick={handleAddToSchedule}
-              className="bg-cyan-600 hover:bg-cyan-700"
+              className="sgames-admin-primary-button"
             >
               Agregar al Horario
             </Button>

@@ -254,7 +254,7 @@ function getManualStatusBadge(
 
   if (status === "Completed") {
     return (
-      <Badge className="bg-gray-500/20 text-gray-400">
+      <Badge className="bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)]">
         Completado
       </Badge>
     );
@@ -262,14 +262,14 @@ function getManualStatusBadge(
 
   if (status === "Scheduled") {
     return (
-      <Badge className="bg-cyan-500/20 text-cyan-300">
+      <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
         Programado
       </Badge>
     );
   }
 
   return (
-    <Badge className="bg-cyan-500/20 text-cyan-300">
+    <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
       Esperando
     </Badge>
   );
@@ -344,21 +344,21 @@ function DraggableItem({
           drag(drop(node));
         }
       }}
-      className={`group rounded-lg border border-gray-700 bg-gray-800/50 p-4 transition-all hover:border-cyan-500/50 ${
+      className={`group rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4 transition-all hover:border-[var(--sg-admin-border-strong)] ${
         isDragging ? "opacity-50" : ""
       }`}
     >
       <div className="flex items-start gap-3">
         <div className="cursor-move pt-1">
-          <GripVertical className="h-5 w-5 text-gray-500" />
+          <GripVertical className="h-5 w-5 text-[var(--sg-admin-muted-soft)]" />
         </div>
 
         <div className="flex-1 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-cyan-400" />
+              <Clock className="h-4 w-4 text-[var(--sg-primary)]" />
 
-              <span className="font-mono font-semibold text-cyan-400">
+              <span className="font-mono font-semibold text-[var(--sg-primary)]">
                 {item.time}
               </span>
             </div>
@@ -372,7 +372,7 @@ function DraggableItem({
                     onEdit(item);
                   }}
                   title="Editar hora"
-                  className="h-8 w-8 p-0 text-cyan-400 hover:text-cyan-300"
+                  className="h-8 w-8 p-0 text-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -393,22 +393,22 @@ function DraggableItem({
           </div>
 
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-500" />
+            <User className="h-4 w-4 text-[var(--sg-admin-muted-soft)]" />
 
-            <span className="text-sm text-white">
+            <span className="text-sm text-[var(--sg-text)]">
               {item.runner}
             </span>
           </div>
 
           <div className="flex items-start gap-2">
-            <Gamepad2 className="mt-0.5 h-4 w-4 text-purple-400" />
+            <Gamepad2 className="mt-0.5 h-4 w-4 text-[var(--sg-secondary)]" />
 
             <div>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-medium text-[var(--sg-text)]">
                 {item.game}
               </p>
 
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[var(--sg-muted-text)]">
                 {item.category} • {item.platform}
               </p>
             </div>
@@ -417,21 +417,21 @@ function DraggableItem({
           <div className="flex items-center gap-2">
             <Badge
               variant="outline"
-              className="border-gray-600 text-xs text-gray-400"
+              className="border-[var(--sg-admin-border)] text-xs text-[var(--sg-muted-text)]"
             >
               {item.duration}
             </Badge>
           </div>
-          <div className="mt-3 rounded-lg border border-gray-700/80 bg-gray-900/50 p-3">
+          <div className="mt-3 rounded-lg border border-[var(--sg-admin-border)]/80 bg-[var(--sg-admin-card-bg)] p-3">
   <div className="mb-2 flex items-center justify-between gap-2">
-    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
+    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sg-admin-muted-soft)]">
       Estado
     </span>
 
     {getManualStatusBadge(item.runStatus)}
   </div>
 
-  <p className="mb-3 text-xs text-gray-500">
+  <p className="mb-3 text-xs text-[var(--sg-admin-muted-soft)]">
     {getManualStatusLabel(item.runStatus)}
   </p>
 
@@ -469,7 +469,7 @@ function DraggableItem({
         e.stopPropagation();
         onStatusChange(item, "completed");
       }}
-      className="border-gray-500/40 text-gray-300 hover:bg-gray-500/10"
+      className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-hover-bg)]"
     >
       <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
       Completar
@@ -482,7 +482,7 @@ function DraggableItem({
         e.stopPropagation();
         onStatusChange(item, "auto");
       }}
-      className="border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10"
+      className="border-cyan-500/40 text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
     >
       <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
       Esperando
@@ -546,16 +546,16 @@ function DayColumn({
       }}
       className="flex-1"
     >
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
         <CardContent className="p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold capitalize text-white">
+            <h3 className="text-lg font-semibold capitalize text-[var(--sg-text)]">
               {day}
             </h3>
 
             <Badge
               variant="outline"
-              className="border-gray-700 text-gray-400"
+              className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
             >
               {items.length}{" "}
               {items.length === 1 ? "run" : "runs"}
@@ -564,8 +564,8 @@ function DayColumn({
 
           <div className="space-y-3">
             {items.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-gray-700 p-8 text-center">
-                <p className="text-sm text-gray-500">
+              <div className="rounded-lg border-2 border-dashed border-[var(--sg-admin-border)] p-8 text-center">
+                <p className="text-sm text-[var(--sg-admin-muted-soft)]">
                   Arrastra runs aquí para agregar al {day}
                 </p>
               </div>
@@ -1251,11 +1251,11 @@ async function handleStatusChange(
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="mb-2 text-3xl font-bold text-white">
+            <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
               Constructor de Horarios
             </h1>
 
-            <p className="text-gray-400">
+            <p className="text-[var(--sg-muted-text)]">
               Organiza los speedruns arrastrando y soltando
             </p>
           </div>
@@ -1285,7 +1285,7 @@ async function handleStatusChange(
             <Button
               variant="outline"
               onClick={handleSaveDraft}
-              className="border-gray-700"
+              className="border-[var(--sg-admin-border)]"
             >
               <Save className="mr-2 h-4 w-4" />
               {isPublished
@@ -1305,7 +1305,7 @@ async function handleStatusChange(
             ) : (
               <Button
                 onClick={handlePublish}
-                className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700"
+                className="bg-gradient-to-r from-[var(--sg-primary)] to-[var(--sg-secondary)] hover:brightness-110"
               >
                 <Send className="mr-2 h-4 w-4" />
                 Publicar Horario
@@ -1358,7 +1358,7 @@ async function handleStatusChange(
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
         >
-          <AlertDialogContent className="border-gray-800 bg-gray-900 text-white">
+          <AlertDialogContent className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] text-[var(--sg-text)]">
             <AlertDialogHeader>
               <div className="mb-2 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
@@ -1370,11 +1370,11 @@ async function handleStatusChange(
                 </AlertDialogTitle>
               </div>
 
-              <AlertDialogDescription className="text-gray-400">
+              <AlertDialogDescription className="text-[var(--sg-muted-text)]">
                 {itemToDelete ? (
                   <>
                     Vas a eliminar{" "}
-                    <span className="font-semibold text-white">
+                    <span className="font-semibold text-[var(--sg-text)]">
                       {itemToDelete.game}
                     </span>{" "}
                     del horario. La postulación seguirá guardada
@@ -1387,13 +1387,13 @@ async function handleStatusChange(
             </AlertDialogHeader>
               
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white">
+              <AlertDialogCancel className="border-[var(--sg-admin-border)] bg-transparent text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-input-bg)] hover:text-[var(--sg-text)]">
                 Cancelar
               </AlertDialogCancel>
               
               <AlertDialogAction
                 onClick={handleConfirmDelete}
-                className="bg-red-600 text-white hover:bg-red-700"
+                className="bg-red-600 text-[var(--sg-text)] hover:bg-red-700"
               >
                 Eliminar del horario
               </AlertDialogAction>
@@ -1406,7 +1406,7 @@ async function handleStatusChange(
           open={clearScheduleDialogOpen}
           onOpenChange={setClearScheduleDialogOpen}
         >
-          <AlertDialogContent className="border-red-500/30 bg-gray-900 text-white">
+          <AlertDialogContent className="border-red-500/30 bg-[var(--sg-admin-card-bg)] text-[var(--sg-text)]">
             <AlertDialogHeader>
               <div className="mb-2 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
@@ -1418,7 +1418,7 @@ async function handleStatusChange(
                 </AlertDialogTitle>
               </div>
 
-              <AlertDialogDescription className="space-y-4 text-gray-400">
+              <AlertDialogDescription className="space-y-4 text-[var(--sg-muted-text)]">
                 <p>
                   Esta acción borrará todas las entradas del horario del evento
                   activo. Las postulaciones, runners, juegos, categorías,
@@ -1427,7 +1427,7 @@ async function handleStatusChange(
 
                 <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
                   Se eliminarán{" "}
-                  <span className="font-semibold text-white">
+                  <span className="font-semibold text-[var(--sg-text)]">
                     {getScheduleItemsCount(schedule)}
                   </span>{" "}
                   entradas del horario.
@@ -1436,7 +1436,7 @@ async function handleStatusChange(
                 <div>
                   <Label
                     htmlFor="clearScheduleConfirmation"
-                    className="text-gray-300"
+                    className="text-[var(--sg-muted-text)]"
                   >
                     Escribe{" "}
                     <span className="font-semibold text-red-300">
@@ -1453,7 +1453,7 @@ async function handleStatusChange(
                         event.target.value
                       )
                     }
-                    className="mt-2 border-gray-700 bg-gray-800 text-white"
+                    className="mt-2 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                     placeholder="BORRAR HORARIO"
                   />
                 </div>
@@ -1462,7 +1462,7 @@ async function handleStatusChange(
 
             <AlertDialogFooter>
               <AlertDialogCancel
-                className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white"
+                className="border-[var(--sg-admin-border)] bg-transparent text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-input-bg)] hover:text-[var(--sg-text)]"
                 onClick={() =>
                   setClearScheduleConfirmation("")
                 }
@@ -1473,7 +1473,7 @@ async function handleStatusChange(
               <AlertDialogAction
                 onClick={handleConfirmClearSchedule}
                 disabled={clearScheduleConfirmation !== "BORRAR HORARIO"}
-                className="bg-red-600 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-red-600 text-[var(--sg-text)] hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Borrar horario completo
               </AlertDialogAction>
@@ -1486,7 +1486,7 @@ async function handleStatusChange(
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
         >
-          <DialogContent className="border-gray-800 bg-gray-900 text-white">
+          <DialogContent className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] text-[var(--sg-text)]">
             <DialogHeader>
               <DialogTitle>
                 Editar Horario
@@ -1495,11 +1495,11 @@ async function handleStatusChange(
 
             {editingItem && (
               <div className="space-y-4">
-                <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4">
-                  <p className="text-sm text-cyan-100/80">
+                <div className="rounded-lg border border-cyan-500/20 bg-[var(--sg-admin-primary-softer)] p-4">
+                  <p className="text-sm text-[var(--sg-muted-text)]">
                     Estos cambios se aplican al horario localmente. Para
                     persistirlos en backend, presiona
-                    <span className="font-semibold text-white">
+                    <span className="font-semibold text-[var(--sg-text)]">
                       {" "}Guardar Borrador
                     </span>
                     .
@@ -1510,7 +1510,7 @@ async function handleStatusChange(
                   <div>
                     <Label
                       htmlFor="editTime"
-                      className="text-gray-300"
+                      className="text-[var(--sg-muted-text)]"
                     >
                       Hora de inicio
                     </Label>
@@ -1524,14 +1524,14 @@ async function handleStatusChange(
                           e.target.value
                         )
                       }
-                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                      className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                     />
                   </div>
 
                   <div>
                     <Label
                       htmlFor="editDurationMinutes"
-                      className="text-gray-300"
+                      className="text-[var(--sg-muted-text)]"
                     >
                       Duración en minutos
                     </Label>
@@ -1546,7 +1546,7 @@ async function handleStatusChange(
                           e.target.value
                         )
                       }
-                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                      className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                       placeholder="Ej: 45"
                     />
                   </div>
@@ -1555,7 +1555,7 @@ async function handleStatusChange(
                 <div>
                   <Label
                     htmlFor="editRunner"
-                    className="text-gray-300"
+                    className="text-[var(--sg-muted-text)]"
                   >
                     Runner
                   </Label>
@@ -1568,7 +1568,7 @@ async function handleStatusChange(
                         e.target.value
                       )
                     }
-                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                     placeholder="Nombre o alias del runner"
                   />
                 </div>
@@ -1576,7 +1576,7 @@ async function handleStatusChange(
                 <div>
                   <Label
                     htmlFor="editGame"
-                    className="text-gray-300"
+                    className="text-[var(--sg-muted-text)]"
                   >
                     Juego
                   </Label>
@@ -1589,7 +1589,7 @@ async function handleStatusChange(
                         e.target.value
                       )
                     }
-                    className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                     placeholder="Nombre del juego"
                   />
                 </div>
@@ -1598,7 +1598,7 @@ async function handleStatusChange(
                   <div>
                     <Label
                       htmlFor="editCategory"
-                      className="text-gray-300"
+                      className="text-[var(--sg-muted-text)]"
                     >
                       Categoría
                     </Label>
@@ -1611,7 +1611,7 @@ async function handleStatusChange(
                           e.target.value
                         )
                       }
-                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                      className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                       placeholder="Ej: Any%, 100%, Glitchless"
                     />
                   </div>
@@ -1619,7 +1619,7 @@ async function handleStatusChange(
                   <div>
                     <Label
                       htmlFor="editPlatform"
-                      className="text-gray-300"
+                      className="text-[var(--sg-muted-text)]"
                     >
                       Plataforma
                     </Label>
@@ -1632,7 +1632,7 @@ async function handleStatusChange(
                           e.target.value
                         )
                       }
-                      className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                      className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                       placeholder="Ej: PC, Nintendo Switch"
                     />
                   </div>
@@ -1646,14 +1646,14 @@ async function handleStatusChange(
                 onClick={() =>
                   setEditDialogOpen(false)
                 }
-                className="border-gray-700"
+                className="border-[var(--sg-admin-border)]"
               >
                 Cancelar
               </Button>
 
               <Button
                 onClick={handleSaveEdit}
-                className="bg-cyan-600 hover:bg-cyan-700"
+                className="sgames-admin-primary-button"
               >
                 Guardar Cambios
               </Button>

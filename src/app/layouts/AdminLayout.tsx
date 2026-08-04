@@ -53,39 +53,32 @@ import { useAdminSeasonTheme } from "../hooks/useAdminSeasonTheme";
 const adminLayoutThemeCss = `
   .sgames-admin-layout {
     background:
-      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 12%, transparent), transparent 30rem),
-      radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 10%, transparent), transparent 32rem),
-      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 50%, var(--sg-background) 50%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+      radial-gradient(circle at 14% 8%, color-mix(in srgb, var(--sg-primary) 7%, transparent), transparent 30rem),
+      radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--sg-accent) 6%, transparent), transparent 32rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 26%, var(--sg-background) 74%) 0%, var(--sg-background) 54%, var(--sg-background) 100%);
     color: var(--sg-text);
   }
 
   .sgames-admin-sidebar {
-    border-color: var(--sg-border);
+    border-color: var(--sg-admin-border, var(--sg-border));
     background:
       linear-gradient(
         180deg,
-        color-mix(in srgb, var(--sg-surface) 88%, #000000 12%),
+        color-mix(in srgb, var(--sg-surface) 62%, var(--sg-background) 38%),
         color-mix(in srgb, var(--sg-background) 92%, #000000 8%)
       );
     box-shadow:
-      18px 0 45px color-mix(in srgb, var(--sg-background) 78%, transparent);
+      18px 0 45px color-mix(in srgb, var(--sg-background) 70%, transparent);
   }
 
-  .sgames-admin-sidebar-header {
-    border-color: var(--sg-border);
+  .sgames-admin-sidebar-header,
+  .sgames-admin-sidebar-footer {
+    border-color: var(--sg-admin-border, var(--sg-border));
   }
 
   .sgames-admin-logo-text {
-    background:
-      linear-gradient(
-        90deg,
-        var(--sg-primary),
-        var(--sg-secondary),
-        var(--sg-accent)
-      );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--sg-primary);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--sg-primary) 14%, transparent);
   }
 
   .sgames-admin-nav-link {
@@ -93,44 +86,41 @@ const adminLayoutThemeCss = `
   }
 
   .sgames-admin-nav-link:hover {
-    background: color-mix(in srgb, var(--sg-primary) 8%, transparent);
+    background: var(--sg-admin-hover-bg, color-mix(in srgb, var(--sg-primary) 7%, transparent));
     color: var(--sg-text);
   }
 
   .sgames-admin-nav-link-active {
-    border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+    border: 1px solid var(--sg-admin-border-strong, color-mix(in srgb, var(--sg-primary) 28%, transparent));
     background:
       linear-gradient(
         90deg,
-        color-mix(in srgb, var(--sg-primary) 15%, transparent),
-        color-mix(in srgb, var(--sg-secondary) 10%, transparent)
+        var(--sg-admin-primary-soft, color-mix(in srgb, var(--sg-primary) 12%, transparent)),
+        color-mix(in srgb, var(--sg-surface) 18%, transparent)
       );
     color: var(--sg-primary);
     box-shadow:
-      0 0 24px color-mix(in srgb, var(--sg-primary) 10%, transparent);
-  }
-
-  .sgames-admin-sidebar-footer {
-    border-color: var(--sg-border);
+      inset 0 0 0 1px color-mix(in srgb, var(--sg-text) 3%, transparent),
+      0 0 18px color-mix(in srgb, var(--sg-primary) 8%, transparent);
   }
 
   .sgames-admin-header {
-    border-color: var(--sg-border);
+    border-color: var(--sg-admin-border, var(--sg-border));
     background:
       linear-gradient(
         90deg,
-        color-mix(in srgb, var(--sg-surface) 90%, #000000 10%),
+        color-mix(in srgb, var(--sg-surface) 58%, var(--sg-background) 42%),
         color-mix(in srgb, var(--sg-background) 92%, #000000 8%)
       );
     box-shadow:
-      0 12px 34px color-mix(in srgb, var(--sg-background) 62%, transparent);
+      0 12px 34px color-mix(in srgb, var(--sg-background) 60%, transparent);
     backdrop-filter: blur(14px);
   }
 
   .sgames-admin-main {
     background:
-      radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--sg-primary) 8%, transparent), transparent 26rem),
-      radial-gradient(circle at 90% 8%, color-mix(in srgb, var(--sg-accent) 7%, transparent), transparent 30rem),
+      radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--sg-primary) 5%, transparent), transparent 26rem),
+      radial-gradient(circle at 90% 8%, color-mix(in srgb, var(--sg-accent) 4%, transparent), transparent 30rem),
       transparent;
   }
 
@@ -139,7 +129,7 @@ const adminLayoutThemeCss = `
   }
 
   .sgames-admin-icon-button:hover {
-    background: color-mix(in srgb, var(--sg-primary) 9%, transparent);
+    background: var(--sg-admin-hover-bg, color-mix(in srgb, var(--sg-primary) 7%, transparent));
     color: var(--sg-text);
   }
 
@@ -147,50 +137,50 @@ const adminLayoutThemeCss = `
     background:
       linear-gradient(
         135deg,
-        var(--sg-primary),
-        var(--sg-secondary),
-        var(--sg-accent)
+        color-mix(in srgb, var(--sg-primary) 78%, var(--sg-surface) 22%),
+        color-mix(in srgb, var(--sg-secondary) 72%, var(--sg-surface) 28%),
+        color-mix(in srgb, var(--sg-accent) 70%, var(--sg-surface) 30%)
       );
     color: #ffffff;
   }
 
   .sgames-admin-dropdown {
-    border-color: var(--sg-border) !important;
-    background: color-mix(in srgb, var(--sg-surface) 92%, #000000 8%) !important;
+    border-color: var(--sg-admin-border, var(--sg-border)) !important;
+    background: color-mix(in srgb, var(--sg-surface) 82%, #000000 18%) !important;
     color: var(--sg-text) !important;
     box-shadow:
       0 20px 50px color-mix(in srgb, var(--sg-background) 78%, transparent),
-      0 0 26px color-mix(in srgb, var(--sg-accent) 12%, transparent);
+      0 0 22px var(--sg-admin-glow-accent, color-mix(in srgb, var(--sg-accent) 10%, transparent));
   }
 
   .sgames-admin-dropdown-separator {
-    background: var(--sg-border) !important;
+    background: var(--sg-admin-border, var(--sg-border)) !important;
   }
 
   .sgames-admin-notification-item:focus,
   .sgames-admin-notification-item:hover {
-    background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
+    background: var(--sg-admin-hover-bg, color-mix(in srgb, var(--sg-primary) 7%, transparent)) !important;
   }
 
   .sgames-admin-mobile-overlay {
-    background: color-mix(in srgb, var(--sg-background) 72%, #000000 28%);
+    background: color-mix(in srgb, var(--sg-background) 74%, #000000 26%);
     backdrop-filter: blur(5px);
   }
 
   [data-admin-season-theme="Autumn"] .sgames-admin-layout {
     background:
-      radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.15), transparent 30rem),
-      radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.13), transparent 32rem),
-      radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.07), transparent 34rem),
-      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 62%, var(--sg-background) 38%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+      radial-gradient(circle at 14% 8%, rgba(249, 115, 22, 0.075), transparent 30rem),
+      radial-gradient(circle at 90% 10%, rgba(185, 28, 28, 0.06), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.035), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 28%, var(--sg-background) 72%) 0%, var(--sg-background) 54%, var(--sg-background) 100%);
   }
 
   [data-admin-season-theme="Winter"] .sgames-admin-layout {
     background:
-      radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.14), transparent 30rem),
-      radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.14), transparent 32rem),
-      radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.07), transparent 34rem),
-      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 62%, var(--sg-background) 38%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+      radial-gradient(circle at 14% 8%, rgba(103, 232, 249, 0.065), transparent 30rem),
+      radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.06), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.035), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 28%, var(--sg-background) 72%) 0%, var(--sg-background) 54%, var(--sg-background) 100%);
   }
 `;
 
@@ -369,12 +359,12 @@ async function handleMarkAllRead() {
 
     if (type === "scheduleUnpublished") {
       return (
-        <AlertCircle className="h-4 w-4 text-pink-400" />
+        <AlertCircle className="h-4 w-4 text-[var(--sg-accent)]" />
       );
     }
 
     return (
-      <Bell className="h-4 w-4 text-purple-400" />
+      <Bell className="h-4 w-4 text-[var(--sg-secondary)]" />
     );
   }
 

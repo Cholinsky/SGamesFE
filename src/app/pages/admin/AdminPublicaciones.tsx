@@ -105,12 +105,12 @@ const categories = [
   {
     value: "anuncio",
     label: "Anuncio",
-    className: "bg-cyan-500/20 text-cyan-300",
+    className: "bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]",
   },
   {
     value: "noticia",
     label: "Noticia",
-    className: "bg-purple-500/20 text-purple-300",
+    className: "bg-[var(--sg-admin-secondary-soft)] text-[var(--sg-secondary)]",
   },
   {
     value: "actualizacion",
@@ -120,7 +120,7 @@ const categories = [
   {
     value: "importante",
     label: "Importante",
-    className: "bg-pink-500/20 text-pink-300",
+    className: "bg-[var(--sg-admin-accent-soft)] text-[var(--sg-accent)]",
   },
 ];
 
@@ -150,7 +150,7 @@ function getCategoryClass(value: string) {
 
   return (
     categories.find((category) => category.value === value)?.className ??
-    "bg-gray-500/20 text-gray-300"
+    "bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)]"
   );
 }
 
@@ -443,11 +443,11 @@ export default function AdminPublicaciones() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="mb-2 text-3xl font-bold text-white">
+          <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
             Publicaciones
           </h1>
 
-          <p className="text-gray-400">
+          <p className="text-[var(--sg-muted-text)]">
             Gestiona anuncios, noticias y actualizaciones reales del evento
           </p>
         </div>
@@ -456,7 +456,7 @@ export default function AdminPublicaciones() {
           <Button
             variant="outline"
             onClick={loadPosts}
-            className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+            className="border-[var(--sg-admin-border-strong)] text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualizar
@@ -464,7 +464,7 @@ export default function AdminPublicaciones() {
 
           <Button
             onClick={openCreateDialog}
-            className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white"
+            className="sgames-admin-primary-button"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nueva Publicación
@@ -474,66 +474,66 @@ export default function AdminPublicaciones() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Total publicaciones
               </p>
 
-              <p className="mt-2 text-3xl font-bold text-white">
+              <p className="mt-2 text-3xl font-bold text-[var(--sg-text)]">
                 {totalPosts}
               </p>
             </div>
 
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600">
-              <FileText className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sg-primary)] to-[var(--sg-secondary)]">
+              <FileText className="h-6 w-6 text-[var(--sg-text)]" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Visibles
               </p>
 
-              <p className="mt-2 text-3xl font-bold text-white">
+              <p className="mt-2 text-3xl font-bold text-[var(--sg-text)]">
                 {visiblePosts}
               </p>
             </div>
 
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-emerald-600">
-              <Eye className="h-6 w-6 text-white" />
+              <Eye className="h-6 w-6 text-[var(--sg-text)]" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Ocultas
               </p>
 
-              <p className="mt-2 text-3xl font-bold text-white">
+              <p className="mt-2 text-3xl font-bold text-[var(--sg-text)]">
                 {hiddenPosts}
               </p>
             </div>
 
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gray-500 to-slate-700">
-              <EyeOff className="h-6 w-6 text-white" />
+              <EyeOff className="h-6 w-6 text-[var(--sg-text)]" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
         <CardContent className="grid gap-3 p-6 md:grid-cols-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--sg-admin-muted-soft)]" />
 
             <Input
               placeholder="Buscar por título o autor..."
@@ -541,7 +541,7 @@ export default function AdminPublicaciones() {
               onChange={(event) =>
                 setSearchTerm(event.target.value)
               }
-              className="border-gray-700 bg-gray-800 pl-10 text-white"
+              className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] pl-10 text-[var(--sg-text)]"
             />
           </div>
 
@@ -549,11 +549,11 @@ export default function AdminPublicaciones() {
             value={categoryFilter}
             onValueChange={setCategoryFilter}
           >
-            <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+            <SelectTrigger className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
 
-            <SelectContent className="border-gray-700 bg-gray-800">
+            <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
               <SelectItem value="todos">
                 Todas las categorías
               </SelectItem>
@@ -573,11 +573,11 @@ export default function AdminPublicaciones() {
             value={visibilityFilter}
             onValueChange={setVisibilityFilter}
           >
-            <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+            <SelectTrigger className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
 
-            <SelectContent className="border-gray-700 bg-gray-800">
+            <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
               <SelectItem value="todos">
                 Todos los estados
               </SelectItem>
@@ -595,33 +595,33 @@ export default function AdminPublicaciones() {
       </Card>
 
       {/* Table */}
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-800 hover:bg-gray-800/50">
-                  <TableHead className="text-gray-400">
+                <TableRow className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Título
                   </TableHead>
 
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Categoría
                   </TableHead>
 
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Autor
                   </TableHead>
 
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Fecha
                   </TableHead>
 
-                  <TableHead className="text-gray-400">
+                  <TableHead className="text-[var(--sg-muted-text)]">
                     Estado
                   </TableHead>
 
-                  <TableHead className="text-right text-gray-400">
+                  <TableHead className="text-right text-[var(--sg-muted-text)]">
                     Acciones
                   </TableHead>
                 </TableRow>
@@ -632,7 +632,7 @@ export default function AdminPublicaciones() {
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="py-10 text-center text-gray-400"
+                      className="py-10 text-center text-[var(--sg-muted-text)]"
                     >
                       Cargando publicaciones...
                     </TableCell>
@@ -641,7 +641,7 @@ export default function AdminPublicaciones() {
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="py-10 text-center text-gray-500"
+                      className="py-10 text-center text-[var(--sg-admin-muted-soft)]"
                     >
                       No hay publicaciones para mostrar.
                     </TableCell>
@@ -650,9 +650,9 @@ export default function AdminPublicaciones() {
                   filteredPosts.map((post) => (
                     <TableRow
                       key={post.id}
-                      className="border-gray-800 hover:bg-gray-800/50"
+                      className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]"
                     >
-                      <TableCell className="font-semibold text-white">
+                      <TableCell className="font-semibold text-[var(--sg-text)]">
                         {post.title}
                       </TableCell>
 
@@ -662,14 +662,14 @@ export default function AdminPublicaciones() {
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-gray-400">
+                      <TableCell className="text-[var(--sg-muted-text)]">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4" />
                           {post.author}
                         </div>
                       </TableCell>
 
-                      <TableCell className="text-gray-400">
+                      <TableCell className="text-[var(--sg-muted-text)]">
                         <div className="flex items-center gap-2">
                           <CalendarDays className="h-4 w-4" />
                           {formatDate(post.createdAt)}
@@ -682,7 +682,7 @@ export default function AdminPublicaciones() {
                             Visible
                           </Badge>
                         ) : (
-                          <Badge className="bg-gray-500/20 text-gray-400">
+                          <Badge className="bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)]">
                             Oculta
                           </Badge>
                         )}
@@ -696,7 +696,7 @@ export default function AdminPublicaciones() {
                             onClick={() =>
                               handleToggleVisibility(post)
                             }
-                            className="text-cyan-400 hover:bg-cyan-500/10"
+                            className="text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
                             title={
                               post.isVisible
                                 ? "Ocultar"
@@ -716,7 +716,7 @@ export default function AdminPublicaciones() {
                             onClick={() =>
                               openEditDialog(post.id)
                             }
-                            className="text-purple-400 hover:bg-purple-500/10"
+                            className="text-[var(--sg-secondary)] hover:bg-[var(--sg-admin-secondary-soft)]"
                             title="Editar"
                           >
                             <Edit className="h-4 w-4" />
@@ -749,8 +749,8 @@ export default function AdminPublicaciones() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       >
-        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-2xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
-          <DialogHeader className="border-b border-gray-800 px-6 py-4">
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-2xl flex-col overflow-hidden border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] p-0 text-[var(--sg-text)]">
+          <DialogHeader className="border-b border-[var(--sg-admin-border)] px-6 py-4">
             <DialogTitle>
               {editingPostId
                 ? "Editar publicación"
@@ -773,7 +773,7 @@ export default function AdminPublicaciones() {
                   )
                 }
                 placeholder="Ej. Postulaciones abiertas"
-                className="border-gray-700 bg-gray-800 text-white"
+                className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
               />
             </div>
 
@@ -791,11 +791,11 @@ export default function AdminPublicaciones() {
                   )
                 }
               >
-                <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                <SelectTrigger className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
                   <SelectValue placeholder="Selecciona categoría" />
                 </SelectTrigger>
 
-                <SelectContent className="border-gray-700 bg-gray-800">
+                <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
                   {categories.map((category) => (
                     <SelectItem
                       key={category.value}
@@ -822,7 +822,7 @@ export default function AdminPublicaciones() {
                   )
                 }
                 placeholder="Escribe el anuncio, noticia o actualización..."
-                className="min-h-40 border-gray-700 bg-gray-800 text-white"
+                className="min-h-40 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
               />
             </div>
 
@@ -841,7 +841,7 @@ export default function AdminPublicaciones() {
                       event.target.value
                     )
                   }
-                  className="border-gray-700 bg-gray-800 text-white"
+                  className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 />
               </div>
 
@@ -859,7 +859,7 @@ export default function AdminPublicaciones() {
                       event.target.value
                     )
                   }
-                  className="border-gray-700 bg-gray-800 text-white"
+                  className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 />
               </div>
             </div>
@@ -878,11 +878,11 @@ export default function AdminPublicaciones() {
                   )
                 }
               >
-                <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                <SelectTrigger className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
 
-                <SelectContent className="border-gray-700 bg-gray-800">
+                <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
                   <SelectItem value="visible">
                     Visible
                   </SelectItem>
@@ -895,13 +895,13 @@ export default function AdminPublicaciones() {
             </div>
           </div>
 
-          <DialogFooter className="border-t border-gray-800 px-6 py-4">
+          <DialogFooter className="border-t border-[var(--sg-admin-border)] px-6 py-4">
             <Button
               variant="outline"
               onClick={() =>
                 setDialogOpen(false)
               }
-              className="border-gray-700"
+              className="border-[var(--sg-admin-border)]"
             >
               Cancelar
             </Button>
@@ -909,7 +909,7 @@ export default function AdminPublicaciones() {
             <Button
               onClick={handleSavePost}
               disabled={saving}
-              className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-white"
+              className="sgames-admin-primary-button"
             >
               {saving
                 ? "Guardando..."
@@ -924,7 +924,7 @@ export default function AdminPublicaciones() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
       >
-        <AlertDialogContent className="border-gray-800 bg-gray-900 text-white">
+        <AlertDialogContent className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] text-[var(--sg-text)]">
           <AlertDialogHeader>
             <div className="mb-2 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
@@ -936,11 +936,11 @@ export default function AdminPublicaciones() {
               </AlertDialogTitle>
             </div>
 
-            <AlertDialogDescription className="text-gray-400">
+            <AlertDialogDescription className="text-[var(--sg-muted-text)]">
               {postToDelete ? (
                 <>
                   Vas a eliminar{" "}
-                  <span className="font-semibold text-white">
+                  <span className="font-semibold text-[var(--sg-text)]">
                     {postToDelete.title}
                   </span>
                   . Esta acción no se puede deshacer.
@@ -952,13 +952,13 @@ export default function AdminPublicaciones() {
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white">
+            <AlertDialogCancel className="border-[var(--sg-admin-border)] bg-transparent text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-input-bg)] hover:text-[var(--sg-text)]">
               Cancelar
             </AlertDialogCancel>
 
             <AlertDialogAction
               onClick={handleConfirmDelete}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-red-600 text-[var(--sg-text)] hover:bg-red-700"
             >
               Eliminar
             </AlertDialogAction>

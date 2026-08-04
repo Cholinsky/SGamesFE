@@ -436,11 +436,11 @@ export default function AdminRunners() {
     <div className="sgames-admin-page space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="mb-2 text-3xl font-bold text-white">
+          <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
             Runners
           </h1>
 
-          <p className="text-gray-400">
+          <p className="text-[var(--sg-muted-text)]">
             Administra las tarjetas públicas de runners participantes.
           </p>
         </div>
@@ -449,7 +449,7 @@ export default function AdminRunners() {
           <Button
             onClick={loadData}
             variant="outline"
-            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-input-bg)]"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualizar
@@ -457,7 +457,7 @@ export default function AdminRunners() {
 
           <Button
             onClick={openCreateDialog}
-            className="bg-cyan-600 hover:bg-cyan-700"
+            className="sgames-admin-primary-button"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Runner
@@ -466,28 +466,28 @@ export default function AdminRunners() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-5">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Total runners
               </p>
-              <p className="mt-1 text-3xl font-bold text-white">
+              <p className="mt-1 text-3xl font-bold text-[var(--sg-text)]">
                 {runners.length}
               </p>
             </div>
 
-            <Users className="h-9 w-9 text-cyan-400" />
+            <Users className="h-9 w-9 text-[var(--sg-primary)]" />
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-5">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Visibles
               </p>
-              <p className="mt-1 text-3xl font-bold text-white">
+              <p className="mt-1 text-3xl font-bold text-[var(--sg-text)]">
                 {runners.filter((runner) => runner.isVisible).length}
               </p>
             </div>
@@ -496,13 +496,13 @@ export default function AdminRunners() {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-5">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Ocultos
               </p>
-              <p className="mt-1 text-3xl font-bold text-white">
+              <p className="mt-1 text-3xl font-bold text-[var(--sg-text)]">
                 {runners.filter((runner) => !runner.isVisible).length}
               </p>
             </div>
@@ -513,21 +513,21 @@ export default function AdminRunners() {
       </div>
 
       {runners.length === 0 ? (
-        <Card className="border-dashed border-gray-800 bg-gray-900/40">
+        <Card className="border-dashed border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]/40">
           <CardContent className="p-10 text-center">
-            <Users className="mx-auto mb-4 h-12 w-12 text-gray-600" />
+            <Users className="mx-auto mb-4 h-12 w-12 text-[var(--sg-admin-muted-soft)]" />
 
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-[var(--sg-text)]">
               Aún no hay runners cargados
             </h2>
 
-            <p className="mt-2 text-gray-400">
+            <p className="mt-2 text-[var(--sg-muted-text)]">
               Crea el primer perfil para mostrarlo en la página principal.
             </p>
 
             <Button
               onClick={openCreateDialog}
-              className="mt-5 bg-cyan-600 hover:bg-cyan-700"
+              className="mt-5 sgames-admin-primary-button"
             >
               <Plus className="mr-2 h-4 w-4" />
               Crear runner
@@ -539,9 +539,9 @@ export default function AdminRunners() {
           {runners.map((runner) => (
             <Card
               key={runner.id}
-              className="overflow-hidden border-gray-800 bg-gray-900/50"
+              className="overflow-hidden border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]"
             >
-              <div className="relative aspect-[4/3] bg-gray-950">
+              <div className="relative aspect-[4/3] bg-[var(--sg-background)]">
                 {runner.photoUrl ? (
                   <img
   src={runner.photoUrl}
@@ -550,7 +550,7 @@ export default function AdminRunners() {
 />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-gray-700" />
+                    <ImageIcon className="h-12 w-12 text-[var(--sg-admin-muted-soft)]" />
                   </div>
                 )}
 
@@ -571,24 +571,24 @@ export default function AdminRunners() {
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="text-xl font-bold text-white">
+                      <h3 className="text-xl font-bold text-[var(--sg-text)]">
                         {runner.displayName}
                       </h3>
 
                       {runner.country && (
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-[var(--sg-muted-text)]">
                           {runner.country}
                         </p>
                       )}
                     </div>
 
-                    <span className="rounded-full border border-cyan-400/30 px-3 py-1 text-xs text-cyan-300">
+                    <span className="rounded-full border border-[var(--sg-admin-border-strong)] px-3 py-1 text-xs text-[var(--sg-primary)]">
                       #{runner.sortOrder}
                     </span>
                   </div>
 
                   {runner.bio && (
-                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-gray-400">
+                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--sg-muted-text)]">
                       {runner.bio}
                     </p>
                   )}
@@ -600,7 +600,7 @@ export default function AdminRunners() {
                       href={runner.presentationVideoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-purple-300 hover:text-purple-200"
+                      className="inline-flex items-center gap-2 text-sm text-[var(--sg-secondary)] hover:text-purple-200"
                     >
                       <Video className="h-4 w-4" />
                       Ver video de presentación
@@ -616,7 +616,7 @@ export default function AdminRunners() {
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded-full border border-cyan-400/30 px-3 py-1 text-xs text-cyan-300 hover:bg-cyan-500/10"
+                          className="rounded-full border border-[var(--sg-admin-border-strong)] px-3 py-1 text-xs text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
                         >
                           {link.name ?? "Red social"}
                         </a>
@@ -625,8 +625,8 @@ export default function AdminRunners() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap justify-between gap-2 border-t border-gray-800 pt-4">
-                  <span className="text-xs text-gray-500">
+                <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--sg-admin-border)] pt-4">
+                  <span className="text-xs text-[var(--sg-admin-muted-soft)]">
                     Creado: {formatDate(runner.createdAt)}
                   </span>
 
@@ -649,7 +649,7 @@ export default function AdminRunners() {
                       size="sm"
                       variant="ghost"
                       onClick={() => openEditDialog(runner)}
-                      className="text-cyan-300 hover:bg-cyan-500/10"
+                      className="text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
                       title="Editar"
                     >
                       <Edit className="h-4 w-4" />
@@ -682,8 +682,8 @@ export default function AdminRunners() {
           }
         }}
       >
-        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-3xl flex-col overflow-hidden border-gray-800 bg-gray-900 p-0 text-white">
-          <DialogHeader className="shrink-0 border-b border-gray-800 px-6 py-4">
+        <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-3xl flex-col overflow-hidden border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] p-0 text-[var(--sg-text)]">
+          <DialogHeader className="shrink-0 border-b border-[var(--sg-admin-border)] px-6 py-4">
             <DialogTitle className="text-2xl">
               {editingRunner ? "Editar Runner" : "Nuevo Runner"}
             </DialogTitle>
@@ -692,48 +692,48 @@ export default function AdminRunners() {
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label className="text-gray-300">
+                <Label className="text-[var(--sg-muted-text)]">
                   Nombre público <span className="text-red-400">*</span>
                 </Label>
 
                 <Input
                   value={form.displayName}
                   onChange={(event) => updateForm("displayName", event.target.value)}
-                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                   placeholder="Nombre o alias del runner"
                 />
               </div>
 
               <div>
-                <Label className="text-gray-300">
+                <Label className="text-[var(--sg-muted-text)]">
                   País / región
                 </Label>
 
                 <Input
                   value={form.country}
                   onChange={(event) => updateForm("country", event.target.value)}
-                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                   placeholder="Ej. México, Chile, España"
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-gray-300">
+              <Label className="text-[var(--sg-muted-text)]">
                 Bio / presentación
               </Label>
 
               <Textarea
                 value={form.bio}
                 onChange={(event) => updateForm("bio", event.target.value)}
-                className="mt-1.5 min-h-[120px] border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 min-h-[120px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="Pequeña descripción del runner..."
               />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label className="text-gray-300">
+                <Label className="text-[var(--sg-muted-text)]">
                   Orden
                 </Label>
 
@@ -741,17 +741,17 @@ export default function AdminRunners() {
                   type="number"
                   value={form.sortOrder}
                   onChange={(event) => updateForm("sortOrder", event.target.value)}
-                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                   placeholder="999"
                 />
 
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-[var(--sg-admin-muted-soft)]">
                   Menor número aparece primero.
                 </p>
               </div>
 
               <div>
-                <Label className="text-gray-300">
+                <Label className="text-[var(--sg-muted-text)]">
                   Visibilidad
                 </Label>
 
@@ -759,11 +759,11 @@ export default function AdminRunners() {
                   value={form.isVisible ? "visible" : "hidden"}
                   onValueChange={(value) => updateForm("isVisible", value === "visible")}
                 >
-                  <SelectTrigger className="mt-1.5 border-gray-700 bg-gray-800 text-white">
+                  <SelectTrigger className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
                     <SelectValue />
                   </SelectTrigger>
 
-                  <SelectContent className="border-gray-700 bg-gray-800">
+                  <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
                     <SelectItem value="visible">
                       Visible en Home
                     </SelectItem>
@@ -778,7 +778,7 @@ export default function AdminRunners() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label className="text-gray-300">
+                <Label className="text-[var(--sg-muted-text)]">
                   Imagen del runner
                 </Label>
 
@@ -786,7 +786,7 @@ export default function AdminRunners() {
                   type="file"
                   accept="image/*"
                   onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)}
-                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 />
 
                 {editingRunner?.photoUrl && !photoFile && (
@@ -794,7 +794,7 @@ export default function AdminRunners() {
                     href={editingRunner.photoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-2 text-xs text-cyan-300 hover:text-cyan-200"
+                    className="mt-2 inline-flex items-center gap-2 text-xs text-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
                   >
                     Imagen actual
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -803,7 +803,7 @@ export default function AdminRunners() {
               </div>
 
               <div>
-                <Label className="text-gray-300">
+                <Label className="text-[var(--sg-muted-text)]">
                   Video de presentación
                 </Label>
 
@@ -811,7 +811,7 @@ export default function AdminRunners() {
                   type="file"
                   accept="video/mp4,video/webm,video/quicktime"
                   onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)}
-                  className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 />
 
                 {editingRunner?.presentationVideoUrl && !videoFile && (
@@ -819,7 +819,7 @@ export default function AdminRunners() {
                     href={editingRunner.presentationVideoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-2 text-xs text-purple-300 hover:text-purple-200"
+                    className="mt-2 inline-flex items-center gap-2 text-xs text-[var(--sg-secondary)] hover:text-purple-200"
                   >
                     Video actual
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -831,11 +831,11 @@ export default function AdminRunners() {
             <div>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-cyan-400">
+                  <h3 className="font-semibold text-[var(--sg-primary)]">
                     Redes sociales
                   </h3>
 
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-[var(--sg-admin-muted-soft)]">
                     Opcionales. Se mostrarán en la tarjeta pública.
                   </p>
                 </div>
@@ -845,7 +845,7 @@ export default function AdminRunners() {
                   variant="outline"
                   size="sm"
                   onClick={addSocialLink}
-                  className="border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/10"
+                  className="border-[var(--sg-admin-border-strong)] text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Agregar
@@ -853,7 +853,7 @@ export default function AdminRunners() {
               </div>
 
               {socialLinks.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-gray-800 p-4 text-center text-sm text-gray-500">
+                <p className="rounded-lg border border-dashed border-[var(--sg-admin-border)] p-4 text-center text-sm text-[var(--sg-admin-muted-soft)]">
                   No hay redes sociales agregadas.
                 </p>
               ) : (
@@ -861,18 +861,18 @@ export default function AdminRunners() {
                   {socialLinks.map((link, index) => (
                     <div
                       key={index}
-                      className="flex flex-col gap-3 rounded-lg border border-gray-800 bg-gray-800/50 p-3 md:flex-row"
+                      className="flex flex-col gap-3 rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-3 md:flex-row"
                     >
                       <div className="flex-1">
                         <Select
                           value={link.socialNetworkId}
                           onValueChange={(value) => updateSocialLink(index, "socialNetworkId", value)}
                         >
-                          <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                          <SelectTrigger className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
                             <SelectValue placeholder="Red social" />
                           </SelectTrigger>
 
-                          <SelectContent className="border-gray-700 bg-gray-800">
+                          <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
                             {catalog.map((network) => (
                               <SelectItem
                                 key={network.id}
@@ -889,7 +889,7 @@ export default function AdminRunners() {
                         <Input
                           value={link.url}
                           onChange={(event) => updateSocialLink(index, "url", event.target.value)}
-                          className="border-gray-700 bg-gray-800 text-white"
+                          className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                           placeholder="https://..."
                         />
                       </div>
@@ -910,11 +910,11 @@ export default function AdminRunners() {
             </div>
           </div>
 
-          <DialogFooter className="shrink-0 border-t border-gray-800 px-6 py-4">
+          <DialogFooter className="shrink-0 border-t border-[var(--sg-admin-border)] px-6 py-4">
             <Button
               variant="outline"
               onClick={() => setDialogOpen(false)}
-              className="border-gray-700"
+              className="border-[var(--sg-admin-border)]"
               disabled={saving}
             >
               Cancelar
@@ -923,7 +923,7 @@ export default function AdminRunners() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-cyan-600 hover:bg-cyan-700"
+              className="sgames-admin-primary-button"
             >
               <Save className="mr-2 h-4 w-4" />
               {saving ? "Guardando..." : "Guardar"}

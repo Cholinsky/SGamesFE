@@ -110,7 +110,7 @@ function getStatusClass(status: string) {
       return "bg-red-500/20 text-red-400";
 
     default:
-      return "bg-gray-500/20 text-gray-400";
+      return "bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)]";
   }
 }
 
@@ -220,11 +220,11 @@ export default function AdminDashboard() {
           <AlertCircle className="h-10 w-10 text-red-400" />
 
           <div>
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-[var(--sg-text)]">
               Error al cargar el dashboard
             </h2>
 
-            <p className="mt-1 text-gray-400">
+            <p className="mt-1 text-[var(--sg-muted-text)]">
               {error}
             </p>
           </div>
@@ -246,7 +246,7 @@ export default function AdminDashboard() {
       title: "Total Postulaciones",
       value: stats.totalApplications,
       icon: FileText,
-      color: "from-cyan-400 to-blue-600",
+      color: "from-[var(--sg-primary)] to-[var(--sg-secondary)]",
       description: "Postulaciones recibidas",
     },
     {
@@ -285,11 +285,11 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="mb-2 text-3xl font-bold text-white">
+          <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
             Dashboard
           </h1>
 
-          <p className="text-gray-400">
+          <p className="text-[var(--sg-muted-text)]">
             Resumen real de postulaciones, horario y actividad del evento
           </p>
         </div>
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
         <Button
           onClick={loadStats}
           variant="outline"
-          className="w-fit border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+          className="w-fit border-[var(--sg-admin-border-strong)] text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           Actualizar
@@ -312,20 +312,20 @@ export default function AdminDashboard() {
           return (
             <Card
               key={stat.title}
-              className="border-gray-800 bg-gray-900/50 backdrop-blur-sm"
+              className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm"
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-[var(--sg-muted-text)]">
                       {stat.title}
                     </p>
 
-                    <p className="mt-2 text-3xl font-bold text-white">
+                    <p className="mt-2 text-3xl font-bold text-[var(--sg-text)]">
                       {stat.value}
                     </p>
 
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm text-[var(--sg-admin-muted-soft)]">
                       {stat.description}
                     </p>
                   </div>
@@ -333,7 +333,7 @@ export default function AdminDashboard() {
                   <div
                     className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color}`}
                   >
-                    <Icon className="h-6 w-6 text-white" />
+                    <Icon className="h-6 w-6 text-[var(--sg-text)]" />
                   </div>
                 </div>
               </CardContent>
@@ -344,32 +344,32 @@ export default function AdminDashboard() {
 
       {/* Event State */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="flex items-center justify-between gap-4 p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Runs en horario
               </p>
 
-              <p className="mt-2 text-3xl font-bold text-white">
+              <p className="mt-2 text-3xl font-bold text-[var(--sg-text)]">
                 {stats.scheduledRuns}
               </p>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-[var(--sg-admin-muted-soft)]">
                 Entradas agregadas al horario
               </p>
             </div>
 
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-400 to-pink-600">
-              <CalendarCheck className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sg-secondary)] to-[var(--sg-accent)]">
+              <CalendarCheck className="h-6 w-6 text-[var(--sg-text)]" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="flex items-center justify-between gap-4 p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Estado del horario
               </p>
 
@@ -385,7 +385,7 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              <p className="mt-3 text-sm text-gray-500">
+              <p className="mt-3 text-sm text-[var(--sg-admin-muted-soft)]">
                 Controlado desde Constructor de Horarios
               </p>
             </div>
@@ -393,7 +393,7 @@ export default function AdminDashboard() {
             <Link to="/admin/horarios">
               <Button
                 variant="outline"
-                className="border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+                className="border-[var(--sg-admin-border-strong)] text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
               >
                 Ver horario
               </Button>
@@ -405,14 +405,14 @@ export default function AdminDashboard() {
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Activity Chart */}
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-[var(--sg-text)]">
                 Actividad últimos 7 días
               </h3>
 
-              <BarChart3 className="h-5 w-5 text-gray-500" />
+              <BarChart3 className="h-5 w-5 text-[var(--sg-admin-muted-soft)]" />
             </div>
 
             {hasActivityData(stats.weeklyActivity) ? (
@@ -480,13 +480,13 @@ export default function AdminDashboard() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-[250px] items-center justify-center rounded-xl border border-dashed border-gray-800 text-center">
+              <div className="flex h-[250px] items-center justify-center rounded-xl border border-dashed border-[var(--sg-admin-border)] text-center">
                 <div>
-                  <p className="font-medium text-white">
+                  <p className="font-medium text-[var(--sg-text)]">
                     Sin actividad reciente
                   </p>
 
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-[var(--sg-admin-muted-soft)]">
                     Aquí aparecerán las postulaciones de los últimos 7 días.
                   </p>
                 </div>
@@ -496,9 +496,9 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Platform Distribution */}
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="p-6">
-            <h3 className="mb-4 text-lg font-semibold text-white">
+            <h3 className="mb-4 text-lg font-semibold text-[var(--sg-text)]">
               Distribución por Plataforma
             </h3>
 
@@ -546,13 +546,13 @@ export default function AdminDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-[250px] items-center justify-center rounded-xl border border-dashed border-gray-800 text-center">
+              <div className="flex h-[250px] items-center justify-center rounded-xl border border-dashed border-[var(--sg-admin-border)] text-center">
                 <div>
-                  <p className="font-medium text-white">
+                  <p className="font-medium text-[var(--sg-text)]">
                     Sin plataformas registradas
                   </p>
 
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-[var(--sg-admin-muted-soft)]">
                     Se llenará automáticamente con las postulaciones.
                   </p>
                 </div>
@@ -564,14 +564,14 @@ export default function AdminDashboard() {
 
       {/* Recent Submissions and Top Games */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm lg:col-span-2">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm lg:col-span-2">
           <CardContent className="p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-[var(--sg-text)]">
                 Postulaciones Recientes
               </h3>
 
-              <Users className="h-5 w-5 text-gray-400" />
+              <Users className="h-5 w-5 text-[var(--sg-muted-text)]" />
             </div>
 
             {stats.recentApplications.length > 0 ? (
@@ -580,20 +580,20 @@ export default function AdminDashboard() {
                   (application) => (
                     <div
                       key={application.id}
-                      className="flex flex-col gap-3 rounded-lg border border-gray-800 bg-gray-800/50 p-4 md:flex-row md:items-center md:justify-between"
+                      className="flex flex-col gap-3 rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4 md:flex-row md:items-center md:justify-between"
                     >
                       <div className="flex-1">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-[var(--sg-text)]">
                           {application.runnerName}
                         </p>
 
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-[var(--sg-muted-text)]">
                           {application.game} •{" "}
                           {application.category} •{" "}
                           {application.platform}
                         </p>
 
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-[var(--sg-admin-muted-soft)]">
                           {formatDate(
                             application.submittedAt
                           )}
@@ -601,7 +601,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-[var(--sg-admin-muted-soft)]">
                           {formatRelativeTime(
                             application.submittedAt
                           )}
@@ -622,12 +622,12 @@ export default function AdminDashboard() {
                 )}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-gray-800 p-8 text-center">
-                <p className="font-medium text-white">
+              <div className="rounded-xl border border-dashed border-[var(--sg-admin-border)] p-8 text-center">
+                <p className="font-medium text-[var(--sg-text)]">
                   Aún no hay postulaciones
                 </p>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-[var(--sg-admin-muted-soft)]">
                   Cuando llegue una postulación, aparecerá aquí.
                 </p>
               </div>
@@ -636,9 +636,9 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Top Games */}
-        <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="p-6">
-            <h3 className="mb-4 text-lg font-semibold text-white">
+            <h3 className="mb-4 text-lg font-semibold text-[var(--sg-text)]">
               Juegos Más Enviados
             </h3>
 
@@ -651,16 +651,16 @@ export default function AdminDashboard() {
                       className="space-y-2"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium text-white">
+                        <span className="text-sm font-medium text-[var(--sg-text)]">
                           {game.game}
                         </span>
 
-                        <span className="text-sm font-semibold text-cyan-400">
+                        <span className="text-sm font-semibold text-[var(--sg-primary)]">
                           {game.count}
                         </span>
                       </div>
 
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-800">
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--sg-admin-input-bg)]">
                         <div
                           className="h-full rounded-full"
                           style={{
@@ -681,14 +681,14 @@ export default function AdminDashboard() {
                 )}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-gray-800 p-8 text-center">
-                <Gamepad2 className="mx-auto mb-3 h-8 w-8 text-gray-600" />
+              <div className="rounded-xl border border-dashed border-[var(--sg-admin-border)] p-8 text-center">
+                <Gamepad2 className="mx-auto mb-3 h-8 w-8 text-[var(--sg-admin-muted-soft)]" />
 
-                <p className="font-medium text-white">
+                <p className="font-medium text-[var(--sg-text)]">
                   Sin juegos todavía
                 </p>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-[var(--sg-admin-muted-soft)]">
                   Se llenará con las postulaciones reales.
                 </p>
               </div>

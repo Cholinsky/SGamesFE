@@ -490,17 +490,17 @@ export default function AdminConfiguracion() {
     return (
       <div className="sgames-admin-page space-y-6">
         <div>
-          <h1 className="mb-2 text-3xl font-bold text-white">
+          <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
             Configuración
           </h1>
 
-          <p className="text-gray-400">
+          <p className="text-[var(--sg-muted-text)]">
             Cargando configuración real del evento...
           </p>
         </div>
 
-        <Card className="border-gray-800 bg-gray-900/50">
-          <CardContent className="p-8 text-center text-gray-400">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
+          <CardContent className="p-8 text-center text-[var(--sg-muted-text)]">
             Cargando...
           </CardContent>
         </Card>
@@ -513,11 +513,11 @@ export default function AdminConfiguracion() {
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="mb-2 text-3xl font-bold text-white">
+          <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
             Configuración
           </h1>
 
-          <p className="text-gray-400">
+          <p className="text-[var(--sg-muted-text)]">
             Administra los datos reales del evento, contacto y redes oficiales
           </p>
         </div>
@@ -525,7 +525,7 @@ export default function AdminConfiguracion() {
         <Button
           variant="outline"
           onClick={loadConfiguration}
-          className="w-fit border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10"
+          className="w-fit border-[var(--sg-admin-border-strong)] text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
         >
           <Settings className="mr-2 h-4 w-4" />
           Recargar
@@ -534,10 +534,10 @@ export default function AdminConfiguracion() {
 
       {/* Estado Operativo */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Evento activo
               </p>
 
@@ -547,7 +547,7 @@ export default function AdminConfiguracion() {
                     Activo
                   </Badge>
                 ) : (
-                  <Badge className="bg-gray-500/20 text-gray-400">
+                  <Badge className="bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)]">
                     Inactivo
                   </Badge>
                 )}
@@ -558,10 +558,10 @@ export default function AdminConfiguracion() {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Horario público
               </p>
 
@@ -586,10 +586,10 @@ export default function AdminConfiguracion() {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
             <CardContent className="flex items-center justify-between p-6">
               <div>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-[var(--sg-muted-text)]">
                   Postulaciones
                 </p>
 
@@ -616,10 +616,10 @@ export default function AdminConfiguracion() {
             </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Runs públicas
               </p>
 
@@ -644,10 +644,10 @@ export default function AdminConfiguracion() {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Temporada
               </p>
 
@@ -662,29 +662,29 @@ export default function AdminConfiguracion() {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800 bg-gray-900/50">
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardContent className="flex items-center justify-between p-6">
             <div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--sg-muted-text)]">
                 Fechas del evento
               </p>
 
-              <p className="mt-2 text-sm font-semibold text-white">
+              <p className="mt-2 text-sm font-semibold text-[var(--sg-text)]">
                 {eventConfig.startDate || "Sin inicio"} →{" "}
                 {eventConfig.endDate || "Sin fin"}
               </p>
             </div>
 
-            <Calendar className="h-8 w-8 text-cyan-400" />
+            <Calendar className="h-8 w-8 text-[var(--sg-primary)]" />
           </CardContent>
         </Card>
       </div>
 
       {/* Event Configuration */}
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Calendar className="h-5 w-5 text-cyan-400" />
+          <CardTitle className="flex items-center gap-2 text-[var(--sg-text)]">
+            <Calendar className="h-5 w-5 text-[var(--sg-primary)]" />
             Configuración del Evento Activo
           </CardTitle>
         </CardHeader>
@@ -694,7 +694,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="eventName"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 Nombre del evento
               </Label>
@@ -708,7 +708,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="Ej. SGames Julio 2026"
               />
             </div>
@@ -716,7 +716,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="streamUrl"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 <Radio className="mr-1 inline h-4 w-4" />
                 URL del stream
@@ -732,7 +732,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="https://twitch.tv/..."
               />
             </div>
@@ -741,7 +741,7 @@ export default function AdminConfiguracion() {
           <div>
             <Label
               htmlFor="description"
-              className="text-gray-300"
+              className="text-[var(--sg-muted-text)]"
             >
               Descripción
             </Label>
@@ -755,7 +755,7 @@ export default function AdminConfiguracion() {
                   event.target.value
                 )
               }
-              className="mt-1.5 min-h-[100px] border-gray-700 bg-gray-800 text-white"
+              className="mt-1.5 min-h-[100px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
               placeholder="Descripción pública del evento"
             />
           </div>
@@ -764,7 +764,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="startDate"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 Fecha de inicio
               </Label>
@@ -779,14 +779,14 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
               />
             </div>
 
             <div>
               <Label
                 htmlFor="endDate"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 Fecha de fin
               </Label>
@@ -801,14 +801,14 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
               />
             </div>
 
             <div>
               <Label
                 htmlFor="eventDiscordUrl"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 Discord del evento
               </Label>
@@ -823,7 +823,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="https://discord.gg/..."
               />
               </div>
@@ -832,7 +832,7 @@ export default function AdminConfiguracion() {
                       <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 p-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="flex-1">
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-[var(--sg-text)]">
                   Temporada oficial del evento
                 </p>
 
@@ -845,7 +845,7 @@ export default function AdminConfiguracion() {
                 <div className="mt-4">
                   <Label
                     htmlFor="seasonKey"
-                    className="text-gray-300"
+                    className="text-[var(--sg-muted-text)]"
                   >
                     Temporada
                   </Label>
@@ -859,7 +859,7 @@ export default function AdminConfiguracion() {
                         event.target.value
                       )
                     }
-                    className="mt-1.5 w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none transition focus:border-orange-400"
+                    className="mt-1.5 w-full rounded-md border border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] px-3 py-2 text-sm text-[var(--sg-text)] outline-none transition focus:border-orange-400"
                   >
                     <option value="Winter">
                       Invierno / Febrero
@@ -874,12 +874,12 @@ export default function AdminConfiguracion() {
                 </div>
               </div>
 
-              <div className="min-w-[220px] rounded-lg border border-orange-400/20 bg-gray-950/40 p-4">
+              <div className="min-w-[220px] rounded-lg border border-orange-400/20 bg-[var(--sg-admin-input-bg)] p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-orange-200">
                   Diseño aplicado
                 </p>
 
-                <p className="mt-2 text-lg font-bold text-white">
+                <p className="mt-2 text-lg font-bold text-[var(--sg-text)]">
                   {getSelectedTheme()?.name ??
                     getSeasonLabel(eventConfig.seasonKey)}
                 </p>
@@ -910,7 +910,7 @@ export default function AdminConfiguracion() {
                       />
                     </>
                   ) : (
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--sg-muted-text)]">
                       Tema pendiente de cargar
                     </span>
                   )}
@@ -919,10 +919,10 @@ export default function AdminConfiguracion() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
+          <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-secondary-soft)] p-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="font-semibold text-white">
+                  <p className="font-semibold text-[var(--sg-text)]">
                     Postulaciones públicas
                   </p>
 
@@ -965,14 +965,14 @@ export default function AdminConfiguracion() {
               </div>
             </div>
 
-          <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4">
+          <div className="rounded-lg border border-cyan-500/20 bg-[var(--sg-admin-primary-softer)] p-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-[var(--sg-text)]">
                   Runs públicas
                 </p>
 
-                <p className="mt-1 text-sm text-cyan-100/80">
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
                   Controla si la página /runs muestra las runs aprobadas del
                   evento activo. Útil para limpiar el lineup al cerrar el
                   evento sin borrar historial.
@@ -1015,7 +1015,7 @@ export default function AdminConfiguracion() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-100">
+          <div className="rounded-lg border border-cyan-500/20 bg-[var(--sg-admin-primary-softer)] p-4 text-sm text-[var(--sg-muted-text)]">
             El estado de publicación del horario se controla desde{" "}
             <span className="font-semibold">
               Horarios
@@ -1027,7 +1027,7 @@ export default function AdminConfiguracion() {
             <Button
               onClick={handleSaveEventConfig}
               disabled={savingEvent}
-              className="bg-cyan-600 hover:bg-cyan-700"
+              className="sgames-admin-primary-button"
             >
               <Save className="mr-2 h-4 w-4" />
               {savingEvent
@@ -1039,10 +1039,10 @@ export default function AdminConfiguracion() {
       </Card>
 
       {/* Contact and Social Settings */}
-      <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Globe className="h-5 w-5 text-purple-400" />
+          <CardTitle className="flex items-center gap-2 text-[var(--sg-text)]">
+            <Globe className="h-5 w-5 text-[var(--sg-secondary)]" />
             Contacto y Redes Oficiales
           </CardTitle>
         </CardHeader>
@@ -1051,7 +1051,7 @@ export default function AdminConfiguracion() {
           <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="flex-1">
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-[var(--sg-text)]">
                   Modo mantenimiento
                 </p>
 
@@ -1097,7 +1097,7 @@ export default function AdminConfiguracion() {
             <div className="mt-4">
               <Label
                 htmlFor="maintenanceMessage"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 Mensaje público
               </Label>
@@ -1111,7 +1111,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 min-h-[90px] border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 min-h-[90px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="Estamos trabajando en mejoras. Vuelve más tarde."
               />
             </div>
@@ -1121,7 +1121,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="publicEventName"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 Nombre público del evento
               </Label>
@@ -1135,7 +1135,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="Ej. SGames Julio 2026"
               />
             </div>
@@ -1143,7 +1143,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="contactEmail"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 <Mail className="mr-1 inline h-4 w-4" />
                 Email de contacto
@@ -1159,7 +1159,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="correo@ejemplo.com"
               />
             </div>
@@ -1169,7 +1169,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="twitchUrl"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 <Twitch className="mr-1 inline h-4 w-4" />
                 Twitch
@@ -1185,7 +1185,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="https://twitch.tv/..."
               />
             </div>
@@ -1193,7 +1193,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="youtubeUrl"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 <Youtube className="mr-1 inline h-4 w-4" />
                 YouTube
@@ -1209,7 +1209,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="https://youtube.com/..."
               />
             </div>
@@ -1217,7 +1217,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="discordUrl"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 Discord
               </Label>
@@ -1232,7 +1232,7 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="https://discord.gg/..."
               />
             </div>
@@ -1240,7 +1240,7 @@ export default function AdminConfiguracion() {
             <div>
               <Label
                 htmlFor="twitterUrl"
-                className="text-gray-300"
+                className="text-[var(--sg-muted-text)]"
               >
                 <ExternalLink className="mr-1 inline h-4 w-4" />
                 Twitter / X
@@ -1256,13 +1256,13 @@ export default function AdminConfiguracion() {
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-gray-700 bg-gray-800 text-white"
+                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="https://x.com/..."
               />
             </div>
           </div>
 
-          <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4 text-sm text-purple-100">
+          <div className="rounded-lg border border-[var(--sg-admin-border)] bg-[var(--sg-admin-secondary-soft)] p-4 text-sm text-purple-100">
             Estos datos se guardan en la tabla{" "}
             <span className="font-semibold">
               Settings
