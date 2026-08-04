@@ -18,6 +18,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Avatar,
@@ -242,6 +243,11 @@ export function AdminLayout() {
     name: "Runners",
     path: "/admin/runners",
     icon: Users,
+  },
+  {
+    name: "Administradores",
+    path: "/admin/administradores",
+    icon: ShieldCheck,
   },
   {
     name: "Configuración",

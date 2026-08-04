@@ -13,6 +13,7 @@ import AdminHorarios from "./pages/admin/AdminHorarios";
 import AdminPublicaciones from "./pages/admin/AdminPublicaciones";
 import AdminConfiguracion from "./pages/admin/AdminConfiguracion";
 import AdminRunners from "./pages/admin/AdminRunners";
+import AdminAdministradores from "./pages/admin/AdminAdministradores";
 import NotFound from "./pages/NotFound";
 import RunsPage from "./pages/RunsPage";
 
@@ -26,7 +27,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, Component: HomePage },
           { path: "postulacion", Component: PostulacionPage },
-          { path: "horario", Component: HorarioPage },  
+          { path: "horario", Component: HorarioPage },
           { path: "runs", Component: RunsPage },
         ],
       },
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
           { path: "horarios", Component: AdminHorarios },
           { path: "publicaciones", Component: AdminPublicaciones },
           { path: "runners", Component: AdminRunners },
+          { path: "administradores", Component: AdminAdministradores },
           { path: "configuracion", Component: AdminConfiguracion },
         ],
       },
