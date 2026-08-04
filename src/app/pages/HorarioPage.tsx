@@ -62,6 +62,7 @@ type ScheduleEntry = {
 };
 
 type PublicScheduleResponse = {
+  eventActive?: boolean;
   isPublished: boolean;
   message?: string;
   event?: string;
@@ -631,6 +632,9 @@ export default function HorarioPage() {
   const [isPublished, setIsPublished] =
     useState(false);
 
+  const [hasActivePublicEvent, setHasActivePublicEvent] =
+    useState(true);
+
   const [message, setMessage] =
     useState("");
 
@@ -710,6 +714,15 @@ useEffect(() => {
       const data: PublicScheduleResponse =
         await getPublicSchedule(EVENT_ID);
 
+      if (data.eventActive === false) {
+        setHasActivePublicEvent(false);
+        setIsPublished(false);
+        setMessage("");
+        setSchedule([]);
+        return;
+      }
+
+      setHasActivePublicEvent(true);
       setIsPublished(data.isPublished);
 
       if (!data.isPublished) {
@@ -866,6 +879,14 @@ const mappedEntries =
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  if (!hasActivePublicEvent) {
+    return (
+      <div className="sgames-schedule-page min-h-screen py-12">
+        <style>{horarioThemeCss}</style>
       </div>
     );
   }

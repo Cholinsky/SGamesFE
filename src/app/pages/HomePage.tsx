@@ -175,7 +175,10 @@ function getPostPreview(
 
 export default function HomePage() {
   const [applicationsOpen, setApplicationsOpen] =
-    useState(true);
+    useState(false);
+
+  const [hasActivePublicEvent, setHasActivePublicEvent] =
+    useState(false);
 
   const [activeSeasonKey, setActiveSeasonKey] =
     useState<string>("Summer");
@@ -258,12 +261,20 @@ async function loadPublicRunners() {
       const activeEvent =
         await getActivePublicEvent();
 
+      if (!activeEvent) {
+        setHasActivePublicEvent(false);
+        setApplicationsOpen(false);
+        return;
+      }
+
+      setHasActivePublicEvent(true);
       setApplicationsOpen(
-        activeEvent.applicationsOpen ?? true
+        activeEvent.applicationsOpen ?? false
       );
     } catch (error) {
       console.error(error);
-      setApplicationsOpen(true);
+      setHasActivePublicEvent(false);
+      setApplicationsOpen(false);
     }
   }
 
@@ -497,12 +508,15 @@ async function loadPublicRunners() {
               de distintos juegos, categorías y plataformas.
             </p>
 
-            <p className="mx-auto mb-8 max-w-2xl text-sm text-[var(--sg-muted-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
-              Del 31 de julio al 2 de agosto de 2026.
-              Postula tu run, comparte tu talento y forma parte
-              del lineup.
-            </p>
+            {hasActivePublicEvent && (
+              <p className="mx-auto mb-8 max-w-2xl text-sm text-[var(--sg-muted-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
+                Del 31 de julio al 2 de agosto de 2026.
+                Postula tu run, comparte tu talento y forma parte
+                del lineup.
+              </p>
+            )}
 
+            {hasActivePublicEvent && (
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               {applicationsOpen ? (
                 <Link to="/postulacion">
@@ -535,6 +549,7 @@ async function loadPublicRunners() {
                 </Button>
               </Link>
             </div>
+            )}
           </div>
 
           <div className="mt-16 flex justify-center">
@@ -584,6 +599,7 @@ async function loadPublicRunners() {
       </section>
 
       {/* Event Info Section */}
+      {hasActivePublicEvent && (
       <section className="border-y border-[var(--sg-border)] py-16" style={{ background: "var(--sg-card-gradient)" }}>
         <div className="container mx-auto px-4">
           <div className="mb-10 text-center">
@@ -624,9 +640,10 @@ async function loadPublicRunners() {
           </div>
         </div>
       </section>
+      )}
 
             {/* Official Announcements Section */}
-{publicPosts.length > 0 && (
+{hasActivePublicEvent && publicPosts.length > 0 && (
   <section className="bg-[var(--sg-background)] py-20">
     <div className="container mx-auto px-4">
       <div className="mb-12 text-center">
@@ -1065,6 +1082,7 @@ async function loadPublicRunners() {
       </section>
 
       {/* CTA Section */}
+      {hasActivePublicEvent && (
       <section className="relative overflow-hidden py-20" style={{ background: "var(--sg-card-gradient)" }}>
         <div className="absolute inset-0 opacity-30" style={{ background: "var(--sg-hero-gradient)" }} />
 
@@ -1102,6 +1120,7 @@ async function loadPublicRunners() {
           )}
         </div>
       </section>
+      )}
     </div>
   );
 }

@@ -630,6 +630,9 @@ export default function PostulacionPage() {
     useState(true);
 
   const [applicationsOpen, setApplicationsOpen] =
+    useState(false);
+
+  const [hasActivePublicEvent, setHasActivePublicEvent] =
     useState(true);
 
   useEffect(() => {
@@ -648,17 +651,21 @@ export default function PostulacionPage() {
       const activeEvent =
         await getActivePublicEvent();
 
+      if (!activeEvent) {
+        setHasActivePublicEvent(false);
+        setApplicationsOpen(false);
+        return;
+      }
+
+      setHasActivePublicEvent(true);
       setApplicationsOpen(
-        activeEvent.applicationsOpen ?? true
+        activeEvent.applicationsOpen ?? false
       );
     } catch (error) {
       console.error(error);
 
+      setHasActivePublicEvent(false);
       setApplicationsOpen(false);
-
-      toast.error(
-        "No fue posible validar si las postulaciones están abiertas"
-      );
     } finally {
       setLoadingEventStatus(false);
     }
@@ -1171,6 +1178,14 @@ export default function PostulacionPage() {
             </Card>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!hasActivePublicEvent) {
+    return (
+      <div className="sgames-postulation-page min-h-screen py-12">
+        <style>{postulacionThemeCss}</style>
       </div>
     );
   }

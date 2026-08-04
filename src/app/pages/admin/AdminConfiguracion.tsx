@@ -27,6 +27,8 @@ import {
   Twitch,
   Youtube,
   Users,
+  Power,
+  PowerOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,6 +36,7 @@ import {
   updateEvent,
   updatePublicRunsVisibility,
   updateEventSeason,
+  updateEventActiveStatus,
 } from "../../services/eventService";
 import {
   createSettings,
@@ -384,6 +387,42 @@ export default function AdminConfiguracion() {
     }
   }
 
+
+  async function handleToggleEventActive() {
+    if (!eventConfig.id) {
+      toast.error("No hay evento configurado");
+      return;
+    }
+
+    const nextActiveStatus =
+      !eventConfig.isActive;
+
+    try {
+      setSavingEvent(true);
+
+      await updateEventActiveStatus(
+        eventConfig.id,
+        nextActiveStatus
+      );
+
+      toast.success(
+        nextActiveStatus
+          ? "Evento activado para el público"
+          : "Evento desactivado para el público"
+      );
+
+      await loadConfiguration();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo actualizar el estado del evento"
+      );
+    } finally {
+      setSavingEvent(false);
+    }
+  }
+
   async function handleTogglePublicRunsVisible() {
     if (!eventConfig.id) {
       toast.error("No hay evento activo");
@@ -679,6 +718,51 @@ export default function AdminConfiguracion() {
           </CardContent>
         </Card>
       </div>
+
+
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
+        <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-2">
+              {eventConfig.isActive ? (
+                <Power className="h-5 w-5 text-green-400" />
+              ) : (
+                <PowerOff className="h-5 w-5 text-red-400" />
+              )}
+
+              <h2 className="text-lg font-bold text-[var(--sg-text)]">
+                Visibilidad global del evento
+              </h2>
+            </div>
+
+            <p className="mt-2 text-sm leading-relaxed text-[var(--sg-muted-text)]">
+              Cuando el evento está inactivo, las páginas públicas no muestran
+              horario, postulaciones, runs ni mensajes del evento. Esto evita que
+              el público vea información de una edición que todavía no está lista.
+            </p>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleToggleEventActive}
+            disabled={savingEvent}
+            className={
+              eventConfig.isActive
+                ? "border border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                : "sgames-admin-primary-button"
+            }
+          >
+            {eventConfig.isActive ? (
+              <PowerOff className="mr-2 h-4 w-4" />
+            ) : (
+              <Power className="mr-2 h-4 w-4" />
+            )}
+            {eventConfig.isActive
+              ? "Desactivar evento"
+              : "Activar evento"}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Event Configuration */}
       <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">

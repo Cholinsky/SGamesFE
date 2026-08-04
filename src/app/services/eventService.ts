@@ -4,7 +4,7 @@ import { getHeaders } from "./authservice";
 export async function getActiveEvent() {
   const response =
     await fetch(
-      `${API_URL}/Events/active`,
+      `${API_URL}/Events/admin-current`,
       {
         headers: getHeaders(),
       }
@@ -13,6 +13,28 @@ export async function getActiveEvent() {
   if (!response.ok) {
     throw new Error(
       "Error loading active event"
+    );
+  }
+
+  return await response.json();
+}
+
+export async function getActivePublicEvent() {
+  const response =
+    await fetch(
+      `${API_URL}/Events/active-public`
+    );
+
+  if (
+    response.status === 204 ||
+    response.status === 404
+  ) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      "Error loading active public event"
     );
   }
 
@@ -45,6 +67,36 @@ export async function updateEvent(
   return true;
 }
 
+export async function updateEventActiveStatus(
+  id: string,
+  isActive: boolean
+) {
+  const action =
+    isActive
+      ? "activate"
+      : "deactivate";
+
+  const response =
+    await fetch(
+      `${API_URL}/Events/${id}/${action}`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    const error =
+      await response.text();
+
+    throw new Error(
+      error || "Error updating event active status"
+    );
+  }
+
+  return true;
+}
+
 export async function updatePublicRunsVisibility(
   id: string,
   visible: boolean
@@ -71,7 +123,6 @@ export async function updatePublicRunsVisibility(
   return await response.json();
 }
 
-
 export async function updateEventSeason(
   id: string,
   seasonKey: string
@@ -91,21 +142,6 @@ export async function updateEventSeason(
 
     throw new Error(
       error || "Error updating event season"
-    );
-  }
-
-  return await response.json();
-}
-
-export async function getActivePublicEvent() {
-  const response =
-    await fetch(
-      `${API_URL}/Events/active`
-    );
-
-  if (!response.ok) {
-    throw new Error(
-      "Error loading active public event"
     );
   }
 

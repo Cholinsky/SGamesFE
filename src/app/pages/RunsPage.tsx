@@ -20,6 +20,7 @@ import {
   ListFilter,
 } from "lucide-react";
 import { getPublicApprovedApplications } from "../services/applicationService";
+import { getActivePublicEvent } from "../services/eventService";
 import {
   ShareModal,
   type SharePayload,
@@ -345,6 +346,9 @@ export default function RunsPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const [hasActivePublicEvent, setHasActivePublicEvent] =
+    useState(true);
+
   const [searchText, setSearchText] =
     useState("");
 
@@ -416,6 +420,17 @@ export default function RunsPage() {
     try {
       setLoading(true);
 
+      const activeEvent =
+        await getActivePublicEvent();
+
+      if (!activeEvent) {
+        setHasActivePublicEvent(false);
+        setRuns([]);
+        return;
+      }
+
+      setHasActivePublicEvent(true);
+
       const data =
         await getPublicApprovedApplications();
 
@@ -426,6 +441,7 @@ export default function RunsPage() {
       );
     } catch (error) {
       console.error(error);
+      setHasActivePublicEvent(false);
       setRuns([]);
     } finally {
       setLoading(false);
@@ -477,6 +493,202 @@ export default function RunsPage() {
   if (loading) {
     return (
       <div className="sgames-runs-page min-h-screen py-12">
+        <style>{`
+          .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 16%, transparent), transparent 30rem),
+              radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 14%, transparent), transparent 32rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+            color: var(--sg-text);
+          }
+
+          .sgames-runs-gradient-box {
+            background:
+              linear-gradient(
+                135deg,
+                var(--sg-primary),
+                var(--sg-secondary),
+                var(--sg-accent)
+              );
+            box-shadow:
+              0 0 35px color-mix(in srgb, var(--sg-accent) 35%, transparent);
+          }
+
+          .sgames-runs-badge-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 11%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-badge-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 12%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-badge-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 34%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 11%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-stat-card {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 80%, transparent)
+              );
+            box-shadow:
+              0 0 28px rgba(15, 23, 42, 0.28);
+          }
+
+          .sgames-runs-stat-card-primary {
+            border-color: color-mix(in srgb, var(--sg-primary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-accent {
+            border-color: color-mix(in srgb, var(--sg-accent) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+          }
+
+          .sgames-runs-stat-card-secondary {
+            border-color: color-mix(in srgb, var(--sg-secondary) 24%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+          }
+
+          .sgames-runs-panel {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 82%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(14px);
+          }
+
+          .sgames-runs-input {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 82%, #000000 18%) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-input::placeholder {
+            color: color-mix(in srgb, var(--sg-muted-text) 54%, transparent);
+          }
+
+          .sgames-runs-filter-active {
+            border-color: color-mix(in srgb, var(--sg-primary) 52%, transparent) !important;
+            background: color-mix(in srgb, var(--sg-primary) 20%, transparent) !important;
+            color: var(--sg-primary) !important;
+          }
+
+          .sgames-runs-filter-idle {
+            border-color: var(--sg-border) !important;
+            background: color-mix(in srgb, var(--sg-background) 70%, transparent) !important;
+            color: var(--sg-muted-text) !important;
+          }
+
+          .sgames-runs-filter-idle:hover {
+            background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
+            color: var(--sg-text) !important;
+          }
+
+          .sgames-runs-table {
+            border: 1px solid var(--sg-border);
+            background:
+              linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--sg-surface) 72%, transparent),
+                color-mix(in srgb, var(--sg-background) 84%, transparent)
+              );
+            box-shadow:
+              0 0 35px rgba(15, 23, 42, 0.35);
+          }
+
+          .sgames-runs-header-row {
+            border-bottom: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-text) 5%, transparent);
+            color: color-mix(in srgb, var(--sg-muted-text) 70%, transparent);
+          }
+
+          .sgames-runs-row {
+            border-color: color-mix(in srgb, var(--sg-secondary) 18%, transparent);
+          }
+
+          .sgames-runs-row:hover {
+            background: color-mix(in srgb, var(--sg-primary) 5%, transparent);
+          }
+
+          .sgames-run-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-background) 62%, transparent);
+          }
+
+          .sgames-race-participants {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 6%, transparent);
+          }
+
+          .sgames-race-player-card {
+            border: 1px solid var(--sg-border);
+            background: color-mix(in srgb, var(--sg-surface) 70%, transparent);
+          }
+
+          .sgames-runs-pill-primary {
+            border: 1px solid color-mix(in srgb, var(--sg-primary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-primary) 10%, transparent);
+            color: var(--sg-primary);
+          }
+
+          .sgames-runs-pill-secondary {
+            border: 1px solid color-mix(in srgb, var(--sg-secondary) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-secondary) 10%, transparent);
+            color: var(--sg-secondary);
+          }
+
+          .sgames-runs-pill-accent {
+            border: 1px solid color-mix(in srgb, var(--sg-accent) 32%, transparent);
+            background: color-mix(in srgb, var(--sg-accent) 10%, transparent);
+            color: var(--sg-accent);
+          }
+
+          .sgames-runs-pill-primary:hover,
+          .sgames-runs-pill-secondary:hover,
+          .sgames-runs-pill-accent:hover {
+            filter: brightness(1.16);
+          }
+
+          [data-season-theme="Winter"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.16), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
+          [data-season-theme="Winter"] .sgames-runs-panel,
+          [data-season-theme="Winter"] .sgames-runs-table,
+          [data-season-theme="Winter"] .sgames-run-card {
+            box-shadow:
+              0 0 0 1px rgba(103, 232, 249, 0.08),
+              0 0 34px rgba(59, 130, 246, 0.14);
+          }
+
+          [data-season-theme="Autumn"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.17), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.14), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
+        `}</style>
         <div className="container mx-auto px-4">
           <Card className="sgames-runs-panel mx-auto max-w-2xl">
             <CardContent className="p-10 text-center">
@@ -488,6 +700,24 @@ export default function RunsPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  if (!hasActivePublicEvent) {
+    return (
+      <div className="sgames-runs-page min-h-screen py-12">
+        <style>
+          {`
+            .sgames-runs-page {
+              background:
+                radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 16%, transparent), transparent 30rem),
+                radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 14%, transparent), transparent 32rem),
+                linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+              color: var(--sg-text);
+            }
+          `}
+        </style>
       </div>
     );
   }
@@ -688,6 +918,31 @@ export default function RunsPage() {
           .sgames-runs-pill-accent:hover {
             filter: brightness(1.16);
           }
+
+          [data-season-theme="Winter"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.16), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
+          [data-season-theme="Winter"] .sgames-runs-panel,
+          [data-season-theme="Winter"] .sgames-runs-table,
+          [data-season-theme="Winter"] .sgames-run-card {
+            box-shadow:
+              0 0 0 1px rgba(103, 232, 249, 0.08),
+              0 0 34px rgba(59, 130, 246, 0.14);
+          }
+
+          [data-season-theme="Autumn"] .sgames-runs-page {
+            background:
+              radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.17), transparent 30rem),
+              radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.14), transparent 32rem),
+              radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
+              linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+          }
+
         `}
       </style>
 
