@@ -25,8 +25,14 @@ import {
   Timer,
   SearchX,
   ClipboardEdit,
+  Twitch,
+  ExternalLink,
 } from "lucide-react";
 import { getPublicSchedule } from "../services/scheduleService";
+import {
+  getPublicSettings,
+  type PublicSettings,
+} from "../services/publicSettingsService";
 
 type ScheduleStatus =
   | "scheduled"
@@ -571,6 +577,36 @@ const horarioThemeCss = `
       radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
       linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
   }
+
+  .sgames-schedule-twitch-card {
+    border: 1px solid color-mix(in srgb, var(--sg-accent) 30%, transparent);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--sg-accent) 11%, transparent),
+        color-mix(in srgb, var(--sg-secondary) 10%, transparent)
+      );
+    box-shadow:
+      0 0 32px color-mix(in srgb, var(--sg-accent) 18%, transparent);
+    backdrop-filter: blur(14px);
+  }
+
+  .sgames-schedule-twitch-button {
+    border: 1px solid color-mix(in srgb, var(--sg-accent) 46%, transparent);
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--sg-accent) 88%, #ffffff 12%),
+        color-mix(in srgb, var(--sg-secondary) 82%, #ffffff 18%)
+      );
+    color: #ffffff;
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--sg-accent) 24%, transparent);
+  }
+
+  .sgames-schedule-twitch-button:hover {
+    filter: brightness(1.12);
+  }
 `;
 
 export default function HorarioPage() {
@@ -589,6 +625,9 @@ export default function HorarioPage() {
   const [eventName, setEventName] =
     useState("SGames");
 
+  const [publicSettings, setPublicSettings] =
+    useState<PublicSettings | null>(null);
+
   const [isPublished, setIsPublished] =
     useState(false);
 
@@ -604,8 +643,27 @@ export default function HorarioPage() {
   );
 
   useEffect(() => {
-    loadPublicSchedule();
+    loadInitialData();
   }, []);
+
+  async function loadInitialData() {
+    await Promise.all([
+      loadPublicSchedule(),
+      loadPublicSettings(),
+    ]);
+  }
+
+  async function loadPublicSettings() {
+    try {
+      const settings =
+        await getPublicSettings();
+
+      setPublicSettings(settings);
+    } catch (error) {
+      console.error(error);
+      setPublicSettings(null);
+    }
+  }
 
   useEffect(() => {
   const interval =
@@ -787,6 +845,12 @@ const mappedEntries =
     setSelectedPlatform("todos");
   }
 
+  const twitchUrl =
+    publicSettings?.twitchUrl?.trim();
+
+  const hasTwitchUrl =
+    Boolean(twitchUrl);
+
   if (loading) {
     return (
       <div className="sgames-schedule-page min-h-screen py-12">
@@ -824,6 +888,39 @@ const mappedEntries =
               El staff está preparando el programa oficial del evento.
             </p>
           </div>
+
+          {hasTwitchUrl && (
+            <Card className="sgames-schedule-twitch-card mx-auto mb-6 max-w-2xl">
+              <CardContent className="flex flex-col gap-4 p-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--sg-accent)]">
+                    Transmisión oficial
+                  </p>
+
+                  <h2 className="mt-2 text-2xl font-black text-[var(--sg-text)]">
+                    Mira el directo en Twitch
+                  </h2>
+
+                  <p className="mt-2 text-sm text-[var(--sg-muted-text)]">
+                    Aunque el horario todavía no esté publicado, puedes ir al canal oficial de Super Games.
+                  </p>
+                </div>
+
+                <a
+                  href={twitchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0"
+                >
+                  <Button className="sgames-schedule-twitch-button w-full md:w-auto">
+                    <Twitch className="mr-2 h-5 w-5" />
+                    Ir al Twitch
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="mx-auto max-w-2xl border-yellow-500/40 bg-yellow-500/10 shadow-[0_0_30px_rgba(234,179,8,0.08)]">
             <CardContent className="p-10 text-center">
@@ -907,6 +1004,45 @@ const mappedEntries =
             </p>
           </CardContent>
         </Card>
+
+        {hasTwitchUrl && (
+          <Card className="sgames-schedule-twitch-card mb-8">
+            <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--sg-accent)_14%,transparent)] text-[var(--sg-accent)]">
+                  <Twitch className="h-6 w-6" />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--sg-accent)]">
+                    Transmisión oficial
+                  </p>
+
+                  <h2 className="mt-1 text-2xl font-black text-[var(--sg-text)]">
+                    Sigue el evento en Twitch
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm text-[var(--sg-muted-text)]">
+                    Abre el canal oficial de Super Games para ver el directo mientras consultas el horario.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={twitchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0"
+              >
+                <Button className="sgames-schedule-twitch-button w-full md:w-auto">
+                  <Twitch className="mr-2 h-5 w-5" />
+                  Ver directo
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filters */}
         <Card className="mb-8 border-[var(--sg-border)] bg-[color-mix(in_srgb,var(--sg-surface)_70%,transparent)] backdrop-blur-sm">
