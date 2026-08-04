@@ -371,6 +371,10 @@ export default function AdminConfiguracion() {
         new Event("sgames:admin-theme-refresh")
       );
 
+      window.dispatchEvent(
+        new Event("sgames:season-theme-updated")
+      );
+
       toast.success(
         "Configuración del evento guardada"
       );
@@ -409,6 +413,14 @@ export default function AdminConfiguracion() {
         nextActiveStatus
           ? "Evento activado para el público"
           : "Evento desactivado para el público"
+      );
+
+      window.dispatchEvent(
+        new Event("sgames:admin-theme-refresh")
+      );
+
+      window.dispatchEvent(
+        new Event("sgames:season-theme-updated")
       );
 
       await loadConfiguration();

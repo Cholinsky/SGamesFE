@@ -412,10 +412,34 @@ export function useAdminSeasonTheme() {
       }
     }
 
+    function handleThemeRefresh() {
+      loadTheme();
+    }
+
     loadTheme();
+
+    window.addEventListener(
+      "sgames:admin-theme-refresh",
+      handleThemeRefresh
+    );
+
+    window.addEventListener(
+      "sgames:season-theme-updated",
+      handleThemeRefresh
+    );
 
     return () => {
       isMounted = false;
+
+      window.removeEventListener(
+        "sgames:admin-theme-refresh",
+        handleThemeRefresh
+      );
+
+      window.removeEventListener(
+        "sgames:season-theme-updated",
+        handleThemeRefresh
+      );
     };
   }, []);
 }

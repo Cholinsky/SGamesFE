@@ -19,12 +19,18 @@ export type PublicDesignTheme = {
 export async function getActiveDesignTheme() {
   const response =
     await fetch(
-      `${API_URL}/DesignThemes/active`
+      `${API_URL}/DesignThemes/active?t=${Date.now()}`,
+      {
+        cache: "no-store",
+      }
     );
 
   if (!response.ok) {
+    const error =
+      await response.text();
+
     throw new Error(
-      "Error loading active design theme"
+      error || "Error loading active design theme"
     );
   }
 
