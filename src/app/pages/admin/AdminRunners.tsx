@@ -44,6 +44,7 @@ import {
   type RunnerSocialLinkPayload,
 } from "../../services/runnerProfileService";
 import { getSocialNetworks } from "../../services/socialNetworkService";
+import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 
 type SocialNetworkCatalog = {
   id: string;
@@ -107,6 +108,7 @@ function formatDate(value?: string | null) {
 }
 
 export default function AdminRunners() {
+  useAdminSeasonTheme();
   const [runners, setRunners] =
     useState<RunnerProfile[]>([]);
 
@@ -424,14 +426,14 @@ export default function AdminRunners() {
 
   if (loading) {
     return (
-      <div className="text-white">
+      <div className="sgames-admin-page text-[var(--sg-text)]">
         Cargando runners...
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="sgames-admin-page space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="mb-2 text-3xl font-bold text-white">

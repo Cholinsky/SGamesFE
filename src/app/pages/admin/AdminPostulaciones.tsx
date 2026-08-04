@@ -54,6 +54,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 
 type ScheduleDay = {
   id: string;
@@ -307,6 +308,7 @@ function formatAvailabilityRange(
 }
 
 export default function AdminPostulaciones() {
+  useAdminSeasonTheme();
   const [scheduleDays, setScheduleDays] =
     useState<ScheduleDay[]>([]);
 
@@ -593,7 +595,7 @@ export default function AdminPostulaciones() {
     ).sort();
 
   return (
-    <div className="space-y-6">
+    <div className="sgames-admin-page space-y-6">
       {/* Header */}
       <div>
         <h1 className="mb-2 text-3xl font-bold text-white">

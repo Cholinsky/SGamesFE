@@ -33,6 +33,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 
 type DashboardWeeklyActivity = {
   day: string;
@@ -73,9 +74,9 @@ type DashboardStats = {
 };
 
 const chartColors = [
-  "#22d3ee",
-  "#8b5cf6",
-  "#ec4899",
+  "var(--sg-primary)",
+  "var(--sg-secondary)",
+  "var(--sg-accent)",
   "#10b981",
   "#f59e0b",
   "#ef4444",
@@ -168,6 +169,7 @@ function hasActivityData(
 }
 
 export default function AdminDashboard() {
+  useAdminSeasonTheme();
   const [stats, setStats] =
     useState<DashboardStats | null>(
       null
@@ -205,7 +207,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="text-white">
+      <div className="sgames-admin-page text-[var(--sg-text)]">
         Cargando dashboard...
       </div>
     );
@@ -279,7 +281,7 @@ export default function AdminDashboard() {
     );
 
   return (
-    <div className="space-y-6">
+    <div className="sgames-admin-page space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>

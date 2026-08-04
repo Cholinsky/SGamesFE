@@ -60,6 +60,7 @@ import {
   showPost,
   updatePost,
 } from "../../services/postService";
+import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 
 type PostListItem = {
   id: string;
@@ -162,6 +163,7 @@ function toDateInputValue(dateValue?: string | null) {
 }
 
 export default function AdminPublicaciones() {
+  useAdminSeasonTheme();
   const [posts, setPosts] =
     useState<PostListItem[]>([]);
 
@@ -437,7 +439,7 @@ export default function AdminPublicaciones() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="sgames-admin-page space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>

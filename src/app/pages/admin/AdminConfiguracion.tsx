@@ -44,6 +44,7 @@ import {
   getDesignThemes,
   type DesignTheme,
 } from "../../services/designThemeService";
+import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 
 type EventConfig = {
   id: string;
@@ -104,6 +105,7 @@ function normalizeText(
 }
 
 export default function AdminConfiguracion() {
+  useAdminSeasonTheme();
   const [eventConfig, setEventConfig] =
     useState<EventConfig>({
       id: "",
@@ -362,6 +364,10 @@ export default function AdminConfiguracion() {
         eventConfig.seasonKey
       );
 
+      window.dispatchEvent(
+        new Event("sgames:admin-theme-refresh")
+      );
+
       toast.success(
         "Configuración del evento guardada"
       );
@@ -482,7 +488,7 @@ export default function AdminConfiguracion() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="sgames-admin-page space-y-6">
         <div>
           <h1 className="mb-2 text-3xl font-bold text-white">
             Configuración
@@ -503,7 +509,7 @@ export default function AdminConfiguracion() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="sgames-admin-page space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
