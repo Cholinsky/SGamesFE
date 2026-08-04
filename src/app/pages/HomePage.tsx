@@ -61,6 +61,20 @@ type PublicRunnerProfile = {
 };
 
 
+type PublicEvent = {
+  id: string;
+  name?: string | null;
+  description?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  isActive?: boolean;
+  isPublished?: boolean;
+  applicationsOpen?: boolean;
+  publicRunsVisible?: boolean;
+  seasonKey?: string | null;
+};
+
+
 type SeasonAssetKey =
   | "Summer"
   | "Fall"
@@ -173,7 +187,166 @@ function getPostPreview(
   return `${cleanContent.slice(0, 170)}...`;
 }
 
+function parseApiDateOnly(
+  value?: string | null
+) {
+  if (!value) {
+    return null;
+  }
+
+  const datePart =
+    value.split("T")[0];
+
+  const parts =
+    datePart
+      .split("-")
+      .map((part) => Number(part));
+
+  if (
+    parts.length !== 3 ||
+    parts.some((part) => Number.isNaN(part))
+  ) {
+    return null;
+  }
+
+  const [
+    year,
+    month,
+    day,
+  ] = parts;
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+}
+
+function getMonthName(
+  date: Date
+) {
+  return date.toLocaleDateString(
+    "es-MX",
+    {
+      month: "long",
+    }
+  );
+}
+
+function formatEventDateRange(
+  startDate?: string | null,
+  endDate?: string | null
+) {
+  const start =
+    parseApiDateOnly(startDate);
+
+  const end =
+    parseApiDateOnly(endDate);
+
+  if (!start && !end) {
+    return "Fecha por confirmar";
+  }
+
+  if (start && !end) {
+    return start.toLocaleDateString(
+      "es-MX",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }
+    );
+  }
+
+  if (!start && end) {
+    return end.toLocaleDateString(
+      "es-MX",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }
+    );
+  }
+
+  if (!start || !end) {
+    return "Fecha por confirmar";
+  }
+
+  const sameDay =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth() &&
+    start.getDate() === end.getDate();
+
+  if (sameDay) {
+    return start.toLocaleDateString(
+      "es-MX",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }
+    );
+  }
+
+  const sameMonthAndYear =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth();
+
+  if (sameMonthAndYear) {
+    return `${start.getDate()} - ${end.getDate()} ${getMonthName(end)} ${end.getFullYear()}`;
+  }
+
+  const sameYear =
+    start.getFullYear() === end.getFullYear();
+
+  if (sameYear) {
+    return `${start.getDate()} ${getMonthName(start)} - ${end.getDate()} ${getMonthName(end)} ${end.getFullYear()}`;
+  }
+
+  return `${start.getDate()} ${getMonthName(start)} ${start.getFullYear()} - ${end.getDate()} ${getMonthName(end)} ${end.getFullYear()}`;
+}
+
+function formatEventDateDescription(
+  activeEvent: PublicEvent | null
+) {
+  const start =
+    parseApiDateOnly(activeEvent?.startDate);
+
+  const end =
+    parseApiDateOnly(activeEvent?.endDate);
+
+  if (!start || !end) {
+    return activeEvent?.description?.trim()
+      ? activeEvent.description
+      : "La fecha oficial se actualizará cuando el staff la confirme.";
+  }
+
+  const dayDifference =
+    Math.round(
+      (end.getTime() - start.getTime()) /
+      (1000 * 60 * 60 * 24)
+    ) + 1;
+
+  const safeDays =
+    Math.max(
+      dayDifference,
+      1
+    );
+
+  if (activeEvent?.description?.trim()) {
+    return activeEvent.description;
+  }
+
+  return safeDays === 1
+    ? "Una jornada dedicada a runs, comunidad y juegos variados."
+    : `${safeDays} días dedicados a runs, comunidad y juegos variados.`;
+}
+
 export default function HomePage() {
+  const [activeEvent, setActiveEvent] =
+    useState<PublicEvent | null>(null);
+
   const [applicationsOpen, setApplicationsOpen] =
     useState(false);
 
@@ -262,11 +435,13 @@ async function loadPublicRunners() {
         await getActivePublicEvent();
 
       if (!activeEvent) {
+        setActiveEvent(null);
         setHasActivePublicEvent(false);
         setApplicationsOpen(false);
         return;
       }
 
+      setActiveEvent(activeEvent);
       setHasActivePublicEvent(true);
       setApplicationsOpen(
         activeEvent.applicationsOpen ?? false
@@ -328,9 +503,14 @@ async function loadPublicRunners() {
     {
       icon: CalendarDays,
       title: "Fecha del evento",
-      value: "31 julio - 2 agosto 2026",
+      value: formatEventDateRange(
+        activeEvent?.startDate,
+        activeEvent?.endDate
+      ),
       description:
-        "Tres días dedicados a runs, comunidad y juegos variados.",
+        formatEventDateDescription(
+          activeEvent
+        ),
     },
     {
       icon: ClipboardCheck,
@@ -345,9 +525,12 @@ async function loadPublicRunners() {
     {
       icon: Clock3,
       title: "Horario",
-      value: "Publicado por el staff",
-      description:
-        "El calendario se actualizará conforme se aprueben y acomoden las runs.",
+      value: activeEvent?.isPublished
+        ? "Publicado por el staff"
+        : "Pendiente de publicación",
+      description: activeEvent?.isPublished
+        ? "El calendario se actualizará conforme se aprueben y acomoden las runs."
+        : "El staff publicará el horario cuando el acomodo esté listo.",
     },
     {
       icon: Sparkles,
