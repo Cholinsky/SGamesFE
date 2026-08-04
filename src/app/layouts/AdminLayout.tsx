@@ -45,8 +45,154 @@ import {
   markAllAdminNotificationsRead,
   type AdminNotificationItem,
 } from "../services/adminNotificationService";
+import { useAdminSeasonTheme } from "../hooks/useAdminSeasonTheme";
 
 
+
+
+const adminLayoutThemeCss = `
+  .sgames-admin-layout {
+    background:
+      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 12%, transparent), transparent 30rem),
+      radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 10%, transparent), transparent 32rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 50%, var(--sg-background) 50%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+    color: var(--sg-text);
+  }
+
+  .sgames-admin-sidebar {
+    border-color: var(--sg-border);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--sg-surface) 88%, #000000 12%),
+        color-mix(in srgb, var(--sg-background) 92%, #000000 8%)
+      );
+    box-shadow:
+      18px 0 45px color-mix(in srgb, var(--sg-background) 78%, transparent);
+  }
+
+  .sgames-admin-sidebar-header {
+    border-color: var(--sg-border);
+  }
+
+  .sgames-admin-logo-text {
+    background:
+      linear-gradient(
+        90deg,
+        var(--sg-primary),
+        var(--sg-secondary),
+        var(--sg-accent)
+      );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .sgames-admin-nav-link {
+    color: var(--sg-muted-text);
+  }
+
+  .sgames-admin-nav-link:hover {
+    background: color-mix(in srgb, var(--sg-primary) 8%, transparent);
+    color: var(--sg-text);
+  }
+
+  .sgames-admin-nav-link-active {
+    border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--sg-primary) 15%, transparent),
+        color-mix(in srgb, var(--sg-secondary) 10%, transparent)
+      );
+    color: var(--sg-primary);
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--sg-primary) 10%, transparent);
+  }
+
+  .sgames-admin-sidebar-footer {
+    border-color: var(--sg-border);
+  }
+
+  .sgames-admin-header {
+    border-color: var(--sg-border);
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--sg-surface) 90%, #000000 10%),
+        color-mix(in srgb, var(--sg-background) 92%, #000000 8%)
+      );
+    box-shadow:
+      0 12px 34px color-mix(in srgb, var(--sg-background) 62%, transparent);
+    backdrop-filter: blur(14px);
+  }
+
+  .sgames-admin-main {
+    background:
+      radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--sg-primary) 8%, transparent), transparent 26rem),
+      radial-gradient(circle at 90% 8%, color-mix(in srgb, var(--sg-accent) 7%, transparent), transparent 30rem),
+      transparent;
+  }
+
+  .sgames-admin-icon-button {
+    color: var(--sg-muted-text);
+  }
+
+  .sgames-admin-icon-button:hover {
+    background: color-mix(in srgb, var(--sg-primary) 9%, transparent);
+    color: var(--sg-text);
+  }
+
+  .sgames-admin-avatar-fallback {
+    background:
+      linear-gradient(
+        135deg,
+        var(--sg-primary),
+        var(--sg-secondary),
+        var(--sg-accent)
+      );
+    color: #ffffff;
+  }
+
+  .sgames-admin-dropdown {
+    border-color: var(--sg-border) !important;
+    background: color-mix(in srgb, var(--sg-surface) 92%, #000000 8%) !important;
+    color: var(--sg-text) !important;
+    box-shadow:
+      0 20px 50px color-mix(in srgb, var(--sg-background) 78%, transparent),
+      0 0 26px color-mix(in srgb, var(--sg-accent) 12%, transparent);
+  }
+
+  .sgames-admin-dropdown-separator {
+    background: var(--sg-border) !important;
+  }
+
+  .sgames-admin-notification-item:focus,
+  .sgames-admin-notification-item:hover {
+    background: color-mix(in srgb, var(--sg-primary) 8%, transparent) !important;
+  }
+
+  .sgames-admin-mobile-overlay {
+    background: color-mix(in srgb, var(--sg-background) 72%, #000000 28%);
+    backdrop-filter: blur(5px);
+  }
+
+  [data-admin-season-theme="Autumn"] .sgames-admin-layout {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.15), transparent 30rem),
+      radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.13), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.07), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 62%, var(--sg-background) 38%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+  }
+
+  [data-admin-season-theme="Winter"] .sgames-admin-layout {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.14), transparent 30rem),
+      radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.14), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.07), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 62%, var(--sg-background) 38%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+  }
+`;
 
 type AdminNotificationSummary = {
   total: number;
@@ -58,6 +204,8 @@ type AdminNotificationSummary = {
 };
 
 export function AdminLayout() {
+  useAdminSeasonTheme();
+
   const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] =
@@ -215,7 +363,7 @@ async function handleMarkAllRead() {
 
     if (type === "approvedWithoutSchedule") {
       return (
-        <Calendar className="h-4 w-4 text-cyan-400" />
+        <Calendar className="h-4 w-4 text-[var(--sg-primary)]" />
       );
     }
 
@@ -231,13 +379,14 @@ async function handleMarkAllRead() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="sgames-admin-layout flex h-screen overflow-hidden">
+      <style>{adminLayoutThemeCss}</style>
       {/* Sidebar Desktop */}
-      <aside className="hidden w-64 border-r border-gray-800 bg-gray-900 lg:block">
+      <aside className="sgames-admin-sidebar hidden w-64 border-r lg:block">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center border-b border-gray-800 px-6">
-            <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-xl font-bold text-transparent">
+          <div className="sgames-admin-sidebar-header flex h-16 items-center border-b px-6">
+            <span className="sgames-admin-logo-text text-xl font-bold">
               SGames Admin
             </span>
           </div>
@@ -251,10 +400,10 @@ async function handleMarkAllRead() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+                  className={`sgames-admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
                     isActive(item.path)
-                      ? "bg-cyan-500/10 text-cyan-400"
-                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                      ? "sgames-admin-nav-link-active"
+                      : ""
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -265,7 +414,7 @@ async function handleMarkAllRead() {
           </nav>
 
           {/* Logout Desktop */}
-          <div className="border-t border-gray-800 p-4">
+          <div className="sgames-admin-sidebar-footer border-t p-4">
             <Button
               variant="ghost"
               onClick={handleLogout}
@@ -282,17 +431,17 @@ async function handleMarkAllRead() {
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="sgames-admin-mobile-overlay absolute inset-0"
             onClick={() =>
               setSidebarOpen(false)
             }
           />
 
-          <aside className="absolute left-0 top-0 h-full w-64 border-r border-gray-800 bg-gray-900">
+          <aside className="sgames-admin-sidebar absolute left-0 top-0 h-full w-64 border-r">
             <div className="flex h-full flex-col">
               {/* Logo */}
-              <div className="flex h-16 items-center justify-between border-b border-gray-800 px-6">
-                <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-xl font-bold text-transparent">
+              <div className="sgames-admin-sidebar-header flex h-16 items-center justify-between border-b px-6">
+                <span className="sgames-admin-logo-text text-xl font-bold">
                   SGames Admin
                 </span>
 
@@ -302,7 +451,7 @@ async function handleMarkAllRead() {
                     setSidebarOpen(false)
                   }
                 >
-                  <X className="h-6 w-6 text-gray-400" />
+                  <X className="h-6 w-6 text-[var(--sg-muted-text)]" />
                 </button>
               </div>
 
@@ -318,10 +467,10 @@ async function handleMarkAllRead() {
                       onClick={() =>
                         setSidebarOpen(false)
                       }
-                      className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+                      className={`sgames-admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
                         isActive(item.path)
-                          ? "bg-cyan-500/10 text-cyan-400"
-                          : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                          ? "sgames-admin-nav-link-active"
+                          : ""
                       }`}
                     >
                       <Icon className="h-5 w-5" />
@@ -332,7 +481,7 @@ async function handleMarkAllRead() {
               </nav>
 
               {/* Logout Mobile */}
-              <div className="border-t border-gray-800 p-4">
+              <div className="sgames-admin-sidebar-footer border-t p-4">
                 <Button
                   variant="ghost"
                   onClick={handleLogout}
@@ -350,11 +499,11 @@ async function handleMarkAllRead() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-4 lg:px-6">
+        <header className="sgames-admin-header flex h-16 items-center justify-between border-b px-4 lg:px-6">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="sgames-admin-icon-button lg:hidden"
             onClick={() =>
               setSidebarOpen(true)
             }
@@ -370,13 +519,13 @@ async function handleMarkAllRead() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="relative text-gray-300 hover:bg-gray-800 hover:text-white"
+                    className="sgames-admin-icon-button relative"
                     title="Notificaciones"
                   >
                     <Bell className="h-5 w-5" />
 
                     {notifications.total > 0 && (
-                      <Badge className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0 text-xs text-white">
+                      <Badge className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0 text-xs text-[var(--sg-text)]">
                         {notifications.total > 99
                           ? "99+"
                           : notifications.total}
@@ -387,9 +536,9 @@ async function handleMarkAllRead() {
 
                 <DropdownMenuContent
                   align="end"
-                  className="w-80 border-gray-800 bg-gray-900 text-white"
+                  className="sgames-admin-dropdown w-80"
                 >
-                  <DropdownMenuLabel className="flex items-center justify-between gap-3 text-gray-300">
+                  <DropdownMenuLabel className="flex items-center justify-between gap-3 text-[var(--sg-muted-text)]">
                     <span>Notificaciones</span>
 
                     {notifications.items.length > 0 ? (
@@ -398,7 +547,7 @@ async function handleMarkAllRead() {
                         size="sm"
                         variant="ghost"
                         onClick={handleMarkAllRead}
-                        className="h-7 px-2 text-xs text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
+                        className="h-7 px-2 text-xs text-[var(--sg-primary)] hover:bg-[color-mix(in_srgb,var(--sg-primary)_9%,transparent)] hover:text-[var(--sg-accent)]"
                       >
                         Marcar leídas
                       </Button>
@@ -409,17 +558,17 @@ async function handleMarkAllRead() {
                     )}
                   </DropdownMenuLabel>
 
-                  <DropdownMenuSeparator className="bg-gray-800" />
+                  <DropdownMenuSeparator className="sgames-admin-dropdown-separator" />
 
                   {notifications.items.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
                       <CheckCircle2 className="h-8 w-8 text-green-400" />
 
-                      <p className="font-medium text-white">
+                      <p className="font-medium text-[var(--sg-text)]">
                         Sin pendientes
                       </p>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
                         No hay alertas administrativas por ahora.
                       </p>
                     </div>
@@ -427,7 +576,7 @@ async function handleMarkAllRead() {
                     notifications.items.map((item) => (
                       <DropdownMenuItem
                         key={item.type}
-                        className="cursor-pointer focus:bg-gray-800"
+                        className="sgames-admin-notification-item cursor-pointer"
                       >
                         <Link
                           to={item.path}
@@ -442,16 +591,16 @@ async function handleMarkAllRead() {
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">
-                              <p className="font-medium text-white">
+                              <p className="font-medium text-[var(--sg-text)]">
                                 {item.title}
                               </p>
 
-                              <Badge className="bg-cyan-500/20 text-cyan-300">
+                              <Badge className="bg-[color-mix(in_srgb,var(--sg-primary)_16%,transparent)] text-[var(--sg-primary)]">
                                 {item.count}
                               </Badge>
                             </div>
 
-                            <p className="mt-1 text-sm leading-snug text-gray-400">
+                            <p className="mt-1 text-sm leading-snug text-[var(--sg-muted-text)]">
                               {item.description}
                             </p>
                           </div>
@@ -467,23 +616,23 @@ async function handleMarkAllRead() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-3"
+                    className="sgames-admin-icon-button flex items-center gap-3"
                   >
                     <Avatar>
                       <AvatarImage src="" />
 
-                      <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-purple-600">
+                      <AvatarFallback className="sgames-admin-avatar-fallback">
                         <User className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="hidden text-left md:block">
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-[var(--sg-text)]">
                         {user?.nombre ||
                           "Administrador"}
                       </p>
 
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-[var(--sg-muted-text)]">
                         {user?.email ||
                           "admin@sgames.com"}
                       </p>
@@ -493,13 +642,13 @@ async function handleMarkAllRead() {
 
                 <DropdownMenuContent
                   align="end"
-                  className="w-56 border-gray-800 bg-gray-900"
+                  className="sgames-admin-dropdown w-56"
                 >
-                  <DropdownMenuLabel className="text-gray-400">
+                  <DropdownMenuLabel className="text-[var(--sg-muted-text)]">
                     Mi Cuenta
                   </DropdownMenuLabel>
 
-                  <DropdownMenuSeparator className="bg-gray-800" />
+                  <DropdownMenuSeparator className="sgames-admin-dropdown-separator" />
 
                   <DropdownMenuItem
                     onClick={handleLogout}
@@ -515,11 +664,10 @@ async function handleMarkAllRead() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 lg:p-6">
+        <main className="sgames-admin-main flex-1 overflow-auto p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
     </div>
   );
 }
-
