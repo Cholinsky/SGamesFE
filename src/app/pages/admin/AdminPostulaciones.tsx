@@ -14,6 +14,9 @@ import {
   approveApplication,
   rejectApplication,
   deleteApplication,
+  getRunnerApplicationHistory,
+  createApplicationFromHistory,
+  type AdminRunnerHistory,
 } from "../../services/applicationService";
 
 import {
@@ -126,6 +129,18 @@ type ApplicationDetail = {
   socialNetworks: SocialNetworkDetail[];
   availabilities: AvailabilityDetail[];
   participants?: ApplicationParticipantDetail[];
+};
+
+type PostulacionesPanel =
+  | "recibidas"
+  | "historial";
+
+type CreateFromHistoryForm = {
+  status: "Pending" | "Approved";
+  estimatedTimeMinutes: string;
+  youtubeUrl: string;
+  aspectRatio: string;
+  notes: string;
 };
 
 function parseLocalDate(dayDate: string) {
@@ -345,8 +360,39 @@ export default function AdminPostulaciones() {
   const [deletingApplicationId, setDeletingApplicationId] =
     useState<string | null>(null);
 
+  const [activePanel, setActivePanel] =
+    useState<PostulacionesPanel>("recibidas");
+
+  const [runnerHistory, setRunnerHistory] =
+    useState<AdminRunnerHistory[]>([]);
+
+  const [runnerHistoryLoading, setRunnerHistoryLoading] =
+    useState(false);
+
+  const [runnerHistorySearch, setRunnerHistorySearch] =
+    useState("");
+
+  const [selectedHistoryRunnerKey, setSelectedHistoryRunnerKey] =
+    useState("");
+
+  const [selectedHistoryApplicationId, setSelectedHistoryApplicationId] =
+    useState("");
+
+  const [creatingFromHistory, setCreatingFromHistory] =
+    useState(false);
+
+  const [historyForm, setHistoryForm] =
+    useState<CreateFromHistoryForm>({
+      status: "Pending",
+      estimatedTimeMinutes: "",
+      youtubeUrl: "",
+      aspectRatio: "",
+      notes: "",
+    });
+
   useEffect(() => {
     loadApplications();
+    loadRunnerHistory();
   }, []);
 
   async function loadApplications() {
@@ -359,6 +405,200 @@ export default function AdminPostulaciones() {
       toast.error(
         "No se pudieron cargar las postulaciones"
       );
+    }
+  }
+
+  async function loadRunnerHistory() {
+    try {
+      setRunnerHistoryLoading(true);
+
+      const data =
+        await getRunnerApplicationHistory();
+
+      setRunnerHistory(
+        Array.isArray(data)
+          ? data
+          : []
+      );
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "No se pudo cargar el historial de runners"
+      );
+    } finally {
+      setRunnerHistoryLoading(false);
+    }
+  }
+
+  function updateHistoryForm(
+    field: keyof CreateFromHistoryForm,
+    value: string
+  ) {
+    setHistoryForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function resetHistoryForm() {
+    setHistoryForm({
+      status: "Pending",
+      estimatedTimeMinutes: "",
+      youtubeUrl: "",
+      aspectRatio: "",
+      notes: "",
+    });
+  }
+
+  function handleSelectHistoryRunner(
+    runnerKey: string
+  ) {
+    setSelectedHistoryRunnerKey(
+      runnerKey
+    );
+
+    setSelectedHistoryApplicationId(
+      ""
+    );
+
+    resetHistoryForm();
+  }
+
+  function handleSelectHistoryRun(
+    applicationId: string
+  ) {
+    setSelectedHistoryApplicationId(
+      applicationId
+    );
+
+    const selectedRunner =
+      runnerHistory.find(
+        (runner) =>
+          runner.runnerKey ===
+          selectedHistoryRunnerKey
+      );
+
+    const selectedRun =
+      selectedRunner?.runs.find(
+        (run) =>
+          run.applicationId ===
+          applicationId
+      );
+
+    if (!selectedRun) {
+      resetHistoryForm();
+      return;
+    }
+
+    setHistoryForm({
+      status: "Pending",
+      estimatedTimeMinutes:
+        String(
+          selectedRun.estimatedTimeMinutes ??
+          ""
+        ),
+      youtubeUrl:
+        selectedRun.youtubeUrl ?? "",
+      aspectRatio:
+        selectedRun.aspectRatio ?? "",
+      notes: "",
+    });
+  }
+
+  async function handleCreateFromHistory() {
+    const selectedRun =
+      selectedHistoryRun;
+
+    if (!selectedRun) {
+      toast.error(
+        "Selecciona una run del historial"
+      );
+      return;
+    }
+
+    const estimatedMinutes =
+      Number(
+        historyForm.estimatedTimeMinutes
+      );
+
+    if (
+      !Number.isFinite(
+        estimatedMinutes
+      ) ||
+      estimatedMinutes <= 0
+    ) {
+      toast.error(
+        "El tiempo estimado debe ser mayor a 0"
+      );
+      return;
+    }
+
+    if (
+      selectedRun.runType !== "Race" &&
+      !historyForm.youtubeUrl.trim()
+    ) {
+      toast.error(
+        "La postulación necesita video demostrativo"
+      );
+      return;
+    }
+
+    try {
+      setCreatingFromHistory(true);
+
+      await createApplicationFromHistory({
+        sourceApplicationId:
+          selectedRun.applicationId,
+        status:
+          historyForm.status,
+        estimatedTimeMinutes:
+          estimatedMinutes,
+        youtubeUrl:
+          historyForm.youtubeUrl.trim() ||
+          null,
+        aspectRatio:
+          historyForm.aspectRatio.trim() ||
+          null,
+        notes:
+          historyForm.notes.trim() ||
+          null,
+      });
+
+      toast.success(
+        historyForm.status === "Approved"
+          ? "Postulación creada y aprobada"
+          : "Postulación creada como pendiente"
+      );
+
+      await Promise.all([
+        loadApplications(),
+        loadRunnerHistory(),
+      ]);
+
+      setActivePanel(
+        "recibidas"
+      );
+
+      setSelectedHistoryRunnerKey(
+        ""
+      );
+
+      setSelectedHistoryApplicationId(
+        ""
+      );
+
+      resetHistoryForm();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear la postulación"
+      );
+    } finally {
+      setCreatingFromHistory(false);
     }
   }
 
@@ -389,6 +629,43 @@ export default function AdminPostulaciones() {
         matchesPlatform
       );
     });
+
+  const filteredRunnerHistory =
+    runnerHistory.filter((runner) => {
+      const term =
+        runnerHistorySearch.trim().toLowerCase();
+
+      if (!term) {
+        return true;
+      }
+
+      const haystack =
+        [
+          runner.runnerName,
+          runner.email ?? "",
+          runner.discordUser ?? "",
+          runner.country ?? "",
+          ...runner.runs.map((run) =>
+            `${run.game} ${run.category} ${run.platform}`
+          ),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+      return haystack.includes(term);
+    });
+
+  const selectedHistoryRunner =
+    runnerHistory.find(
+      (runner) =>
+        runner.runnerKey === selectedHistoryRunnerKey
+    ) ?? null;
+
+  const selectedHistoryRun =
+    selectedHistoryRunner?.runs.find(
+      (run) =>
+        run.applicationId === selectedHistoryApplicationId
+    ) ?? null;
 
   const handleStatusChange = async (
     id: string,
@@ -597,15 +874,356 @@ export default function AdminPostulaciones() {
   return (
     <div className="sgames-admin-page space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
-          Gestión de Postulaciones
-        </h1>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="mb-2 text-3xl font-bold text-[var(--sg-text)]">
+            Gestión de Postulaciones
+          </h1>
 
-        <p className="text-[var(--sg-muted-text)]">
-          Administra todas las postulaciones del evento
-        </p>
+          <p className="text-[var(--sg-muted-text)]">
+            Administra las postulaciones recibidas y crea nuevas desde el historial de runners.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Button
+            type="button"
+            onClick={() =>
+              setActivePanel("recibidas")
+            }
+            className={
+              activePanel === "recibidas"
+                ? "sgames-admin-primary-button"
+                : "border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-hover-bg)]"
+            }
+          >
+            Postulaciones recibidas
+          </Button>
+
+          <Button
+            type="button"
+            onClick={() =>
+              setActivePanel("historial")
+            }
+            className={
+              activePanel === "historial"
+                ? "sgames-admin-primary-button"
+                : "border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-hover-bg)]"
+            }
+          >
+            Postular runner existente
+          </Button>
+        </div>
       </div>
+
+      {activePanel === "historial" && (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
+            <CardContent className="space-y-4 p-6">
+              <div>
+                <h2 className="flex items-center gap-2 text-xl font-bold text-[var(--sg-text)]">
+                  <Users className="h-5 w-5 text-[var(--sg-primary)]" />
+                  Runners con historial
+                </h2>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  Selecciona un runner para ver los juegos que ya presentó.
+                </p>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--sg-admin-muted-soft)]" />
+
+                <Input
+                  placeholder="Buscar runner, correo o juego..."
+                  value={runnerHistorySearch}
+                  onChange={(event) =>
+                    setRunnerHistorySearch(event.target.value)
+                  }
+                  className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] pl-10 text-[var(--sg-text)]"
+                />
+              </div>
+
+              <div className="max-h-[560px] space-y-2 overflow-y-auto pr-1">
+                {runnerHistoryLoading ? (
+                  <p className="rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4 text-sm text-[var(--sg-muted-text)]">
+                    Cargando historial...
+                  </p>
+                ) : filteredRunnerHistory.length === 0 ? (
+                  <p className="rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4 text-sm text-[var(--sg-muted-text)]">
+                    No hay runners con postulaciones previas.
+                  </p>
+                ) : (
+                  filteredRunnerHistory.map((runner) => (
+                    <button
+                      key={runner.runnerKey}
+                      type="button"
+                      onClick={() =>
+                        handleSelectHistoryRunner(runner.runnerKey)
+                      }
+                      className={`w-full rounded-xl border p-4 text-left transition ${
+                        selectedHistoryRunnerKey === runner.runnerKey
+                          ? "border-[var(--sg-primary)] bg-[var(--sg-admin-primary-soft)]"
+                          : "border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] hover:bg-[var(--sg-admin-hover-bg)]"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-[var(--sg-text)]">
+                            {runner.runnerName}
+                          </p>
+
+                          <p className="truncate text-xs text-[var(--sg-muted-text)]">
+                            {runner.email || "Sin correo registrado"}
+                          </p>
+                        </div>
+
+                        <Badge className="shrink-0 bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
+                          {runner.totalRuns} runs
+                        </Badge>
+                      </div>
+
+                      <p className="mt-2 text-xs text-[var(--sg-muted-text)]">
+                        Última postulación: {formatSubmittedDate(runner.lastSubmittedAt)}
+                      </p>
+                    </button>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
+            <CardContent className="space-y-5 p-6">
+              {!selectedHistoryRunner ? (
+                <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-8 text-center">
+                  <div>
+                    <CalendarDays className="mx-auto mb-3 h-10 w-10 text-[var(--sg-primary)]" />
+
+                    <h2 className="text-xl font-bold text-[var(--sg-text)]">
+                      Selecciona un runner
+                    </h2>
+
+                    <p className="mt-2 max-w-md text-sm text-[var(--sg-muted-text)]">
+                      Aquí podrás elegir una run previa y crear una nueva postulación para el evento activo.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <h2 className="text-xl font-bold text-[var(--sg-text)]">
+                      {selectedHistoryRunner.runnerName}
+                    </h2>
+
+                    <p className="text-sm text-[var(--sg-muted-text)]">
+                      {selectedHistoryRunner.email || "Sin correo"} · {selectedHistoryRunner.country || "Sin país"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label className="text-[var(--sg-muted-text)]">
+                      Juego / categoría presentada
+                    </Label>
+
+                    <Select
+                      value={selectedHistoryApplicationId}
+                      onValueChange={handleSelectHistoryRun}
+                    >
+                      <SelectTrigger className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
+                        <SelectValue placeholder="Selecciona una run previa" />
+                      </SelectTrigger>
+
+                      <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
+                        {selectedHistoryRunner.runs.map((run) => (
+                          <SelectItem
+                            key={run.applicationId}
+                            value={run.applicationId}
+                          >
+                            {run.game} · {run.category} · {run.platform}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedHistoryRun && (
+                    <>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                          <p className="text-xs uppercase tracking-[0.16em] text-[var(--sg-muted-text)]">
+                            Juego base
+                          </p>
+
+                          <p className="mt-2 font-semibold text-[var(--sg-text)]">
+                            {selectedHistoryRun.game}
+                          </p>
+
+                          <p className="text-sm text-[var(--sg-muted-text)]">
+                            {selectedHistoryRun.category} · {selectedHistoryRun.platform}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+                          <p className="text-xs uppercase tracking-[0.16em] text-[var(--sg-muted-text)]">
+                            Origen
+                          </p>
+
+                          <p className="mt-2 font-semibold text-[var(--sg-text)]">
+                            {selectedHistoryRun.event}
+                          </p>
+
+                          <p className="text-sm text-[var(--sg-muted-text)]">
+                            {formatSubmittedDate(selectedHistoryRun.submittedAt)} · {getRunTypeLabel(selectedHistoryRun.runType)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <Label className="text-[var(--sg-muted-text)]">
+                            Estado inicial
+                          </Label>
+
+                          <Select
+                            value={historyForm.status}
+                            onValueChange={(value) =>
+                              updateHistoryForm(
+                                "status",
+                                value as "Pending" | "Approved"
+                              )
+                            }
+                          >
+                            <SelectTrigger className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]">
+                              <SelectValue />
+                            </SelectTrigger>
+
+                            <SelectContent className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)]">
+                              <SelectItem value="Pending">
+                                Pendiente
+                              </SelectItem>
+
+                              <SelectItem value="Approved">
+                                Aprobada
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label className="text-[var(--sg-muted-text)]">
+                            Tiempo estimado en minutos
+                          </Label>
+
+                          <Input
+                            type="number"
+                            min={1}
+                            value={historyForm.estimatedTimeMinutes}
+                            onChange={(event) =>
+                              updateHistoryForm(
+                                "estimatedTimeMinutes",
+                                event.target.value
+                              )
+                            }
+                            className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-[var(--sg-muted-text)]">
+                            Relación de pantalla
+                          </Label>
+
+                          <Input
+                            value={historyForm.aspectRatio}
+                            onChange={(event) =>
+                              updateHistoryForm(
+                                "aspectRatio",
+                                event.target.value
+                              )
+                            }
+                            placeholder="16:9, 4:3, etc."
+                            className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-[var(--sg-muted-text)]">
+                            Video demostrativo
+                          </Label>
+
+                          <Input
+                            value={historyForm.youtubeUrl}
+                            onChange={(event) =>
+                              updateHistoryForm(
+                                "youtubeUrl",
+                                event.target.value
+                              )
+                            }
+                            placeholder="YouTube o Twitch"
+                            className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-[var(--sg-muted-text)]">
+                          Notas para esta nueva postulación
+                        </Label>
+
+                        <textarea
+                          value={historyForm.notes}
+                          onChange={(event) =>
+                            updateHistoryForm(
+                              "notes",
+                              event.target.value
+                            )
+                          }
+                          rows={4}
+                          placeholder="Opcional. Si se deja vacío se conservan las notas anteriores."
+                          className="mt-1.5 w-full rounded-md border border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] px-3 py-2 text-sm text-[var(--sg-text)] outline-none"
+                        />
+                      </div>
+
+                      <div className="rounded-xl border border-yellow-500/25 bg-yellow-500/10 p-4 text-sm text-yellow-200">
+                        Esta acción crea una nueva postulación para el evento activo usando el runner, juego, categoría, plataforma, participantes y redes de la postulación base. No copia disponibilidad porque las fechas del evento pueden ser distintas.
+                      </div>
+
+                      <div className="flex flex-wrap justify-end gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedHistoryApplicationId("");
+                            resetHistoryForm();
+                          }}
+                          className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
+                        >
+                          Limpiar selección
+                        </Button>
+
+                        <Button
+                          type="button"
+                          onClick={handleCreateFromHistory}
+                          disabled={creatingFromHistory}
+                          className="sgames-admin-primary-button"
+                        >
+                          {creatingFromHistory
+                            ? "Creando..."
+                            : "Crear postulación"}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {activePanel === "recibidas" && (
+        <>
 
       {/* Filters */}
       <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
@@ -869,6 +1487,8 @@ export default function AdminPostulaciones() {
           </div>
         </CardContent>
       </Card>
+        </>
+      )}
 
       {/* Detail Dialog */}
       <Dialog

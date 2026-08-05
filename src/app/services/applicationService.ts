@@ -70,6 +70,47 @@ async function readJsonResponse(
     : null;
 }
 
+export type AdminRunnerHistoryRun = {
+  applicationId: string;
+  runnerName: string;
+  email?: string | null;
+  discordUser?: string | null;
+  country?: string | null;
+  runnerTimezone?: string | null;
+  game: string;
+  category: string;
+  platform: string;
+  runType?: string | null;
+  estimatedTimeMinutes: number;
+  estimatedTime: string;
+  aspectRatio?: string | null;
+  youtubeUrl?: string | null;
+  notes?: string | null;
+  status: string;
+  event: string;
+  submittedAt: string;
+};
+
+export type AdminRunnerHistory = {
+  runnerKey: string;
+  runnerName: string;
+  email?: string | null;
+  discordUser?: string | null;
+  country?: string | null;
+  totalRuns: number;
+  lastSubmittedAt: string;
+  runs: AdminRunnerHistoryRun[];
+};
+
+export type CreateApplicationFromHistoryPayload = {
+  sourceApplicationId: string;
+  status: "Pending" | "Approved";
+  estimatedTimeMinutes?: number;
+  youtubeUrl?: string | null;
+  aspectRatio?: string | null;
+  notes?: string | null;
+};
+
 export async function getApplications() {
   const response = await fetch(
     `${API_URL}/Applications`,
@@ -218,4 +259,50 @@ export async function getPublicApprovedApplications() {
   }
 
   return await response.json();
+}
+
+export async function getRunnerApplicationHistory() {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/admin-runner-history`,
+      {
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading runner history"
+      )
+    );
+  }
+
+  return await response.json() as AdminRunnerHistory[];
+}
+
+export async function createApplicationFromHistory(
+  payload: CreateApplicationFromHistoryPayload
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/admin-create-from-history`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error creating application from history"
+      )
+    );
+  }
+
+  return await readJsonResponse(response);
 }
