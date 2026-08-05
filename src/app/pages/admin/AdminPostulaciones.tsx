@@ -10,6 +10,7 @@ import {
 } from "../../services/scheduleService";
 import {
   getApplications,
+  getApplicationGroupsByEvent,
   getApplicationById,
   approveApplication,
   rejectApplication,
@@ -17,6 +18,8 @@ import {
   getRunnerApplicationHistory,
   createApplicationFromHistory,
   type AdminRunnerHistory,
+  type ApplicationEventGroup,
+  type EventGroupedApplication,
 } from "../../services/applicationService";
 
 import {
@@ -55,6 +58,9 @@ import {
   Trash2,
   Globe2,
   Users,
+  ChevronDown,
+  ChevronRight,
+  Archive,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
@@ -177,6 +183,113 @@ function formatSubmittedDate(dateValue: string) {
       day: "numeric",
     }
   );
+}
+
+function parseEventDate(
+  value?: string | null
+) {
+  if (!value) {
+    return null;
+  }
+
+  const cleanDate =
+    value.split("T")[0];
+
+  const [
+    year,
+    month,
+    day,
+  ] = cleanDate
+    .split("-")
+    .map(Number);
+
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day)
+  ) {
+    return null;
+  }
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+}
+
+function getMonthLabel(
+  date: Date
+) {
+  return date.toLocaleDateString(
+    "es-MX",
+    {
+      month: "long",
+    }
+  );
+}
+
+function formatEventRange(
+  startDate?: string | null,
+  endDate?: string | null
+) {
+  const start =
+    parseEventDate(startDate);
+
+  const end =
+    parseEventDate(endDate);
+
+  if (!start && !end) {
+    return "Fechas por confirmar";
+  }
+
+  if (start && !end) {
+    return start.toLocaleDateString(
+      "es-MX",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }
+    );
+  }
+
+  if (!start || !end) {
+    return "Fechas por confirmar";
+  }
+
+  const sameMonthAndYear =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth();
+
+  if (sameMonthAndYear) {
+    return `${start.getDate()} - ${end.getDate()} ${getMonthLabel(end)} ${end.getFullYear()}`;
+  }
+
+  const sameYear =
+    start.getFullYear() === end.getFullYear();
+
+  if (sameYear) {
+    return `${start.getDate()} ${getMonthLabel(start)} - ${end.getDate()} ${getMonthLabel(end)} ${end.getFullYear()}`;
+  }
+
+  return `${start.getDate()} ${getMonthLabel(start)} ${start.getFullYear()} - ${end.getDate()} ${getMonthLabel(end)} ${end.getFullYear()}`;
+}
+
+function getSeasonDisplay(
+  seasonKey?: string | null
+) {
+  switch (seasonKey) {
+    case "Winter":
+      return "Invierno";
+
+    case "Autumn":
+    case "Fall":
+      return "Otoño";
+
+    default:
+      return "Verano";
+  }
 }
 
 function formatEstimatedTime(totalMinutes: number) {
@@ -342,6 +455,12 @@ export default function AdminPostulaciones() {
   const [postulaciones, setPostulaciones] =
     useState<Postulacion[]>([]);
 
+  const [eventGroups, setEventGroups] =
+    useState<ApplicationEventGroup[]>([]);
+
+  const [expandedEventIds, setExpandedEventIds] =
+    useState<string[]>([]);
+
   const [searchTerm, setSearchTerm] =
     useState("");
 
@@ -397,15 +516,117 @@ export default function AdminPostulaciones() {
 
   async function loadApplications() {
     try {
-      const data =
-        await getApplications("active");
+      const groups =
+        await getApplicationGroupsByEvent();
 
-      setPostulaciones(data);
-    } catch {
+      const safeGroups =
+        Array.isArray(groups)
+          ? groups
+          : [];
+
+      setEventGroups(
+        safeGroups
+      );
+
+      setPostulaciones(
+        safeGroups.flatMap(
+          (group) =>
+            group.applications
+        )
+      );
+
+      setExpandedEventIds((current) => {
+        const validIds =
+          new Set(
+            safeGroups.map(
+              (group) =>
+                group.eventId
+            )
+          );
+
+        const preserved =
+          current.filter(
+            (eventId) =>
+              validIds.has(eventId)
+          );
+
+        if (preserved.length > 0) {
+          return preserved;
+        }
+
+        const activeGroup =
+          safeGroups.find(
+            (group) =>
+              group.isActive
+          );
+
+        if (activeGroup) {
+          return [
+            activeGroup.eventId,
+          ];
+        }
+
+        return safeGroups[0]
+          ? [
+              safeGroups[0].eventId,
+            ]
+          : [];
+      });
+    } catch (error) {
+      console.error(error);
+
       toast.error(
         "No se pudieron cargar las postulaciones"
       );
     }
+  }
+
+  function toggleEventGroup(
+    eventId: string
+  ) {
+    setExpandedEventIds((current) =>
+      current.includes(eventId)
+        ? current.filter(
+            (id) =>
+              id !== eventId
+          )
+        : [
+            ...current,
+            eventId,
+          ]
+    );
+  }
+
+  function matchesApplicationFilters(
+    postulacion: EventGroupedApplication
+  ) {
+    const cleanSearch =
+      searchTerm.toLowerCase();
+
+    const matchesSearch =
+      postulacion.runnerName
+        .toLowerCase()
+        .includes(cleanSearch) ||
+      postulacion.game
+        .toLowerCase()
+        .includes(cleanSearch) ||
+      postulacion.category
+        .toLowerCase()
+        .includes(cleanSearch);
+
+    const matchesStatus =
+      statusFilter === "todos" ||
+      postulacion.status === statusFilter;
+
+    const matchesPlatform =
+      platformFilter === "todos" ||
+      postulacion.platform === platformFilter;
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesPlatform
+    );
   }
 
   async function loadRunnerHistory() {
@@ -667,6 +888,27 @@ export default function AdminPostulaciones() {
         run.applicationId === selectedHistoryApplicationId
     ) ?? null;
 
+  const filteredEventGroups =
+    eventGroups
+      .map((group) => ({
+        ...group,
+        applications:
+          group.applications.filter(
+            matchesApplicationFilters
+          ),
+      }))
+      .filter((group) =>
+        group.applications.length > 0
+      );
+
+  const totalFilteredApplications =
+    filteredEventGroups.reduce(
+      (total, group) =>
+        total +
+        group.applications.length,
+      0
+    );
+
   const handleStatusChange = async (
     id: string,
     newStatus: "approved" | "rejected"
@@ -881,7 +1123,7 @@ export default function AdminPostulaciones() {
           </h1>
 
           <p className="text-[var(--sg-muted-text)]">
-            Administra sólo las postulaciones del evento activo y crea nuevas desde el historial de runners.
+            Administra postulaciones por evento. Los eventos anteriores quedan agrupados como historial y sin acciones de calendario o borrado.
           </p>
         </div>
 
@@ -1228,16 +1470,16 @@ export default function AdminPostulaciones() {
             <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-lg font-bold text-[var(--sg-text)]">
-                  Postulaciones del evento activo
+                  Postulaciones agrupadas por evento
                 </h2>
 
                 <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
-                  Las runs de eventos anteriores ya no aparecen aquí para evitar confusión. Siguen guardadas en la base de datos y se usan en “Historial / postular runner”.
+                  Abre cada evento como historial. El evento activo mantiene todas las acciones; los eventos pasados conservan revisión y detalle, pero no muestran calendario ni borrado.
                 </p>
               </div>
 
               <Badge className="w-fit bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
-                Vista limpia
+                {totalFilteredApplications} visibles
               </Badge>
             </CardContent>
           </Card>
@@ -1320,190 +1562,283 @@ export default function AdminPostulaciones() {
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]">
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Runner
-                  </TableHead>
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Juego
-                  </TableHead>
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Categoría
-                  </TableHead>
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Plataforma
-                  </TableHead>
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Estimado
-                  </TableHead>
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Formato
-                  </TableHead>
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Estado
-                  </TableHead>
-                  <TableHead className="text-[var(--sg-muted-text)]">
-                    Fecha
-                  </TableHead>
-                  <TableHead className="text-right text-[var(--sg-muted-text)]">
-                    Acciones
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
+      {/* Event Groups */}
+      <div className="space-y-4">
+        {filteredEventGroups.length === 0 ? (
+          <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
+            <CardContent className="p-10 text-center text-[var(--sg-admin-muted-soft)]">
+              No se encontraron postulaciones con los filtros actuales.
+            </CardContent>
+          </Card>
+        ) : (
+          filteredEventGroups.map((group) => {
+            const expanded =
+              expandedEventIds.includes(
+                group.eventId
+              );
 
-              <TableBody>
-                {filteredPostulaciones.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={9}
-                      className="text-center text-[var(--sg-admin-muted-soft)]"
-                    >
-                      No se encontraron postulaciones
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPostulaciones.map(
-                    (postulacion) => (
-                      <TableRow
-                        key={postulacion.id}
-                        className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]"
-                      >
-                        <TableCell className="font-medium text-[var(--sg-text)]">
-                          {postulacion.runnerName}
-                        </TableCell>
-
-                        <TableCell className="text-[var(--sg-muted-text)]">
-                          {postulacion.game}
-                        </TableCell>
-
-                        <TableCell className="text-[var(--sg-muted-text)]">
-                          {postulacion.category}
-                        </TableCell>
-
-                        <TableCell className="text-[var(--sg-muted-text)]">
-                          {postulacion.platform || "-"}
-                        </TableCell>
-
-                        <TableCell className="font-mono text-sm text-[var(--sg-primary)]">
-                          {getEstimatedDisplay(postulacion)}
-                        </TableCell>
-
-                        <TableCell>
-                          {getRunTypeBadge(postulacion.runType)}
-                        </TableCell>
-                        
-                        <TableCell>
-                          {getStatusBadge(
-                            postulacion.status
-                          )}
-                        </TableCell>
-
-                        <TableCell className="text-[var(--sg-muted-text)]">
-                          {formatSubmittedDate(
-                            postulacion.submittedAt
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() =>
-                                handleViewDetail(
-                                  postulacion
-                                )
-                              }
-                              className="text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
-                              title="Ver detalle"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={
-                                deletingApplicationId ===
-                                postulacion.id
-                              }
-                              onClick={() =>
-                                handleDeleteApplication(
-                                  postulacion
-                                )
-                              }
-                              className="text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
-                              title="Eliminar postulación"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-
-                            {postulacion.status === "Pending" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() =>
-                                    handleStatusChange(
-                                      postulacion.id,
-                                      "approved"
-                                    )
-                                  }
-                                  className="text-green-400 hover:bg-green-500/10"
-                                  title="Aprobar"
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() =>
-                                    handleStatusChange(
-                                      postulacion.id,
-                                      "rejected"
-                                    )
-                                  }
-                                  className="text-red-400 hover:bg-red-500/10"
-                                  title="Rechazar"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-
-                            {postulacion.status === "Approved" && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  handleOpenScheduleDialog(
-                                    postulacion
-                                  )
-                                }
-                                className="text-[var(--sg-secondary)] hover:bg-[var(--sg-admin-secondary-soft)]"
-                                title="Agregar al horario"
-                              >
-                                <Calendar className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
+            return (
+              <Card
+                key={group.eventId}
+                className="sgames-admin-card overflow-hidden border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm"
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    toggleEventGroup(
+                      group.eventId
                     )
-                  )
+                  }
+                  className="flex w-full flex-col gap-4 border-b border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] px-5 py-4 text-left transition hover:bg-[var(--sg-admin-hover-bg)] md:flex-row md:items-center md:justify-between"
+                >
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="mt-1 text-[var(--sg-primary)]">
+                      {expanded ? (
+                        <ChevronDown className="h-5 w-5" />
+                      ) : (
+                        <ChevronRight className="h-5 w-5" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="truncate text-lg font-bold text-[var(--sg-text)]">
+                          {group.eventName}
+                        </h2>
+
+                        {group.isActive ? (
+                          <Badge className="bg-green-500/20 text-green-300">
+                            Evento activo
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-muted-text)]">
+                            Historial
+                          </Badge>
+                        )}
+
+                        <Badge className="bg-[var(--sg-admin-secondary-soft)] text-[var(--sg-secondary)]">
+                          {getSeasonDisplay(
+                            group.seasonKey
+                          )}
+                        </Badge>
+                      </div>
+
+                      <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                        {formatEventRange(
+                          group.startDate,
+                          group.endDate
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
+                      {group.applications.length} visibles
+                    </Badge>
+
+                    <Badge className="bg-yellow-500/15 text-yellow-300">
+                      {group.pending} pendientes
+                    </Badge>
+
+                    <Badge className="bg-green-500/15 text-green-300">
+                      {group.approved} aprobadas
+                    </Badge>
+
+                    <Badge className="bg-red-500/15 text-red-300">
+                      {group.rejected} rechazadas
+                    </Badge>
+                  </div>
+                </button>
+
+                {expanded && (
+                  <CardContent className="p-0">
+                    {!group.isActive && (
+                      <div className="flex items-center gap-2 border-b border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] px-5 py-3 text-sm text-[var(--sg-muted-text)]">
+                        <Archive className="h-4 w-4 text-[var(--sg-primary)]" />
+                        Evento histórico: se ocultan las acciones de calendario y borrado para proteger el historial.
+                      </div>
+                    )}
+
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]">
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Runner
+                            </TableHead>
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Juego
+                            </TableHead>
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Categoría
+                            </TableHead>
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Plataforma
+                            </TableHead>
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Estimado
+                            </TableHead>
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Formato
+                            </TableHead>
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Estado
+                            </TableHead>
+                            <TableHead className="text-[var(--sg-muted-text)]">
+                              Fecha
+                            </TableHead>
+                            <TableHead className="text-right text-[var(--sg-muted-text)]">
+                              Acciones
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
+                          {group.applications.map(
+                            (postulacion) => (
+                              <TableRow
+                                key={postulacion.id}
+                                className="border-[var(--sg-admin-border)] hover:bg-[var(--sg-admin-card-bg-soft)]"
+                              >
+                                <TableCell className="font-medium text-[var(--sg-text)]">
+                                  {postulacion.runnerName}
+                                </TableCell>
+
+                                <TableCell className="text-[var(--sg-muted-text)]">
+                                  {postulacion.game}
+                                </TableCell>
+
+                                <TableCell className="text-[var(--sg-muted-text)]">
+                                  {postulacion.category}
+                                </TableCell>
+
+                                <TableCell className="text-[var(--sg-muted-text)]">
+                                  {postulacion.platform || "-"}
+                                </TableCell>
+
+                                <TableCell className="font-mono text-sm text-[var(--sg-primary)]">
+                                  {getEstimatedDisplay(postulacion)}
+                                </TableCell>
+
+                                <TableCell>
+                                  {getRunTypeBadge(postulacion.runType)}
+                                </TableCell>
+
+                                <TableCell>
+                                  {getStatusBadge(
+                                    postulacion.status
+                                  )}
+                                </TableCell>
+
+                                <TableCell className="text-[var(--sg-muted-text)]">
+                                  {formatSubmittedDate(
+                                    postulacion.submittedAt
+                                  )}
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() =>
+                                        handleViewDetail(
+                                          postulacion
+                                        )
+                                      }
+                                      className="text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-softer)]"
+                                      title="Ver detalle"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+
+                                    {postulacion.status === "Pending" && (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() =>
+                                            handleStatusChange(
+                                              postulacion.id,
+                                              "approved"
+                                            )
+                                          }
+                                          className="text-green-400 hover:bg-green-500/10"
+                                          title="Aprobar"
+                                        >
+                                          <CheckCircle className="h-4 w-4" />
+                                        </Button>
+
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() =>
+                                            handleStatusChange(
+                                              postulacion.id,
+                                              "rejected"
+                                            )
+                                          }
+                                          className="text-red-400 hover:bg-red-500/10"
+                                          title="Rechazar"
+                                        >
+                                          <XCircle className="h-4 w-4" />
+                                        </Button>
+                                      </>
+                                    )}
+
+                                    {group.isActive && (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          disabled={
+                                            deletingApplicationId ===
+                                            postulacion.id
+                                          }
+                                          onClick={() =>
+                                            handleDeleteApplication(
+                                              postulacion
+                                            )
+                                          }
+                                          className="text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                          title="Eliminar postulación"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+
+                                        {postulacion.status === "Approved" && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() =>
+                                              handleOpenScheduleDialog(
+                                                postulacion
+                                              )
+                                            }
+                                            className="text-[var(--sg-secondary)] hover:bg-[var(--sg-admin-secondary-soft)]"
+                                            title="Agregar al horario"
+                                          >
+                                            <Calendar className="h-4 w-4" />
+                                          </Button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
                 )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </Card>
+            );
+          })
+        )}
+      </div>
         </>
       )}
 

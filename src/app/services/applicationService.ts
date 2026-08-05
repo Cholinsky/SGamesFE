@@ -70,6 +70,37 @@ async function readJsonResponse(
     : null;
 }
 
+export type EventGroupedApplication = {
+  id: string;
+  runnerName: string;
+  game: string;
+  category: string;
+  platform: string;
+  status: string;
+  runType?: string | null;
+  estimatedTimeMinutes?: number | null;
+  estimatedTime?: string | null;
+  submittedAt: string;
+  eventId: string;
+  eventName: string;
+  eventIsActive: boolean;
+};
+
+export type ApplicationEventGroup = {
+  eventId: string;
+  eventName: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  isPublished: boolean;
+  seasonKey?: string | null;
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  applications: EventGroupedApplication[];
+};
+
 export type AdminRunnerHistoryRun = {
   applicationId: string;
   runnerName: string;
@@ -261,6 +292,27 @@ export async function getPublicApprovedApplications() {
   }
 
   return await response.json();
+}
+
+export async function getApplicationGroupsByEvent() {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/admin-by-events`,
+      {
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading applications by event"
+      )
+    );
+  }
+
+  return await response.json() as ApplicationEventGroup[];
 }
 
 export async function getRunnerApplicationHistory() {
