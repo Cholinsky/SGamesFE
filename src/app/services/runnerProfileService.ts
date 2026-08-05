@@ -2,6 +2,7 @@ import { API_URL } from "../config/api";
 import { getHeaders } from "./authservice";
 
 export type RunnerSocialLinkPayload = {
+  id?: string;
   socialNetworkId: string;
   url: string;
 };
@@ -17,106 +18,124 @@ export type RunnerProfilePayload = {
   presentationVideo?: File | null;
 };
 
-export async function getRunnerProfiles() {
-  const response =
-    await fetch(
-      `${API_URL}/RunnerProfiles`,
-      {
-        headers: getHeaders(),
-      }
-    );
+export type RunnerProfile = {
+  id: string;
+  eventId?: string | null;
+  eventName?: string | null;
+  eventIsActive?: boolean | null;
+  sourceRunnerProfileId?: string | null;
+  displayName: string;
+  country?: string | null;
+  bio?: string | null;
+  photoUrl?: string | null;
+  presentationVideoUrl?: string | null;
+  isVisible: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt?: string | null;
+  socialLinks: {
+    id?: string;
+    socialNetworkId: string;
+    name?: string;
+    url: string;
+  }[];
+};
 
-  if (!response.ok) {
-    throw new Error(
-      "Error loading runner profiles"
-    );
-  }
+export type RunnerProfileEventGroup = {
+  eventId: string;
+  eventName: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  seasonKey?: string | null;
+  total: number;
+  visible: number;
+  hidden: number;
+  runners: RunnerProfile[];
+};
 
-  return await response.json();
-}
-
-export async function getPublicRunnerProfiles() {
-  const response =
-    await fetch(
-      `${API_URL}/RunnerProfiles/public`
-    );
-
-  if (!response.ok) {
-    throw new Error(
-      "Error loading public runner profiles"
-    );
-  }
-
-  return await response.json();
-}
-
-export async function getRunnerProfileById(
-  id: string
+async function getErrorMessage(
+  response: Response,
+  fallbackMessage: string
 ) {
-  const response =
-    await fetch(
-      `${API_URL}/RunnerProfiles/${id}`,
-      {
-        headers: getHeaders(),
-      }
-    );
+  const text =
+    await response.text();
 
-  if (!response.ok) {
-    throw new Error(
-      "Error loading runner profile"
-    );
+  if (!text) {
+    return fallbackMessage;
   }
 
-  return await response.json();
+  try {
+    const parsed =
+      JSON.parse(text);
+
+    if (typeof parsed === "string") {
+      return parsed;
+    }
+
+    if (parsed?.message) {
+      return parsed.message;
+    }
+
+    if (parsed?.title) {
+      return parsed.title;
+    }
+  } catch {
+    // texto plano
+  }
+
+  return text;
 }
 
-function buildRunnerFormData(
-  data: RunnerProfilePayload
+function buildRunnerProfileFormData(
+  payload: RunnerProfilePayload
 ) {
   const formData =
     new FormData();
 
   formData.append(
-    "displayName",
-    data.displayName
+    "DisplayName",
+    payload.displayName
   );
 
   formData.append(
-    "country",
-    data.country ?? ""
+    "Country",
+    payload.country ?? ""
   );
 
   formData.append(
-    "bio",
-    data.bio ?? ""
+    "Bio",
+    payload.bio ?? ""
   );
 
   formData.append(
-    "isVisible",
-    String(data.isVisible)
+    "IsVisible",
+    String(payload.isVisible)
   );
 
   formData.append(
-    "sortOrder",
-    String(data.sortOrder)
+    "SortOrder",
+    String(payload.sortOrder)
   );
 
   formData.append(
-    "socialLinksJson",
-    JSON.stringify(data.socialLinks)
+    "SocialLinksJson",
+    JSON.stringify(
+      payload.socialLinks ?? []
+    )
   );
 
-  if (data.photo) {
+  if (payload.photo) {
     formData.append(
-      "photo",
-      data.photo
+      "Photo",
+      payload.photo
     );
   }
 
-  if (data.presentationVideo) {
+  if (payload.presentationVideo) {
     formData.append(
-      "presentationVideo",
-      data.presentationVideo
+      "PresentationVideo",
+      payload.presentationVideo
     );
   }
 
@@ -132,8 +151,71 @@ function getMultipartHeaders() {
   };
 }
 
+export async function getPublicRunnerProfiles() {
+  const response =
+    await fetch(
+      `${API_URL}/RunnerProfiles/public`,
+      {
+        cache: "no-store",
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudieron cargar los runners públicos"
+      )
+    );
+  }
+
+  return await response.json();
+}
+
+export async function getRunnerProfiles() {
+  const response =
+    await fetch(
+      `${API_URL}/RunnerProfiles`,
+      {
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudieron cargar los runners"
+      )
+    );
+  }
+
+  return await response.json() as RunnerProfile[];
+}
+
+export async function getRunnerProfileEventGroups() {
+  const response =
+    await fetch(
+      `${API_URL}/RunnerProfiles/by-events`,
+      {
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudo cargar el historial de runners"
+      )
+    );
+  }
+
+  return await response.json() as RunnerProfileEventGroup[];
+}
+
 export async function createRunnerProfile(
-  data: RunnerProfilePayload
+  payload: RunnerProfilePayload
 ) {
   const response =
     await fetch(
@@ -141,16 +223,18 @@ export async function createRunnerProfile(
       {
         method: "POST",
         headers: getMultipartHeaders(),
-        body: buildRunnerFormData(data),
+        body: buildRunnerProfileFormData(
+          payload
+        ),
       }
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error creating runner profile"
+      await getErrorMessage(
+        response,
+        "No se pudo crear el runner"
+      )
     );
   }
 
@@ -159,7 +243,7 @@ export async function createRunnerProfile(
 
 export async function updateRunnerProfile(
   id: string,
-  data: RunnerProfilePayload
+  payload: RunnerProfilePayload
 ) {
   const response =
     await fetch(
@@ -167,16 +251,42 @@ export async function updateRunnerProfile(
       {
         method: "PUT",
         headers: getMultipartHeaders(),
-        body: buildRunnerFormData(data),
+        body: buildRunnerProfileFormData(
+          payload
+        ),
       }
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error updating runner profile"
+      await getErrorMessage(
+        response,
+        "No se pudo actualizar el runner"
+      )
+    );
+  }
+
+  return await response.json();
+}
+
+export async function copyRunnerProfileBasicToActive(
+  sourceRunnerProfileId: string
+) {
+  const response =
+    await fetch(
+      `${API_URL}/RunnerProfiles/${sourceRunnerProfileId}/copy-basic-to-active`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudo copiar el runner al evento activo"
+      )
     );
   }
 
@@ -197,11 +307,12 @@ export async function showRunnerProfile(
 
   if (!response.ok) {
     throw new Error(
-      "Error showing runner profile"
+      await getErrorMessage(
+        response,
+        "No se pudo mostrar el runner"
+      )
     );
   }
-
-  return true;
 }
 
 export async function hideRunnerProfile(
@@ -218,11 +329,12 @@ export async function hideRunnerProfile(
 
   if (!response.ok) {
     throw new Error(
-      "Error hiding runner profile"
+      await getErrorMessage(
+        response,
+        "No se pudo ocultar el runner"
+      )
     );
   }
-
-  return true;
 }
 
 export async function deleteRunnerProfile(
@@ -238,13 +350,13 @@ export async function deleteRunnerProfile(
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error deleting runner profile"
+      await getErrorMessage(
+        response,
+        "No se pudo eliminar el runner"
+      )
     );
   }
 
-  return true;
+  return await response.json();
 }
