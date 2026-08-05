@@ -61,11 +61,20 @@ type DashboardTopGame = {
 };
 
 type DashboardStats = {
+  activeEventId?: string | null;
+  activeEventName: string;
+  activeEventStartDate?: string | null;
+  activeEventEndDate?: string | null;
+  activeEventSeasonKey?: string | null;
+  activeEventIsActive: boolean;
+  activeEventApplicationsOpen: boolean;
+  activeEventPublicRunsVisible: boolean;
   totalApplications: number;
   pendingApplications: number;
   approvedApplications: number;
   rejectedApplications: number;
   scheduledRuns: number;
+  activeRunners: number;
   isSchedulePublished: boolean;
   weeklyActivity: DashboardWeeklyActivity[];
   platformDistribution: DashboardPlatformDistribution[];
@@ -124,6 +133,86 @@ function formatDate(dateValue: string) {
         year: "numeric",
       }
     );
+}
+
+function parseEventDate(
+  value?: string | null
+) {
+  if (!value) {
+    return null;
+  }
+
+  const [
+    year,
+    month,
+    day,
+  ] = value
+    .split("T")[0]
+    .split("-")
+    .map(Number);
+
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day)
+  ) {
+    return null;
+  }
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+}
+
+function formatEventDateRange(
+  startDate?: string | null,
+  endDate?: string | null
+) {
+  const start =
+    parseEventDate(startDate);
+
+  const end =
+    parseEventDate(endDate);
+
+  if (!start || !end) {
+    return "Fechas por confirmar";
+  }
+
+  const sameMonth =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth();
+
+  const monthLabel =
+    end.toLocaleDateString(
+      "es-MX",
+      {
+        month: "long",
+      }
+    );
+
+  if (sameMonth) {
+    return `${start.getDate()} - ${end.getDate()} ${monthLabel} ${end.getFullYear()}`;
+  }
+
+  return `${formatDate(startDate ?? "")} - ${formatDate(endDate ?? "")}`;
+}
+
+function getSeasonLabel(
+  seasonKey?: string | null
+) {
+  switch (seasonKey) {
+    case "Winter":
+      return "Invierno";
+
+    case "Autumn":
+    case "Fall":
+      return "Otoño";
+
+    default:
+      return "Verano";
+  }
 }
 
 function formatRelativeTime(dateValue: string) {
@@ -247,7 +336,7 @@ export default function AdminDashboard() {
       value: stats.totalApplications,
       icon: FileText,
       color: "from-[var(--sg-primary)] to-[var(--sg-secondary)]",
-      description: "Postulaciones recibidas",
+      description: "Del evento activo",
     },
     {
       title: "Pendientes",
@@ -342,8 +431,62 @@ export default function AdminDashboard() {
         })}
       </div>
 
+      {/* Active Event */}
+      <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
+        <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold text-[var(--sg-text)]">
+                {stats.activeEventName}
+              </h2>
+
+              <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
+                {getSeasonLabel(
+                  stats.activeEventSeasonKey
+                )}
+              </Badge>
+
+              {stats.activeEventIsActive && (
+                <Badge className="bg-green-500/20 text-green-400">
+                  Evento activo
+                </Badge>
+              )}
+            </div>
+
+            <p className="mt-2 text-sm text-[var(--sg-muted-text)]">
+              {formatEventDateRange(
+                stats.activeEventStartDate,
+                stats.activeEventEndDate
+              )}
+            </p>
+
+            <p className="mt-2 text-sm text-[var(--sg-admin-muted-soft)]">
+              El dashboard sólo muestra datos de este evento. Las ediciones anteriores quedan fuera del resumen principal.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Badge className={
+              stats.activeEventApplicationsOpen
+                ? "bg-green-500/20 text-green-400"
+                : "bg-red-500/20 text-red-400"
+            }>
+              Postulaciones {stats.activeEventApplicationsOpen ? "abiertas" : "cerradas"}
+            </Badge>
+
+            <Badge className={
+              stats.activeEventPublicRunsVisible
+                ? "bg-green-500/20 text-green-400"
+                : "bg-yellow-500/20 text-yellow-400"
+            }>
+              Runs públicas {stats.activeEventPublicRunsVisible ? "visibles" : "ocultas"}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Event State */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
           <CardContent className="flex items-center justify-between gap-4 p-6">
             <div>
@@ -362,6 +505,28 @@ export default function AdminDashboard() {
 
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sg-secondary)] to-[var(--sg-accent)]">
               <CalendarCheck className="h-6 w-6 text-[var(--sg-text)]" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
+          <CardContent className="flex items-center justify-between gap-4 p-6">
+            <div>
+              <p className="text-sm text-[var(--sg-muted-text)]">
+                Runners actuales
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-[var(--sg-text)]">
+                {stats.activeRunners}
+              </p>
+
+              <p className="mt-2 text-sm text-[var(--sg-admin-muted-soft)]">
+                Tarjetas cargadas para el carrusel
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sg-primary)] to-[var(--sg-accent)]">
+              <Users className="h-6 w-6 text-[var(--sg-text)]" />
             </div>
           </CardContent>
         </Card>
