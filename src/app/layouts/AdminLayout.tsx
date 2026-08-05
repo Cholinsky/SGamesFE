@@ -77,8 +77,49 @@ const adminLayoutThemeCss = `
     border-color: var(--sg-admin-border, var(--sg-border));
   }
 
+  .sgames-admin-brand {
+    min-width: 0;
+  }
+
+  .sgames-admin-season-logo-wrap {
+    position: relative;
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 0.9rem;
+    border: 1px solid var(--sg-admin-border-strong, color-mix(in srgb, var(--sg-primary) 28%, transparent));
+    background:
+      radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--sg-primary) 18%, transparent), transparent 58%),
+      color-mix(in srgb, var(--sg-surface) 72%, #000000 28%);
+    box-shadow:
+      0 0 20px color-mix(in srgb, var(--sg-primary) 12%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--sg-text) 4%, transparent);
+  }
+
+  .sgames-admin-season-logo {
+    height: 1.85rem;
+    width: 1.85rem;
+    object-fit: contain;
+    filter:
+      drop-shadow(0 0 8px color-mix(in srgb, var(--sg-primary) 28%, transparent))
+      drop-shadow(0 0 14px color-mix(in srgb, var(--sg-accent) 12%, transparent));
+  }
+
+  .sgames-admin-season-logo-fallback {
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: var(--sg-primary);
+    text-shadow: 0 0 14px color-mix(in srgb, var(--sg-primary) 22%, transparent);
+  }
+
   .sgames-admin-logo-text {
     color: var(--sg-primary);
+    line-height: 1;
     text-shadow: 0 0 18px color-mix(in srgb, var(--sg-primary) 14%, transparent);
   }
 
@@ -184,6 +225,57 @@ const adminLayoutThemeCss = `
       linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 28%, var(--sg-background) 72%) 0%, var(--sg-background) 54%, var(--sg-background) 100%);
   }
 `;
+const ADMIN_LOGO_EXTENSIONS = [
+  "png",
+  "webp",
+  "jpg",
+  "jpeg",
+  "svg",
+  "avif",
+];
+
+function normalizeAdminSeasonLogoKey(
+  seasonKey?: string | null
+) {
+  const normalized =
+    seasonKey?.trim().toLowerCase();
+
+  if (
+    normalized === "winter" ||
+    normalized === "invierno"
+  ) {
+    return "adminwinter";
+  }
+
+  if (
+    normalized === "autumn" ||
+    normalized === "fall" ||
+    normalized === "otoño" ||
+    normalized === "otono"
+  ) {
+    return "adminfall";
+  }
+
+  return "adminsummer";
+}
+
+function getAdminLogoBaseFromDocument() {
+  if (typeof document === "undefined") {
+    return "adminsummer";
+  }
+
+  return normalizeAdminSeasonLogoKey(
+    document.documentElement.dataset.adminSeasonTheme
+  );
+}
+
+function getAdminLogoPath(
+  logoBase: string,
+  extensionIndex: number
+) {
+  return `/logos/${logoBase}.${ADMIN_LOGO_EXTENSIONS[extensionIndex]}`;
+}
+
 
 type AdminNotificationSummary = {
   total: number;
@@ -202,6 +294,17 @@ export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] =
     useState(false);
 
+  const [adminLogoBase, setAdminLogoBase] =
+    useState(() =>
+      getAdminLogoBaseFromDocument()
+    );
+
+  const [adminLogoExtensionIndex, setAdminLogoExtensionIndex] =
+    useState(0);
+
+  const [adminLogoFailed, setAdminLogoFailed] =
+    useState(false);
+
   const [notifications, setNotifications] =
     useState<AdminNotificationSummary>({
       total: 0,
@@ -217,6 +320,65 @@ export function AdminLayout() {
 
   const isActive = (path: string) =>
     location.pathname === path;
+
+
+  useEffect(() => {
+    function syncAdminLogoFromTheme() {
+      const nextLogoBase =
+        getAdminLogoBaseFromDocument();
+
+      setAdminLogoBase((currentLogoBase) => {
+        if (currentLogoBase === nextLogoBase) {
+          return currentLogoBase;
+        }
+
+        setAdminLogoExtensionIndex(0);
+        setAdminLogoFailed(false);
+
+        return nextLogoBase;
+      });
+    }
+
+    syncAdminLogoFromTheme();
+
+    const observer =
+      new MutationObserver(syncAdminLogoFromTheme);
+
+    observer.observe(
+      document.documentElement,
+      {
+        attributes: true,
+        attributeFilter: [
+          "data-admin-season-theme",
+        ],
+      }
+    );
+
+    window.addEventListener(
+      "sgames:admin-theme-refresh",
+      syncAdminLogoFromTheme
+    );
+
+    window.addEventListener(
+      "sgames:season-theme-updated",
+      syncAdminLogoFromTheme
+    );
+
+    return () => {
+      observer.disconnect();
+
+      window.removeEventListener(
+        "sgames:admin-theme-refresh",
+        syncAdminLogoFromTheme
+      );
+
+      window.removeEventListener(
+        "sgames:season-theme-updated",
+        syncAdminLogoFromTheme
+      );
+    };
+  }, []);
+
 
   const navigation = [
   {
@@ -348,6 +510,52 @@ async function handleMarkAllRead() {
     logout();
   };
 
+  const adminLogoSrc =
+    getAdminLogoPath(
+      adminLogoBase,
+      adminLogoExtensionIndex
+    );
+
+  function handleAdminLogoError() {
+    setAdminLogoExtensionIndex((currentIndex) => {
+      const nextIndex =
+        currentIndex + 1;
+
+      if (nextIndex >= ADMIN_LOGO_EXTENSIONS.length) {
+        setAdminLogoFailed(true);
+        return currentIndex;
+      }
+
+      return nextIndex;
+    });
+  }
+
+  function renderAdminBrand() {
+    return (
+      <div className="sgames-admin-brand flex min-w-0 items-center gap-3">
+        <div className="sgames-admin-season-logo-wrap">
+          {!adminLogoFailed ? (
+            <img
+              key={adminLogoSrc}
+              src={adminLogoSrc}
+              alt="SGames Admin"
+              className="sgames-admin-season-logo"
+              onError={handleAdminLogoError}
+            />
+          ) : (
+            <span className="sgames-admin-season-logo-fallback">
+              SG
+            </span>
+          )}
+        </div>
+
+        <span className="sgames-admin-logo-text truncate text-xl font-bold">
+          SGames Admin
+        </span>
+      </div>
+    );
+  }
+
   function getNotificationIcon(
     type: string
   ) {
@@ -381,10 +589,8 @@ async function handleMarkAllRead() {
       <aside className="sgames-admin-sidebar hidden w-64 border-r lg:block">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="sgames-admin-sidebar-header flex h-16 items-center border-b px-6">
-            <span className="sgames-admin-logo-text text-xl font-bold">
-              SGames Admin
-            </span>
+          <div className="sgames-admin-sidebar-header flex h-16 items-center border-b px-5">
+            {renderAdminBrand()}
           </div>
 
           {/* Navigation */}
@@ -436,10 +642,8 @@ async function handleMarkAllRead() {
           <aside className="sgames-admin-sidebar absolute left-0 top-0 h-full w-64 border-r">
             <div className="flex h-full flex-col">
               {/* Logo */}
-              <div className="sgames-admin-sidebar-header flex h-16 items-center justify-between border-b px-6">
-                <span className="sgames-admin-logo-text text-xl font-bold">
-                  SGames Admin
-                </span>
+              <div className="sgames-admin-sidebar-header flex h-16 items-center justify-between border-b px-5">
+                {renderAdminBrand()}
 
                 <button
                   type="button"
