@@ -111,9 +111,11 @@ export type CreateApplicationFromHistoryPayload = {
   notes?: string | null;
 };
 
-export async function getApplications() {
+export async function getApplications(
+  scope: "active" | "history" | "all" = "active"
+) {
   const response = await fetch(
-    `${API_URL}/Applications`,
+    `${API_URL}/Applications?scope=${scope}`,
     {
       headers: getHeaders(),
     }

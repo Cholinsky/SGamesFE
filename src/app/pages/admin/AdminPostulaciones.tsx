@@ -398,7 +398,7 @@ export default function AdminPostulaciones() {
   async function loadApplications() {
     try {
       const data =
-        await getApplications();
+        await getApplications("active");
 
       setPostulaciones(data);
     } catch {
@@ -881,7 +881,7 @@ export default function AdminPostulaciones() {
           </h1>
 
           <p className="text-[var(--sg-muted-text)]">
-            Administra las postulaciones recibidas y crea nuevas desde el historial de runners.
+            Administra sólo las postulaciones del evento activo y crea nuevas desde el historial de runners.
           </p>
         </div>
 
@@ -897,7 +897,7 @@ export default function AdminPostulaciones() {
                 : "border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-hover-bg)]"
             }
           >
-            Postulaciones recibidas
+            Evento activo
           </Button>
 
           <Button
@@ -911,7 +911,7 @@ export default function AdminPostulaciones() {
                 : "border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)] hover:bg-[var(--sg-admin-hover-bg)]"
             }
           >
-            Postular runner existente
+            Historial / postular runner
           </Button>
         </div>
       </div>
@@ -1224,6 +1224,23 @@ export default function AdminPostulaciones() {
 
       {activePanel === "recibidas" && (
         <>
+          <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
+            <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-[var(--sg-text)]">
+                  Postulaciones del evento activo
+                </h2>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  Las runs de eventos anteriores ya no aparecen aquí para evitar confusión. Siguen guardadas en la base de datos y se usan en “Historial / postular runner”.
+                </p>
+              </div>
+
+              <Badge className="w-fit bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
+                Vista limpia
+              </Badge>
+            </CardContent>
+          </Card>
 
       {/* Filters */}
       <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] backdrop-blur-sm">
