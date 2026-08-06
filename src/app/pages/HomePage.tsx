@@ -693,7 +693,7 @@ async function loadPublicRunners() {
 
             {hasActivePublicEvent && (
               <p className="mx-auto mb-8 max-w-2xl text-sm text-[var(--sg-muted-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
-                Del 31 de julio al 2 de agosto de 2026.
+                Del 23 al 25 de Octubre del 2026.
                 Postula tu run, comparte tu talento y forma parte
                 del lineup.
               </p>
