@@ -608,7 +608,7 @@ async function loadPublicRunners() {
         {/* Video Background */}
         <video
           key={seasonVideoSrc}
-          className="absolute inset-0 h-full w-full object-cover opacity-70"
+          className="absolute inset-0 h-full w-full object-cover opacity-90"
           src={seasonVideoSrc}
           autoPlay
           muted
@@ -619,11 +619,28 @@ async function loadPublicRunners() {
         />
 
         {/* Video Overlays */}
-        <div className="absolute inset-0 bg-black/70" />
+        <div
+          className="absolute inset-0 bg-black"
+          style={{
+            opacity:
+              seasonAssetKey === "Fall"
+                ? 0.34
+                : 0.48,
+          }}
+        />
 
-        <div className="absolute inset-0 opacity-95" style={{ background: "var(--sg-hero-gradient)" }} />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "var(--sg-hero-gradient)",
+            opacity:
+              seasonAssetKey === "Fall"
+                ? 0.42
+                : 0.62,
+          }}
+        />
 
-        <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
 
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--sg-background)] to-transparent" />
 
@@ -693,7 +710,7 @@ async function loadPublicRunners() {
 
             {hasActivePublicEvent && (
               <p className="mx-auto mb-8 max-w-2xl text-sm text-[var(--sg-muted-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
-                Del 23 al 25 de Octubre del 2026.
+                Del 31 de julio al 2 de agosto de 2026.
                 Postula tu run, comparte tu talento y forma parte
                 del lineup.
               </p>
