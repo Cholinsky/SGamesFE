@@ -16,6 +16,8 @@ import AdminRunners from "./pages/admin/AdminRunners";
 import AdminAdministradores from "./pages/admin/AdminAdministradores";
 import NotFound from "./pages/NotFound";
 import RunsPage from "./pages/RunsPage";
+import ClipsPage from "./pages/ClipsPage";
+import AdminClips from "./pages/admin/AdminClips";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +31,7 @@ export const router = createBrowserRouter([
           { path: "postulacion", Component: PostulacionPage },
           { path: "horario", Component: HorarioPage },
           { path: "runs", Component: RunsPage },
+          { path: "clips", Component: ClipsPage },
         ],
       },
       {
@@ -47,6 +50,7 @@ export const router = createBrowserRouter([
           { path: "postulaciones", Component: AdminPostulaciones },
           { path: "horarios", Component: AdminHorarios },
           { path: "publicaciones", Component: AdminPublicaciones },
+          { path: "clips", Component: AdminClips },
           { path: "runners", Component: AdminRunners },
           { path: "administradores", Component: AdminAdministradores },
           { path: "configuracion", Component: AdminConfiguracion },

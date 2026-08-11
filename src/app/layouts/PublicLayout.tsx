@@ -420,6 +420,13 @@ export function PublicLayout() {
             </Link>
 
             <Link
+              to="/clips"
+              className={navLinkClass("/clips")}
+            >
+              Clips
+            </Link>
+
+            <Link
               to="/horario"
               className={navLinkClass("/horario")}
             >
@@ -493,6 +500,16 @@ export function PublicLayout() {
                 className={navLinkClass("/runs")}
               >
                 Runs
+              </Link>
+
+              <Link
+                to="/clips"
+                onClick={() =>
+                  setMobileMenuOpen(false)
+                }
+                className={navLinkClass("/clips")}
+              >
+                Clips
               </Link>
 
               <Link

@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
+  Clapperboard,
 } from "lucide-react";
 import {
   Avatar,
@@ -400,6 +401,11 @@ export function AdminLayout() {
     name: "Publicaciones",
     path: "/admin/publicaciones",
     icon: Newspaper,
+  },
+  {
+    name: "Clips",
+    path: "/admin/clips",
+    icon: Clapperboard,
   },
   {
     name: "Runners",
