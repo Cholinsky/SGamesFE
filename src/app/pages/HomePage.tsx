@@ -538,10 +538,10 @@ async function loadPublicRunners() {
     },
     {
       icon: Sparkles,
-      title: "Lineup",
-      value: "Curado por SGames",
+      title: "Talento",
+      value: "Elegido por SGames",
       description:
-        "Buscamos variedad de juegos, categorías, plataformas y runners.",
+        "Tenemos variedad de juegos, categorías, plataformas y runners.",
     },
   ];
 
