@@ -72,6 +72,10 @@ type PublicEvent = {
   applicationsOpen?: boolean;
   publicRunsVisible?: boolean;
   seasonKey?: string | null;
+  heroEyebrow?: string | null;
+  heroTitle?: string | null;
+  heroDescription?: string | null;
+  heroMetaText?: string | null;
 };
 
 
@@ -596,6 +600,26 @@ async function loadPublicRunners() {
       )
     ];
 
+  const heroEyebrowText =
+    activeEvent?.heroEyebrow?.trim() ||
+    "Speedrun Event";
+
+  const heroTitleText =
+    activeEvent?.heroTitle?.trim() ||
+    "SGames";
+
+  const heroDescriptionText =
+    activeEvent?.heroDescription?.trim() ||
+    "Un evento comunitario para reunir speedrunners de distintos juegos, categorías y plataformas.";
+
+  const heroMetaText =
+    activeEvent?.heroMetaText?.trim() ||
+    `Del ${formatEventDateRange(
+      activeEvent?.startDate,
+      activeEvent?.endDate
+    )}. Postula tu run, comparte tu talento y forma parte del lineup.`;
+
+
   useEffect(() => {
     setLogoFallbackIndex(0);
     setLogoFailed(false);
@@ -696,23 +720,20 @@ async function loadPublicRunners() {
             </div>
 
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em] text-[var(--sg-primary)]">
-              Speedrun Event
+              {heroEyebrowText}
             </p>
 
             <h1 className="sgames-neon-text mb-6 text-5xl font-black tracking-tight md:text-7xl lg:text-8xl">
-              SGames
+              {heroTitleText}
             </h1>
 
             <p className="mx-auto mb-4 max-w-3xl text-lg text-[var(--sg-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-xl lg:text-2xl">
-              Un evento comunitario para reunir speedrunners
-              de distintos juegos, categorías y plataformas.
+              {heroDescriptionText}
             </p>
 
             {hasActivePublicEvent && (
               <p className="mx-auto mb-8 max-w-2xl text-sm text-[var(--sg-muted-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
-                Del 31 de julio al 2 de agosto de 2026.
-                Postula tu run, comparte tu talento y forma parte
-                del lineup.
+                {heroMetaText}
               </p>
             )}
 

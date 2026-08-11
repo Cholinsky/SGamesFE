@@ -62,6 +62,10 @@ type EventConfig = {
   applicationsOpen: boolean;
   publicRunsVisible: boolean;
   seasonKey: string;
+  heroEyebrow: string;
+  heroTitle: string;
+  heroDescription: string;
+  heroMetaText: string;
 };
 
 type SettingsConfig = {
@@ -123,6 +127,10 @@ export default function AdminConfiguracion() {
       applicationsOpen: true,
       publicRunsVisible: true,
       seasonKey: "Summer",
+      heroEyebrow: "Speedrun Event",
+      heroTitle: "SGames",
+      heroDescription: "Un evento comunitario para reunir speedrunners de distintos juegos, categorías y plataformas.",
+      heroMetaText: "",
     });
 
   const [settingsConfig, setSettingsConfig] =
@@ -186,6 +194,15 @@ export default function AdminConfiguracion() {
           activeEvent.publicRunsVisible ?? true,
         seasonKey:
           activeEvent.seasonKey ?? "Summer",
+          heroEyebrow:
+  activeEvent.heroEyebrow ?? "Speedrun Event",
+heroTitle:
+  activeEvent.heroTitle ?? "SGames",
+heroDescription:
+  activeEvent.heroDescription ??
+  "Un evento comunitario para reunir speedrunners de distintos juegos, categorías y plataformas.",
+heroMetaText:
+  activeEvent.heroMetaText ?? "",
       });
 
       const themes =
@@ -359,6 +376,25 @@ export default function AdminConfiguracion() {
             ),
             applicationsOpen:
               eventConfig.applicationsOpen,
+              heroEyebrow:
+  normalizeText(
+    eventConfig.heroEyebrow
+  ),
+
+heroTitle:
+  normalizeText(
+    eventConfig.heroTitle
+  ),
+
+heroDescription:
+  normalizeText(
+    eventConfig.heroDescription
+  ),
+
+heroMetaText:
+  normalizeText(
+    eventConfig.heroMetaText
+  ),
         }
       );
 
@@ -854,6 +890,111 @@ export default function AdminConfiguracion() {
               className="mt-1.5 min-h-[100px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
               placeholder="Descripción pública del evento"
             />
+            <div className="rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+  <div className="mb-4">
+    <p className="font-semibold text-[var(--sg-text)]">
+      Texto principal del Home
+    </p>
+
+    <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+      Controla manualmente el texto que aparece sobre el video principal de la página pública.
+    </p>
+  </div>
+
+  <div className="grid gap-4 md:grid-cols-2">
+    <div>
+      <Label
+        htmlFor="heroEyebrow"
+        className="text-[var(--sg-muted-text)]"
+      >
+        Texto superior
+      </Label>
+
+      <Input
+        id="heroEyebrow"
+        value={eventConfig.heroEyebrow}
+        onChange={(event) =>
+          updateEventField(
+            "heroEyebrow",
+            event.target.value
+          )
+        }
+        className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+        placeholder="Speedrun Event"
+      />
+    </div>
+
+    <div>
+      <Label
+        htmlFor="heroTitle"
+        className="text-[var(--sg-muted-text)]"
+      >
+        Título principal
+      </Label>
+
+      <Input
+        id="heroTitle"
+        value={eventConfig.heroTitle}
+        onChange={(event) =>
+          updateEventField(
+            "heroTitle",
+            event.target.value
+          )
+        }
+        className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+        placeholder="SGames"
+      />
+    </div>
+
+    <div className="md:col-span-2">
+      <Label
+        htmlFor="heroDescription"
+        className="text-[var(--sg-muted-text)]"
+      >
+        Descripción principal
+      </Label>
+
+      <Textarea
+        id="heroDescription"
+        value={eventConfig.heroDescription}
+        onChange={(event) =>
+          updateEventField(
+            "heroDescription",
+            event.target.value
+          )
+        }
+        className="mt-1.5 min-h-[88px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+        placeholder="Un evento comunitario..."
+      />
+    </div>
+
+    <div className="md:col-span-2">
+      <Label
+        htmlFor="heroMetaText"
+        className="text-[var(--sg-muted-text)]"
+      >
+        Línea secundaria bajo el título
+      </Label>
+
+      <Textarea
+        id="heroMetaText"
+        value={eventConfig.heroMetaText}
+        onChange={(event) =>
+          updateEventField(
+            "heroMetaText",
+            event.target.value
+          )
+        }
+        className="mt-1.5 min-h-[74px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+        placeholder="Si lo dejas vacío, se genera automáticamente con las fechas del evento."
+      />
+
+      <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
+        Ejemplo: Del 23 al 25 de octubre de 2026. Postula tu run y forma parte del lineup.
+      </p>
+    </div>
+  </div>
+</div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
