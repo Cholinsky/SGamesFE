@@ -1,18 +1,55 @@
 import { API_URL } from "../config/api";
 import { getHeaders } from "./authservice";
 
+async function getErrorMessage(
+  response: Response,
+  fallbackMessage: string
+) {
+  const text =
+    await response.text();
+
+  if (!text) {
+    return fallbackMessage;
+  }
+
+  try {
+    const parsed =
+      JSON.parse(text);
+
+    if (typeof parsed === "string") {
+      return parsed;
+    }
+
+    if (parsed?.message) {
+      return parsed.message;
+    }
+
+    if (parsed?.title) {
+      return parsed.title;
+    }
+  } catch {
+    // texto plano
+  }
+
+  return text;
+}
+
 export async function getActiveEvent() {
   const response =
     await fetch(
-      `${API_URL}/Events/admin-current`,
+      `${API_URL}/Events/admin-current?t=${Date.now()}`,
       {
         headers: getHeaders(),
+        cache: "no-store",
       }
     );
 
   if (!response.ok) {
     throw new Error(
-      "Error loading active event"
+      await getErrorMessage(
+        response,
+        "Error loading current admin event"
+      )
     );
   }
 
@@ -22,7 +59,10 @@ export async function getActiveEvent() {
 export async function getActivePublicEvent() {
   const response =
     await fetch(
-      `${API_URL}/Events/active-public`
+      `${API_URL}/Events/active-public?t=${Date.now()}`,
+      {
+        cache: "no-store",
+      }
     );
 
   if (
@@ -34,7 +74,56 @@ export async function getActivePublicEvent() {
 
   if (!response.ok) {
     throw new Error(
-      "Error loading active public event"
+      await getErrorMessage(
+        response,
+        "Error loading active public event"
+      )
+    );
+  }
+
+  return await response.json();
+}
+
+export async function getEvents() {
+  const response =
+    await fetch(
+      `${API_URL}/Events`,
+      {
+        headers: getHeaders(),
+        cache: "no-store",
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading events"
+      )
+    );
+  }
+
+  return await response.json();
+}
+
+export async function getEventById(
+  id: string
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Events/${id}`,
+      {
+        headers: getHeaders(),
+        cache: "no-store",
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading event"
+      )
     );
   }
 
@@ -56,11 +145,11 @@ export async function updateEvent(
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error updating event"
+      await getErrorMessage(
+        response,
+        "Error updating event"
+      )
     );
   }
 
@@ -86,11 +175,11 @@ export async function updateEventActiveStatus(
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error updating event active status"
+      await getErrorMessage(
+        response,
+        "Error updating event active status"
+      )
     );
   }
 
@@ -111,12 +200,11 @@ export async function updatePublicRunsVisibility(
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error ||
+      await getErrorMessage(
+        response,
         "Error updating public runs visibility"
+      )
     );
   }
 
@@ -137,11 +225,11 @@ export async function updateEventSeason(
     );
 
   if (!response.ok) {
-    const error =
-      await response.text();
-
     throw new Error(
-      error || "Error updating event season"
+      await getErrorMessage(
+        response,
+        "Error updating event season"
+      )
     );
   }
 

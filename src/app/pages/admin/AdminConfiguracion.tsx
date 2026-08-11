@@ -194,15 +194,15 @@ export default function AdminConfiguracion() {
           activeEvent.publicRunsVisible ?? true,
         seasonKey:
           activeEvent.seasonKey ?? "Summer",
-          heroEyebrow:
-  activeEvent.heroEyebrow ?? "Speedrun Event",
-heroTitle:
-  activeEvent.heroTitle ?? "SGames",
-heroDescription:
-  activeEvent.heroDescription ??
-  "Un evento comunitario para reunir speedrunners de distintos juegos, categorías y plataformas.",
-heroMetaText:
-  activeEvent.heroMetaText ?? "",
+        heroEyebrow:
+          activeEvent.heroEyebrow ?? "Speedrun Event",
+        heroTitle:
+          activeEvent.heroTitle ?? "SGames",
+        heroDescription:
+          activeEvent.heroDescription ??
+          "Un evento comunitario para reunir speedrunners de distintos juegos, categorías y plataformas.",
+        heroMetaText:
+          activeEvent.heroMetaText ?? "",
       });
 
       const themes =
@@ -269,7 +269,7 @@ heroMetaText:
       console.error(error);
 
       toast.error(
-        "No se pudo cargar la configuración"
+        "No se pudo cargar la configuración. Verifica que exista al menos un evento en la tabla Events."
       );
     } finally {
       setLoading(false);
@@ -320,6 +320,13 @@ heroMetaText:
   }
 
   async function handleSaveEventConfig() {
+    if (!eventConfig.id) {
+      toast.error(
+        "No hay evento configurado para guardar"
+      );
+      return;
+    }
+
     if (!eventConfig.name.trim()) {
       toast.error(
         "El nombre del evento es obligatorio"
@@ -374,27 +381,29 @@ heroMetaText:
             normalizeText(
               eventConfig.discordUrl
             ),
-            applicationsOpen:
-              eventConfig.applicationsOpen,
-              heroEyebrow:
-  normalizeText(
-    eventConfig.heroEyebrow
-  ),
 
-heroTitle:
-  normalizeText(
-    eventConfig.heroTitle
-  ),
+          applicationsOpen:
+            eventConfig.applicationsOpen,
 
-heroDescription:
-  normalizeText(
-    eventConfig.heroDescription
-  ),
+          heroEyebrow:
+            normalizeText(
+              eventConfig.heroEyebrow
+            ),
 
-heroMetaText:
-  normalizeText(
-    eventConfig.heroMetaText
-  ),
+          heroTitle:
+            normalizeText(
+              eventConfig.heroTitle
+            ),
+
+          heroDescription:
+            normalizeText(
+              eventConfig.heroDescription
+            ),
+
+          heroMetaText:
+            normalizeText(
+              eventConfig.heroMetaText
+            ),
         }
       );
 
@@ -473,7 +482,7 @@ heroMetaText:
 
   async function handleTogglePublicRunsVisible() {
     if (!eventConfig.id) {
-      toast.error("No hay evento activo");
+      toast.error("No hay evento configurado");
       return;
     }
 
@@ -890,111 +899,112 @@ heroMetaText:
               className="mt-1.5 min-h-[100px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
               placeholder="Descripción pública del evento"
             />
-            <div className="rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
-  <div className="mb-4">
-    <p className="font-semibold text-[var(--sg-text)]">
-      Texto principal del Home
-    </p>
+          </div>
 
-    <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
-      Controla manualmente el texto que aparece sobre el video principal de la página pública.
-    </p>
-  </div>
+          <div className="rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+            <div className="mb-4">
+              <p className="font-semibold text-[var(--sg-text)]">
+                Texto principal del Home
+              </p>
 
-  <div className="grid gap-4 md:grid-cols-2">
-    <div>
-      <Label
-        htmlFor="heroEyebrow"
-        className="text-[var(--sg-muted-text)]"
-      >
-        Texto superior
-      </Label>
+              <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                Controla manualmente el texto que aparece sobre el video principal de la página pública.
+              </p>
+            </div>
 
-      <Input
-        id="heroEyebrow"
-        value={eventConfig.heroEyebrow}
-        onChange={(event) =>
-          updateEventField(
-            "heroEyebrow",
-            event.target.value
-          )
-        }
-        className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-        placeholder="Speedrun Event"
-      />
-    </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label
+                  htmlFor="heroEyebrow"
+                  className="text-[var(--sg-muted-text)]"
+                >
+                  Texto superior
+                </Label>
 
-    <div>
-      <Label
-        htmlFor="heroTitle"
-        className="text-[var(--sg-muted-text)]"
-      >
-        Título principal
-      </Label>
+                <Input
+                  id="heroEyebrow"
+                  value={eventConfig.heroEyebrow}
+                  onChange={(event) =>
+                    updateEventField(
+                      "heroEyebrow",
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="Speedrun Event"
+                />
+              </div>
 
-      <Input
-        id="heroTitle"
-        value={eventConfig.heroTitle}
-        onChange={(event) =>
-          updateEventField(
-            "heroTitle",
-            event.target.value
-          )
-        }
-        className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-        placeholder="SGames"
-      />
-    </div>
+              <div>
+                <Label
+                  htmlFor="heroTitle"
+                  className="text-[var(--sg-muted-text)]"
+                >
+                  Título principal
+                </Label>
 
-    <div className="md:col-span-2">
-      <Label
-        htmlFor="heroDescription"
-        className="text-[var(--sg-muted-text)]"
-      >
-        Descripción principal
-      </Label>
+                <Input
+                  id="heroTitle"
+                  value={eventConfig.heroTitle}
+                  onChange={(event) =>
+                    updateEventField(
+                      "heroTitle",
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="SGames"
+                />
+              </div>
 
-      <Textarea
-        id="heroDescription"
-        value={eventConfig.heroDescription}
-        onChange={(event) =>
-          updateEventField(
-            "heroDescription",
-            event.target.value
-          )
-        }
-        className="mt-1.5 min-h-[88px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-        placeholder="Un evento comunitario..."
-      />
-    </div>
+              <div className="md:col-span-2">
+                <Label
+                  htmlFor="heroDescription"
+                  className="text-[var(--sg-muted-text)]"
+                >
+                  Descripción principal
+                </Label>
 
-    <div className="md:col-span-2">
-      <Label
-        htmlFor="heroMetaText"
-        className="text-[var(--sg-muted-text)]"
-      >
-        Línea secundaria bajo el título
-      </Label>
+                <Textarea
+                  id="heroDescription"
+                  value={eventConfig.heroDescription}
+                  onChange={(event) =>
+                    updateEventField(
+                      "heroDescription",
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 min-h-[88px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="Un evento comunitario..."
+                />
+              </div>
 
-      <Textarea
-        id="heroMetaText"
-        value={eventConfig.heroMetaText}
-        onChange={(event) =>
-          updateEventField(
-            "heroMetaText",
-            event.target.value
-          )
-        }
-        className="mt-1.5 min-h-[74px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-        placeholder="Si lo dejas vacío, se genera automáticamente con las fechas del evento."
-      />
+              <div className="md:col-span-2">
+                <Label
+                  htmlFor="heroMetaText"
+                  className="text-[var(--sg-muted-text)]"
+                >
+                  Línea secundaria bajo el título
+                </Label>
 
-      <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
-        Ejemplo: Del 23 al 25 de octubre de 2026. Postula tu run y forma parte del lineup.
-      </p>
-    </div>
-  </div>
-</div>
+                <Textarea
+                  id="heroMetaText"
+                  value={eventConfig.heroMetaText}
+                  onChange={(event) =>
+                    updateEventField(
+                      "heroMetaText",
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 min-h-[74px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="Si lo dejas vacío, se genera automáticamente con las fechas del evento."
+                />
+
+                <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
+                  Ejemplo: Del 23 al 25 de octubre de 2026. Postula tu run y forma parte del lineup.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
