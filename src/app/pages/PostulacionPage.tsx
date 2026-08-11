@@ -71,6 +71,7 @@ type RunForm = {
   raceDiscordUser: string;
   raceCountry: string;
   raceVideoUrl: string;
+  raceSocialNetworks: SocialNetwork[];
   notes: string;
 };
 
@@ -240,6 +241,7 @@ function createEmptyRun(): RunForm {
     raceDiscordUser: "",
     raceCountry: "",
     raceVideoUrl: "",
+    raceSocialNetworks: [],
     notes: "",
   };
 }
@@ -766,6 +768,73 @@ export default function PostulacionPage() {
     );
   };
 
+  const addRaceSocialNetwork = (
+    runId: string
+  ) => {
+    setRuns((current) =>
+      current.map((run) =>
+        run.id === runId
+          ? {
+              ...run,
+              raceSocialNetworks: [
+                ...(run.raceSocialNetworks ?? []),
+                {
+                  id: createId(),
+                  socialNetworkId: "",
+                  url: "",
+                },
+              ],
+            }
+          : run
+      )
+    );
+  };
+
+  const removeRaceSocialNetwork = (
+    runId: string,
+    socialNetworkId: string
+  ) => {
+    setRuns((current) =>
+      current.map((run) =>
+        run.id === runId
+          ? {
+              ...run,
+              raceSocialNetworks:
+                (run.raceSocialNetworks ?? []).filter(
+                  (sn) => sn.id !== socialNetworkId
+                ),
+            }
+          : run
+      )
+    );
+  };
+
+  const updateRaceSocialNetwork = (
+    runId: string,
+    socialNetworkId: string,
+    field: "socialNetworkId" | "url",
+    value: string
+  ) => {
+    setRuns((current) =>
+      current.map((run) =>
+        run.id === runId
+          ? {
+              ...run,
+              raceSocialNetworks:
+                (run.raceSocialNetworks ?? []).map((sn) =>
+                  sn.id === socialNetworkId
+                    ? {
+                        ...sn,
+                        [field]: value,
+                      }
+                    : sn
+                ),
+            }
+          : run
+      )
+    );
+  };
+
   const updateAvailability = (
     dayDate: string,
     field: keyof Availability,
@@ -889,6 +958,23 @@ export default function PostulacionPage() {
         )) {
           toast.error(
             `La run #${runNumber} tiene una URL inválida en el jugador 2. Usa YouTube o Twitch`
+          );
+
+          return false;
+        }
+
+        const invalidRaceSocialNetwork =
+          (run.raceSocialNetworks ?? []).some(
+            (x) =>
+              (x.socialNetworkId.trim() !== "" &&
+                x.url.trim() === "") ||
+              (x.socialNetworkId.trim() === "" &&
+                x.url.trim() !== "")
+          );
+
+        if (invalidRaceSocialNetwork) {
+          toast.error(
+            `Completa o elimina las redes sociales incompletas del jugador 2 en la run #${runNumber}`
           );
 
           return false;
@@ -1048,6 +1134,20 @@ export default function PostulacionPage() {
 
                     videoUrl:
                       run.raceVideoUrl.trim(),
+
+                    socialNetworks:
+                      (run.raceSocialNetworks ?? [])
+                        .filter(
+                          (x) =>
+                            x.socialNetworkId.trim() !== "" &&
+                            x.url.trim() !== ""
+                        )
+                        .map((x) => ({
+                          socialNetworkId:
+                            x.socialNetworkId,
+                          url:
+                            x.url.trim(),
+                        })),
                   },
                 ]
               : [];
@@ -1803,6 +1903,108 @@ export default function PostulacionPage() {
                                   <p className="sgames-postulation-muted-soft mt-2 text-sm">
                                     Sólo se aceptan videos de YouTube o Twitch.
                                   </p>
+                                </div>
+
+                                <div className="rounded-lg border border-[var(--sg-border)] bg-[var(--sg-surface)]/35 p-4">
+                                  <div className="mb-3 flex items-center justify-between gap-3">
+                                    <div>
+                                      <p className="font-semibold text-[var(--sg-secondary)]">
+                                        Redes sociales del jugador 2
+                                      </p>
+
+                                      <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                                        Opcional. Agrega Twitch, YouTube, X, Instagram u otra red del segundo jugador.
+                                      </p>
+                                    </div>
+
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        addRaceSocialNetwork(run.id)
+                                      }
+                                      className="sgames-postulation-outline-button shrink-0"
+                                    >
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      Agregar red
+                                    </Button>
+                                  </div>
+
+                                  {(run.raceSocialNetworks ?? []).length === 0 ? (
+                                    <p className="text-sm text-[color-mix(in_srgb,var(--sg-muted-text)_70%,transparent)]">
+                                      Sin redes sociales del jugador 2
+                                    </p>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      {(run.raceSocialNetworks ?? []).map((sn) => (
+                                        <div
+                                          key={sn.id}
+                                          className="sgames-postulation-social-row flex flex-col gap-3 rounded-lg p-4 sm:flex-row"
+                                        >
+                                          <div className="flex-1">
+                                            <Select
+                                              value={sn.socialNetworkId}
+                                              onValueChange={(value) =>
+                                                updateRaceSocialNetwork(
+                                                  run.id,
+                                                  sn.id,
+                                                  "socialNetworkId",
+                                                  value
+                                                )
+                                              }
+                                            >
+                                              <SelectTrigger className="sgames-postulation-input">
+                                                <SelectValue placeholder="Tipo de red" />
+                                              </SelectTrigger>
+
+                                              <SelectContent className="sgames-postulation-select-content">
+                                                {catalog.map((network) => (
+                                                  <SelectItem
+                                                    key={network.id}
+                                                    value={network.id}
+                                                  >
+                                                    {network.name}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+
+                                          <div className="flex-[2]">
+                                            <Input
+                                              value={sn.url}
+                                              onChange={(event) =>
+                                                updateRaceSocialNetwork(
+                                                  run.id,
+                                                  sn.id,
+                                                  "url",
+                                                  event.target.value
+                                                )
+                                              }
+                                              className="sgames-postulation-input"
+                                              placeholder="https://..."
+                                            />
+                                          </div>
+
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              removeRaceSocialNetwork(
+                                                run.id,
+                                                sn.id
+                                              )
+                                            }
+                                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
