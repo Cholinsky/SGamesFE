@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
+import AdminStreamOverlayLibrary from "../../components/admin/AdminStreamOverlayLibrary";
 import {
   createStreamQueueItem,
   deleteStreamQueueItem,
@@ -715,6 +716,10 @@ export default function AdminStream() {
           </div>
         </MonitorCard>
       </div>
+
+      <AdminStreamOverlayLibrary
+        activeSeasonKey={panelData?.seasonKey}
+      />
 
       <div className="grid gap-5 xl:grid-cols-[1fr_1.15fr]">
         <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
