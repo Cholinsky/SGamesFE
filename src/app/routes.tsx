@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import RunsPage from "./pages/RunsPage";
 import ClipsPage from "./pages/ClipsPage";
 import AdminClips from "./pages/admin/AdminClips";
+import AdminStream from "./pages/admin/AdminStream";
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
           { path: "horarios", Component: AdminHorarios },
           { path: "publicaciones", Component: AdminPublicaciones },
           { path: "clips", Component: AdminClips },
+          { path: "stream", Component: AdminStream },
           { path: "runners", Component: AdminRunners },
           { path: "administradores", Component: AdminAdministradores },
           { path: "configuracion", Component: AdminConfiguracion },

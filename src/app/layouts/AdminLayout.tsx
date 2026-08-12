@@ -20,6 +20,7 @@ import {
   Clock,
   ShieldCheck,
   Clapperboard,
+  Radio,
 } from "lucide-react";
 import {
   Avatar,
@@ -401,6 +402,11 @@ export function AdminLayout() {
     name: "Publicaciones",
     path: "/admin/publicaciones",
     icon: Newspaper,
+  },
+  {
+    name: "Stream",
+    path: "/admin/stream",
+    icon: Radio,
   },
   {
     name: "Clips",
