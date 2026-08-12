@@ -31,12 +31,14 @@ import {
 import {
   ArrowDown,
   ArrowUp,
+  CalendarPlus,
   CheckCircle2,
   Copy,
   ExternalLink,
   Eye,
   MonitorPlay,
   Plus,
+  Link2,
   Radio,
   RefreshCw,
   RotateCcw,
@@ -53,6 +55,9 @@ import {
   deleteStreamQueueItem,
   getStreamPanelAdmin,
   getStreamOverlayUrl,
+  getStreamScheduleCandidates,
+  importScheduleEntryToStream,
+  syncStreamQueueItemNow,
   markStreamQueueItemDone,
   moveStreamQueueItem,
   restoreStreamQueueItem,
@@ -60,6 +65,7 @@ import {
   type StreamPanelData,
   type StreamQueueItem,
   type StreamQueuePayload,
+  type StreamScheduleCandidate,
 } from "../../services/streamPanelService";
 
 type StreamSettingsForm = {
@@ -369,6 +375,33 @@ export default function AdminStream() {
   const [queueDialogOpen, setQueueDialogOpen] =
     useState(false);
 
+  const [scheduleDialogOpen, setScheduleDialogOpen] =
+    useState(false);
+
+  const [scheduleCandidates, setScheduleCandidates] =
+    useState<StreamScheduleCandidate[]>([]);
+
+  const [scheduleSearch, setScheduleSearch] =
+    useState("");
+
+  const [importingScheduleId, setImportingScheduleId] =
+    useState("");
+
+  const [importSyncWithSchedule, setImportSyncWithSchedule] =
+    useState(true);
+
+  const [importCommentators, setImportCommentators] =
+    useState("");
+
+  const [importLanguage, setImportLanguage] =
+    useState("ES");
+
+  const [importNote, setImportNote] =
+    useState("");
+
+  const [loadingSchedule, setLoadingSchedule] =
+    useState(false);
+
   const [queueForm, setQueueForm] =
     useState<QueueForm>(
       emptyQueueForm
@@ -476,6 +509,39 @@ export default function AdminStream() {
   const currentItem =
     panelData?.currentItem ?? null;
 
+  const filteredScheduleCandidates =
+    useMemo(() => {
+      const cleanSearch =
+        scheduleSearch
+          .trim()
+          .toLowerCase();
+
+      if (!cleanSearch) {
+        return scheduleCandidates;
+      }
+
+      return scheduleCandidates.filter((run) => {
+        const haystack =
+          [
+            run.runnerName,
+            run.runner2Name,
+            run.gameName,
+            run.categoryName,
+            run.platformName,
+            run.estimate,
+            run.runType,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+        return haystack.includes(cleanSearch);
+      });
+    }, [
+      scheduleCandidates,
+      scheduleSearch,
+    ]);
+
   function updateFormField(
     field: keyof StreamSettingsForm,
     value: string | boolean
@@ -554,6 +620,77 @@ export default function AdminStream() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function openScheduleImportDialog() {
+    try {
+      setLoadingSchedule(true);
+      setScheduleDialogOpen(true);
+
+      const runs =
+        await getStreamScheduleCandidates();
+
+      setScheduleCandidates(runs);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron cargar las runs del horario"
+      );
+    } finally {
+      setLoadingSchedule(false);
+    }
+  }
+
+  async function handleImportScheduleRun(
+    run: StreamScheduleCandidate
+  ) {
+    try {
+      setImportingScheduleId(
+        run.scheduleEntryId
+      );
+
+      await importScheduleEntryToStream({
+        scheduleEntryId:
+          run.scheduleEntryId,
+        sourceLabel:
+          "Horario",
+        commentators:
+          importCommentators.trim() || null,
+        language:
+          importLanguage.trim() || "ES",
+        note:
+          importNote.trim() || null,
+        syncWithSchedule:
+          importSyncWithSchedule,
+      });
+
+      toast.success(
+        importSyncWithSchedule
+          ? "Run importada y sincronizada con horario"
+          : "Run importada como snapshot"
+      );
+
+      setScheduleDialogOpen(false);
+      setImportCommentators("");
+      setImportLanguage("ES");
+      setImportNote("");
+      setScheduleSearch("");
+
+      await loadPanel();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo importar la run"
+      );
+    } finally {
+      setImportingScheduleId("");
     }
   }
 
@@ -1002,15 +1139,26 @@ export default function AdminStream() {
                 </p>
               </div>
 
-              <Button
-                onClick={() =>
-                  setQueueDialogOpen(true)
-                }
-                className="sgames-admin-primary-button"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar item
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={openScheduleImportDialog}
+                  variant="outline"
+                  className="border-[var(--sg-admin-border)] text-[var(--sg-primary)]"
+                >
+                  <CalendarPlus className="mr-2 h-4 w-4" />
+                  Importar desde horario
+                </Button>
+
+                <Button
+                  onClick={() =>
+                    setQueueDialogOpen(true)
+                  }
+                  className="sgames-admin-primary-button"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar item
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
@@ -1054,6 +1202,19 @@ export default function AdminStream() {
                           {item.sourceLabel && (
                             <Badge className="bg-[var(--sg-admin-card-bg)] text-[var(--sg-muted-text)]">
                               {item.sourceLabel}
+                            </Badge>
+                          )}
+
+                          {item.sourceScheduleEntryId && (
+                            <Badge className={
+                              item.syncWithSchedule
+                                ? "bg-blue-500/20 text-blue-300"
+                                : "bg-slate-500/20 text-slate-300"
+                            }>
+                              <Link2 className="mr-1 h-3 w-3" />
+                              {item.syncWithSchedule
+                                ? "Sync horario"
+                                : "Snapshot"}
                             </Badge>
                           )}
                         </div>
@@ -1113,6 +1274,25 @@ export default function AdminStream() {
                         >
                           <ArrowDown className="h-4 w-4" />
                         </Button>
+
+                        {item.sourceScheduleEntryId && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              handleQueueAction(
+                                () =>
+                                  syncStreamQueueItemNow(
+                                    item.id
+                                  ),
+                                "Item sincronizado con horario"
+                              )
+                            }
+                            className="border-blue-500/30 text-blue-300"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        )}
 
                         <Button
                           size="sm"
@@ -1200,6 +1380,197 @@ export default function AdminStream() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
+      >
+        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)] text-[var(--sg-text)]">
+          <DialogHeader>
+            <DialogTitle>
+              Importar run desde horario
+            </DialogTitle>
+
+            <p className="text-sm text-[var(--sg-muted-text)]">
+              Selecciona una run del horario activo. Si activas sincronización, los cambios futuros del horario actualizarán automáticamente el item y los overlays.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-[1fr_220px_1fr]">
+              <div>
+                <Label className="text-[var(--sg-muted-text)]">
+                  Buscar
+                </Label>
+
+                <Input
+                  value={scheduleSearch}
+                  onChange={(event) =>
+                    setScheduleSearch(
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="Runner, juego, categoría o plataforma"
+                />
+              </div>
+
+              <div>
+                <Label className="text-[var(--sg-muted-text)]">
+                  Idioma
+                </Label>
+
+                <Input
+                  value={importLanguage}
+                  onChange={(event) =>
+                    setImportLanguage(
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="ES"
+                />
+              </div>
+
+              <label className="mt-7 flex items-center gap-3 rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] px-4 py-3 text-sm text-[var(--sg-muted-text)]">
+                <input
+                  type="checkbox"
+                  checked={importSyncWithSchedule}
+                  onChange={(event) =>
+                    setImportSyncWithSchedule(
+                      event.target.checked
+                    )
+                  }
+                />
+                Sincronizar con cambios del horario
+              </label>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label className="text-[var(--sg-muted-text)]">
+                  Comentaristas / staff opcional
+                </Label>
+
+                <Input
+                  value={importCommentators}
+                  onChange={(event) =>
+                    setImportCommentators(
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="Ej. N6 + SweetX"
+                />
+              </div>
+
+              <div>
+                <Label className="text-[var(--sg-muted-text)]">
+                  Nota para Info Bar opcional
+                </Label>
+
+                <Input
+                  value={importNote}
+                  onChange={(event) =>
+                    setImportNote(
+                      event.target.value
+                    )
+                  }
+                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="Ej. Preparando setup / entrevista rápida"
+                />
+              </div>
+            </div>
+
+            {loadingSchedule ? (
+              <div className="rounded-2xl border border-dashed border-[var(--sg-admin-border)] p-10 text-center text-[var(--sg-muted-text)]">
+                Cargando runs del horario...
+              </div>
+            ) : filteredScheduleCandidates.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[var(--sg-admin-border)] p-10 text-center">
+                <p className="font-semibold text-[var(--sg-text)]">
+                  No hay runs en el horario activo
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  Agrega runs desde Admin &gt; Horarios y vuelve a intentar.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredScheduleCandidates.map((run) => (
+                  <div
+                    key={run.scheduleEntryId}
+                    className="rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4"
+                  >
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                      <div className="min-w-0">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
+                            {new Date(run.dayDate).toLocaleDateString("es-MX")}
+                          </Badge>
+
+                          <Badge className="bg-black/30 text-[var(--sg-muted-text)]">
+                            {String(run.startTime).slice(0, 5)}
+                          </Badge>
+
+                          <Badge className="bg-green-500/15 text-green-300">
+                            {run.runType || "Solo"}
+                          </Badge>
+                        </div>
+
+                        <h3 className="text-lg font-bold text-[var(--sg-text)]">
+                          {run.gameName || run.title}
+                        </h3>
+
+                        <p className="text-sm text-[var(--sg-muted-text)]">
+                          {run.runnerName}
+                          {run.runner2Name
+                            ? ` vs ${run.runner2Name}`
+                            : ""}
+                          {" · "}
+                          {run.categoryName}
+                          {" · "}
+                          {run.platformName}
+                          {" · "}
+                          {run.estimate}
+                        </p>
+                      </div>
+
+                      <Button
+                        onClick={() =>
+                          handleImportScheduleRun(run)
+                        }
+                        disabled={
+                          importingScheduleId === run.scheduleEntryId
+                        }
+                        className="sgames-admin-primary-button"
+                      >
+                        <CalendarPlus className="mr-2 h-4 w-4" />
+                        {importingScheduleId === run.scheduleEntryId
+                          ? "Importando..."
+                          : "Importar"}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setScheduleDialogOpen(false)
+              }
+              className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
+            >
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={queueDialogOpen}

@@ -28,6 +28,9 @@ export type StreamQueueItem = {
   detailText?: string | null;
   sourceLabel?: string | null;
   displayDataJson?: string | null;
+  sourceScheduleEntryId?: string | null;
+  syncWithSchedule?: boolean;
+  lastSyncedAt?: string | null;
   sortOrder: number;
   isActive: boolean;
   isDone: boolean;
@@ -46,6 +49,37 @@ export type StreamPanelData = {
   currentItem?: StreamQueueItem | null;
   queue: StreamQueueItem[];
   doneItems: StreamQueueItem[];
+};
+
+export type StreamScheduleCandidate = {
+  scheduleEntryId: string;
+  applicationId?: string | null;
+  dayDate: string;
+  startTime: string;
+  durationMinutes: number;
+  positionOrder: number;
+  runStatus?: string | null;
+  runnerName: string;
+  runner2Name?: string | null;
+  gameName: string;
+  categoryName: string;
+  platformName: string;
+  estimate: string;
+  runType: string;
+  videoUrl?: string | null;
+  title: string;
+  subtitle: string;
+  displayDataJson: string;
+};
+
+export type ImportScheduleEntryToStreamPayload = {
+  scheduleEntryId: string;
+  sourceLabel?: string | null;
+  commentators?: string | null;
+  language?: string | null;
+  note?: string | null;
+  syncWithSchedule: boolean;
+  sortOrder?: number;
 };
 
 export type UpdateStreamSettingsPayload = {
@@ -361,4 +395,76 @@ export async function deleteStreamQueueItem(
   }
 
   return await response.json();
+}
+
+
+export async function getStreamScheduleCandidates() {
+  const response =
+    await fetch(
+      `${API_URL}/StreamPanel/schedule-candidates?t=${Date.now()}`,
+      {
+        headers: getHeaders(),
+        cache: "no-store",
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudieron cargar las runs del horario"
+      )
+    );
+  }
+
+  return await response.json() as StreamScheduleCandidate[];
+}
+
+export async function importScheduleEntryToStream(
+  payload: ImportScheduleEntryToStreamPayload
+) {
+  const response =
+    await fetch(
+      `${API_URL}/StreamPanel/queue/import-schedule-entry`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudo importar la run del horario"
+      )
+    );
+  }
+
+  return await response.json() as StreamQueueItem;
+}
+
+export async function syncStreamQueueItemNow(
+  id: string
+) {
+  const response =
+    await fetch(
+      `${API_URL}/StreamPanel/queue/${id}/sync-now`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudo sincronizar el item con horario"
+      )
+    );
+  }
+
+  return await response.json() as StreamQueueItem;
 }
