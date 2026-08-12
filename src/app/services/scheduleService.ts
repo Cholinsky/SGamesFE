@@ -187,6 +187,26 @@ export async function getPublicSchedule(
   return await response.json();
 }
 
+export async function getCurrentPublicSchedule() {
+  const response = await fetch(
+    `${API_URL}/Schedule/public-current?t=${Date.now()}`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading current public schedule"
+      )
+    );
+  }
+
+  return await response.json();
+}
+
 export async function getEventById(
   eventId: string
 ) {

@@ -1,223 +1,311 @@
 import { useEffect, useState } from "react";
-import { getActivePublicEvent } from "../services/eventService";
-import { getPublicPosts } from "../services/postService";
 import { Link } from "react-router";
-import { Button } from "../components/ui/button";
-import { getPublicRunnerProfiles } from "../services/runnerProfileService";
-import { getActiveDesignTheme } from "../services/publicDesignThemeService";
-import {
-  Play,
-  Users,
-  Trophy,
-  Gamepad2,
-  ChevronDown,
-  Zap,
-  Heart,
-  CalendarDays,
-  ClipboardCheck,
-  Clock3,
-  Sparkles,
-  Megaphone,
-  Newspaper,
-} from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../components/ui/accordion";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { DateTime } from "luxon";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../components/ui/dialog";
+  Calendar,
+  Clock,
+  Gamepad2,
+  User,
+  Filter,
+  ArrowLeft,
+  CalendarDays,
+  Sparkles,
+  Info,
+  Monitor,
+  Timer,
+  SearchX,
+  ClipboardEdit,
+  Twitch,
+  ExternalLink,
+} from "lucide-react";
+import { getCurrentPublicSchedule } from "../services/scheduleService";
+import {
+  getPublicSettings,
+  type PublicSettings,
+} from "../services/publicSettingsService";
 
-type PublicPost = {
+type ScheduleStatus =
+  | "scheduled"
+  | "preparing"
+  | "live"
+  | "completed";
+
+type ScheduleEntry = {
   id: string;
-  title: string;
-  content: string;
-  category?: string | null;
-  publishDate?: string | null;
-  createdAt?: string | null;
+  dayDate: string;
+  dayLabel: string;
+  shortDayLabel: string;
+  time: string;
+  runner: string;
+  game: string;
+  category: string;
+  platform: string;
+  duration: string;
+  durationMinutes: number;
+  status: ScheduleStatus;
+  statusText: string;
+  runStatus?: string | null;
+  actualStartedAt?: string | null;
+  actualCompletedAt?: string | null;
+  statusUpdatedAt?: string | null;
+  statusNote?: string | null;
 };
 
-type PublicRunnerProfile = {
-  id: string;
-  displayName: string;
-  country?: string | null;
-  bio?: string | null;
-  photoUrl?: string | null;
-  presentationVideoUrl?: string | null;
-  sortOrder: number;
-  socialLinks: {
-    socialNetworkId: string;
-    name: string;
-    url: string;
-  }[];
+type PublicScheduleResponse = {
+  eventActive?: boolean;
+  isPublished: boolean;
+  message?: string;
+  eventId?: string;
+  event?: string;
+  eventStartDate?: string;
+  eventEndDate?: string;
+  entries?: PublicScheduleEntryDto[];
 };
 
-
-type PublicEvent = {
+type PublicScheduleEntryDto = {
   id: string;
-  name?: string | null;
-  description?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  isActive?: boolean;
-  isPublished?: boolean;
-  applicationsOpen?: boolean;
-  publicRunsVisible?: boolean;
-  seasonKey?: string | null;
-  heroEyebrow?: string | null;
-  heroTitle?: string | null;
-  heroDescription?: string | null;
-  heroMetaText?: string | null;
+  dayDate: string;
+  startTime: string;
+  durationMinutes: number;
+  runStatus?: string | null;
+  actualStartedAt?: string | null;
+  actualCompletedAt?: string | null;
+  statusUpdatedAt?: string | null;
+  statusNote?: string | null;
+  runnerName: string | null;
+  game: string | null;
+  category: string | null;
+  platform: string | null;
 };
 
+type DayOption = {
+  dayDate: string;
+  label: string;
+  shortLabel: string;
+};
 
-type SeasonAssetKey =
-  | "Summer"
-  | "Fall"
-  | "Winter";
+const EVENT_TIMEZONE =
+  "America/Mexico_City";
 
-function normalizeSeasonAssetKey(
-  seasonKey?: string | null
-): SeasonAssetKey {
-  const cleanSeason =
-    seasonKey?.trim().toLowerCase();
+const PREPARING_MINUTES =
+  15;
 
-  if (cleanSeason === "winter") {
-    return "Winter";
-  }
-
-  if (
-    cleanSeason === "autumn" ||
-    cleanSeason === "fall"
-  ) {
-    return "Fall";
-  }
-
-  return "Summer";
+function normalizeDateOnly(
+  dayDate: string
+) {
+  return dayDate.split("T")[0];
 }
 
-function getSeasonVideoSrc(
-  season: SeasonAssetKey
+function getEntryDateTimes(
+  dayDate: string,
+  startTime: string,
+  durationMinutes: number
 ) {
-  switch (season) {
-    case "Winter":
-      return "/videos/SGW.mp4";
+  const cleanDate =
+    normalizeDateOnly(dayDate);
 
-    case "Fall":
-      return "/videos/SGF.mp4";
+  const cleanTime =
+    String(startTime).substring(0, 5);
 
-    default:
-      return "/videos/SGS.mp4";
-  }
-}
-
-function getSeasonLogoBaseName(
-  season: SeasonAssetKey
-) {
-  switch (season) {
-    case "Winter":
-      return "LogoWinter";
-
-    case "Fall":
-      return "LogoFall";
-
-    default:
-      return "LogoSummer";
-  }
-}
-
-function getSeasonLogoCandidates(
-  season: SeasonAssetKey
-) {
-  const logoName =
-    getSeasonLogoBaseName(season);
-
-  return [
-    `/logos/${logoName}.png`,
-    `/logos/${logoName}.Png`,
-    `/logos/${logoName}.PNG`,
-    `/logos/${logoName}.webp`,
-    `/logos/${logoName}.jpg`,
-    `/logos/${logoName}.jpeg`,
-    `/logos/${logoName}.svg`,
-    `/logos/${logoName}.avif`,
-    "/logos/LogoSummer.png",
-    "/logos/LogoSummer.Png",
-    "/logos/LogoSummer.PNG",
-    "/logos/LogoSummer.webp",
-    "/logos/LogoSummer.jpg",
-    "/logos/LogoSummer.jpeg",
-    "/logos/LogoSummer.svg",
-    "/logos/LogoSummer.avif",
-  ];
-}
-
-function formatPostDate(
-  value?: string | null
-) {
-  if (!value) {
-    return "Anuncio oficial";
-  }
-
-  return new Date(value)
-    .toLocaleDateString(
-      "es-MX",
+  const start =
+    DateTime.fromISO(
+      `${cleanDate}T${cleanTime}`,
       {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+        zone: EVENT_TIMEZONE,
       }
     );
+
+  const end =
+    start.plus({
+      minutes: durationMinutes,
+    });
+
+  return {
+    start,
+    end,
+  };
 }
 
-function getPostPreview(
-  content: string
+function formatClock(
+  date: DateTime
 ) {
-  const cleanContent =
-    content?.trim() ?? "";
-
-  if (cleanContent.length <= 170) {
-    return cleanContent;
-  }
-
-  return `${cleanContent.slice(0, 170)}...`;
+  return date.toFormat("HH:mm");
 }
 
-function parseApiDateOnly(
-  value?: string | null
+function formatRelativeMinutes(
+  minutes: number
 ) {
-  if (!value) {
-    return null;
+  if (minutes <= 0) {
+    return "ahora";
   }
 
-  const datePart =
-    value.split("T")[0];
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
 
-  const parts =
-    datePart
-      .split("-")
-      .map((part) => Number(part));
+  const hours =
+    Math.floor(minutes / 60);
+
+  const remainingMinutes =
+    minutes % 60;
+
+  if (remainingMinutes === 0) {
+    return `${hours} h`;
+  }
+
+  return `${hours} h ${remainingMinutes} min`;
+}
+
+function getScheduleStatus(
+  dayDate: string,
+  startTime: string,
+  durationMinutes: number,
+  now: DateTime
+) {
+  const { start, end } =
+    getEntryDateTimes(
+      dayDate,
+      startTime,
+      durationMinutes
+    );
+
+  const preparingStart =
+    start.minus({
+      minutes: PREPARING_MINUTES,
+    });
+
+  const nowMs =
+    now.toMillis();
+
+  const startMs =
+    start.toMillis();
+
+  const endMs =
+    end.toMillis();
+
+  const preparingStartMs =
+    preparingStart.toMillis();
+
+  if (nowMs >= endMs) {
+    return {
+      status: "completed" as const,
+      statusText: `Finalizó aprox. ${formatClock(end)}`,
+    };
+  }
 
   if (
-    parts.length !== 3 ||
-    parts.some((part) => Number.isNaN(part))
+    nowMs >= startMs &&
+    nowMs < endMs
   ) {
-    return null;
+    return {
+      status: "live" as const,
+      statusText: `Termina aprox. ${formatClock(end)}`,
+    };
   }
 
-  const [
-    year,
-    month,
-    day,
-  ] = parts;
+  if (
+    nowMs >= preparingStartMs &&
+    nowMs < startMs
+  ) {
+    const minutes =
+      Math.ceil(
+        start.diff(now, "minutes").minutes
+      );
+
+    return {
+      status: "preparing" as const,
+      statusText: `Inicia en ${formatRelativeMinutes(minutes)}`,
+    };
+  }
+
+  const minutes =
+    Math.ceil(
+      start.diff(now, "minutes").minutes
+    );
+
+  return {
+    status: "scheduled" as const,
+    statusText:
+      minutes > 0
+        ? `Inicia en ${formatRelativeMinutes(minutes)}`
+        : `Inicia ${formatClock(start)}`,
+  };
+}
+
+function getManualScheduleStatus(
+  entry: PublicScheduleEntryDto,
+  fallbackStatus: {
+    status: ScheduleStatus;
+    statusText: string;
+  }
+) {
+  if (!entry.runStatus) {
+    return fallbackStatus;
+  }
+
+  if (entry.runStatus === "Live") {
+    return {
+      status: "live" as const,
+      statusText:
+        entry.actualStartedAt
+          ? `Inició ${formatManualTime(entry.actualStartedAt)}`
+          : "Transmitiendo ahora",
+    };
+  }
+
+  if (entry.runStatus === "Preparing") {
+    return {
+      status: "preparing" as const,
+      statusText: "El staff está preparando esta run",
+    };
+  }
+
+  if (entry.runStatus === "Completed") {
+    return {
+      status: "completed" as const,
+      statusText:
+        entry.actualCompletedAt
+          ? `Finalizó ${formatManualTime(entry.actualCompletedAt)}`
+          : "Run completada",
+    };
+  }
+
+  if (entry.runStatus === "Scheduled") {
+    return {
+      status: "scheduled" as const,
+      statusText: "Esperando inicio",
+    };
+  }
+
+  return fallbackStatus;
+}
+
+function formatManualTime(
+  value: string
+) {
+  return DateTime
+    .fromISO(value, {
+      zone: "utc",
+    })
+    .setZone(EVENT_TIMEZONE)
+    .toFormat("HH:mm");
+}
+function parseLocalDate(dayDate: string) {
+  const cleanDate =
+    dayDate.split("T")[0];
+
+  const [year, month, day] =
+    cleanDate.split("-").map(Number);
 
   return new Date(
     year,
@@ -226,1122 +314,1160 @@ function parseApiDateOnly(
   );
 }
 
-function getMonthName(
-  date: Date
-) {
-  return date.toLocaleDateString(
-    "es-MX",
-    {
-      month: "long",
-    }
-  );
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function formatScheduleDate(dayDate: string) {
+  const date =
+    parseLocalDate(dayDate);
+
+  return date.toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function formatShortDay(dayDate: string) {
+  const date =
+    parseLocalDate(dayDate);
+
+  const day =
+    date.toLocaleDateString("es-MX", {
+      weekday: "long",
+    });
+
+  return capitalize(day);
 }
 
 function formatEventDateRange(
-  startDate?: string | null,
-  endDate?: string | null
+  startDate?: string,
+  endDate?: string,
+  entries: PublicScheduleEntryDto[] = []
 ) {
+  const entryDates =
+    entries
+      .map((entry) =>
+        normalizeDateOnly(entry.dayDate)
+      )
+      .filter(Boolean)
+      .sort();
+
+  const cleanStart =
+    startDate
+      ? normalizeDateOnly(startDate)
+      : entryDates[0];
+
+  const cleanEnd =
+    endDate
+      ? normalizeDateOnly(endDate)
+      : entryDates[entryDates.length - 1];
+
+  if (!cleanStart || !cleanEnd) {
+    return "Fechas por confirmar";
+  }
+
   const start =
-    parseApiDateOnly(startDate);
+    parseLocalDate(cleanStart);
 
   const end =
-    parseApiDateOnly(endDate);
+    parseLocalDate(cleanEnd);
 
-  if (!start && !end) {
-    return "Fecha por confirmar";
+  const startDay =
+    start.getDate();
+
+  const endDay =
+    end.getDate();
+
+  const startMonth =
+    start.toLocaleDateString("es-MX", {
+      month: "long",
+    });
+
+  const endMonth =
+    end.toLocaleDateString("es-MX", {
+      month: "long",
+    });
+
+  const startYear =
+    start.getFullYear();
+
+  const endYear =
+    end.getFullYear();
+
+  if (
+    startMonth === endMonth &&
+    startYear === endYear
+  ) {
+    return `${startDay} - ${endDay} ${startMonth} ${startYear}`;
   }
 
-  if (start && !end) {
-    return start.toLocaleDateString(
-      "es-MX",
-      {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }
-    );
+  if (startYear === endYear) {
+    return `${startDay} ${startMonth} - ${endDay} ${endMonth} ${startYear}`;
   }
 
-  if (!start && end) {
-    return end.toLocaleDateString(
-      "es-MX",
-      {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }
-    );
-  }
-
-  if (!start || !end) {
-    return "Fecha por confirmar";
-  }
-
-  const sameDay =
-    start.getFullYear() === end.getFullYear() &&
-    start.getMonth() === end.getMonth() &&
-    start.getDate() === end.getDate();
-
-  if (sameDay) {
-    return start.toLocaleDateString(
-      "es-MX",
-      {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }
-    );
-  }
-
-  const sameMonthAndYear =
-    start.getFullYear() === end.getFullYear() &&
-    start.getMonth() === end.getMonth();
-
-  if (sameMonthAndYear) {
-    return `${start.getDate()} - ${end.getDate()} ${getMonthName(end)} ${end.getFullYear()}`;
-  }
-
-  const sameYear =
-    start.getFullYear() === end.getFullYear();
-
-  if (sameYear) {
-    return `${start.getDate()} ${getMonthName(start)} - ${end.getDate()} ${getMonthName(end)} ${end.getFullYear()}`;
-  }
-
-  return `${start.getDate()} ${getMonthName(start)} ${start.getFullYear()} - ${end.getDate()} ${getMonthName(end)} ${end.getFullYear()}`;
+  return `${startDay} ${startMonth} ${startYear} - ${endDay} ${endMonth} ${endYear}`;
 }
 
-function formatEventDateDescription(
-  activeEvent: PublicEvent | null
+function formatDuration(minutes: number) {
+  const hours =
+    Math.floor(minutes / 60);
+
+  const remainingMinutes =
+    minutes % 60;
+
+  if (hours <= 0) {
+    return `${remainingMinutes}m`;
+  }
+
+  if (remainingMinutes === 0) {
+    return `${hours}h`;
+  }
+
+  return `${hours}h ${remainingMinutes}m`;
+}
+
+function compareEntries(
+  a: ScheduleEntry,
+  b: ScheduleEntry
 ) {
-  const start =
-    parseApiDateOnly(activeEvent?.startDate);
+  const dateA =
+    parseLocalDate(a.dayDate).getTime();
 
-  const end =
-    parseApiDateOnly(activeEvent?.endDate);
+  const dateB =
+    parseLocalDate(b.dayDate).getTime();
 
-  if (!start || !end) {
-    return activeEvent?.description?.trim()
-      ? activeEvent.description
-      : "La fecha oficial se actualizará cuando el staff la confirme.";
+  if (dateA !== dateB) {
+    return dateA - dateB;
   }
 
-  const dayDifference =
-    Math.round(
-      (end.getTime() - start.getTime()) /
-      (1000 * 60 * 60 * 24)
-    ) + 1;
+  return a.time.localeCompare(b.time);
+}
 
-  const safeDays =
-    Math.max(
-      dayDifference,
-      1
+function mapPublicEntry(
+  entry: PublicScheduleEntryDto,
+  now: DateTime
+): ScheduleEntry {
+  const startTime =
+    String(entry.startTime).substring(0, 5);
+
+const automaticStatus =
+  getScheduleStatus(
+    entry.dayDate,
+    startTime,
+    entry.durationMinutes,
+    now
+  );
+
+const statusInfo =
+  getManualScheduleStatus(
+    entry,
+    automaticStatus
+  );
+
+  return {
+    id:
+      entry.id,
+
+    dayDate:
+      entry.dayDate,
+
+    dayLabel:
+      formatScheduleDate(entry.dayDate),
+
+    shortDayLabel:
+      formatShortDay(entry.dayDate),
+
+    time:
+      startTime,
+
+    runner:
+      entry.runnerName ?? "Bloque",
+
+    game:
+      entry.game ?? "Bloque del evento",
+
+    category:
+      entry.category ?? "General",
+
+    platform:
+      entry.platform ?? "-",
+
+    duration:
+      formatDuration(entry.durationMinutes),
+
+    durationMinutes:
+      entry.durationMinutes,
+
+    status:
+      statusInfo.status,
+
+    statusText:
+      statusInfo.statusText,
+      
+      runStatus:
+  entry.runStatus ?? null,
+
+actualStartedAt:
+  entry.actualStartedAt ?? null,
+
+actualCompletedAt:
+  entry.actualCompletedAt ?? null,
+
+statusUpdatedAt:
+  entry.statusUpdatedAt ?? null,
+
+statusNote:
+  entry.statusNote ?? null,
+  };
+}
+
+function getStatusBadge(
+  status: ScheduleStatus
+) {
+  if (status === "live") {
+    return (
+      <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+        En vivo
+      </Badge>
     );
-
-  if (activeEvent?.description?.trim()) {
-    return activeEvent.description;
   }
 
-  return safeDays === 1
-    ? "Una jornada dedicada a runs, comunidad y juegos variados."
-    : `${safeDays} días dedicados a runs, comunidad y juegos variados.`;
+  if (status === "preparing") {
+    return (
+      <Badge className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
+        Preparando
+      </Badge>
+    );
+  }
+
+  if (status === "completed") {
+    return (
+      <Badge className="bg-gray-500/20 text-gray-400 hover:bg-gray-500/30">
+        Completado
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30">
+      Esperando
+    </Badge>
+  );
 }
 
-export default function HomePage() {
-  const [activeEvent, setActiveEvent] =
-    useState<PublicEvent | null>(null);
 
-  const [applicationsOpen, setApplicationsOpen] =
+const horarioThemeCss = `
+  .sgames-schedule-page {
+    background:
+      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 15%, transparent), transparent 30rem),
+      radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 13%, transparent), transparent 32rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 64%, var(--sg-background) 36%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+    color: var(--sg-text);
+  }
+
+  .sgames-schedule-card {
+    border: 1px solid var(--sg-border);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--sg-surface) 72%, transparent),
+        color-mix(in srgb, var(--sg-background) 84%, transparent)
+      );
+    box-shadow:
+      0 0 32px rgba(15, 23, 42, 0.25);
+    backdrop-filter: blur(14px);
+  }
+
+  .sgames-schedule-gradient-box {
+    background:
+      linear-gradient(
+        135deg,
+        var(--sg-primary),
+        var(--sg-secondary),
+        var(--sg-accent)
+      );
+    box-shadow:
+      0 0 32px color-mix(in srgb, var(--sg-accent) 30%, transparent);
+  }
+
+  .sgames-schedule-badge-primary {
+    border: 1px solid color-mix(in srgb, var(--sg-primary) 34%, transparent);
+    background: color-mix(in srgb, var(--sg-primary) 11%, transparent);
+    color: var(--sg-primary);
+  }
+
+  .sgames-schedule-badge-secondary {
+    border: 1px solid color-mix(in srgb, var(--sg-secondary) 34%, transparent);
+    background: color-mix(in srgb, var(--sg-secondary) 11%, transparent);
+    color: var(--sg-secondary);
+  }
+
+  .sgames-schedule-badge-accent {
+    border: 1px solid color-mix(in srgb, var(--sg-accent) 34%, transparent);
+    background: color-mix(in srgb, var(--sg-accent) 11%, transparent);
+    color: var(--sg-accent);
+  }
+
+  .sgames-schedule-filter {
+    border-color: var(--sg-border) !important;
+    background: color-mix(in srgb, var(--sg-background) 78%, #000000 22%) !important;
+    color: var(--sg-text) !important;
+  }
+
+  .sgames-schedule-select-content {
+    border-color: var(--sg-border) !important;
+    background: color-mix(in srgb, var(--sg-surface) 88%, #000000 12%) !important;
+    color: var(--sg-text) !important;
+  }
+
+  .sgames-schedule-entry {
+    border: 1px solid var(--sg-border);
+    background: color-mix(in srgb, var(--sg-surface) 64%, transparent);
+  }
+
+  .sgames-schedule-entry:hover {
+    border-color: color-mix(in srgb, var(--sg-primary) 42%, transparent);
+    background: color-mix(in srgb, var(--sg-primary) 7%, transparent);
+  }
+
+  [data-season-theme="Winter"] .sgames-schedule-page {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.16), transparent 30rem),
+      radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.08), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+  }
+
+  [data-season-theme="Autumn"] .sgames-schedule-page {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.17), transparent 30rem),
+      radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.14), transparent 32rem),
+      radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+  }
+
+  .sgames-schedule-twitch-card {
+    border: 1px solid color-mix(in srgb, var(--sg-accent) 30%, transparent);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--sg-accent) 11%, transparent),
+        color-mix(in srgb, var(--sg-secondary) 10%, transparent)
+      );
+    box-shadow:
+      0 0 32px color-mix(in srgb, var(--sg-accent) 18%, transparent);
+    backdrop-filter: blur(14px);
+  }
+
+  .sgames-schedule-twitch-button {
+    border: 1px solid color-mix(in srgb, var(--sg-accent) 46%, transparent);
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--sg-accent) 88%, #ffffff 12%),
+        color-mix(in srgb, var(--sg-secondary) 82%, #ffffff 18%)
+      );
+    color: #ffffff;
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--sg-accent) 24%, transparent);
+  }
+
+  .sgames-schedule-twitch-button:hover {
+    filter: brightness(1.12);
+  }
+`;
+
+export default function HorarioPage() {
+  const [selectedDay, setSelectedDay] =
+    useState("todos");
+
+  const [selectedGame, setSelectedGame] =
+    useState("todos");
+
+  const [selectedPlatform, setSelectedPlatform] =
+    useState("todos");
+
+  const [schedule, setSchedule] =
+    useState<ScheduleEntry[]>([]);
+
+  const [eventName, setEventName] =
+    useState("SGames");
+
+  const [eventDateLabel, setEventDateLabel] =
+    useState("Fechas por confirmar");
+
+  const [publicSettings, setPublicSettings] =
+    useState<PublicSettings | null>(null);
+
+  const [isPublished, setIsPublished] =
     useState(false);
 
-  const [hasActivePublicEvent, setHasActivePublicEvent] =
-    useState(false);
+  const [message, setMessage] =
+    useState("");
 
-  const [activeSeasonKey, setActiveSeasonKey] =
-    useState<string>("Summer");
+  const [loading, setLoading] =
+    useState(true);
 
-  const [logoFallbackIndex, setLogoFallbackIndex] =
-    useState(0);
+    const [now, setNow] =
+  useState(
+    DateTime.now().setZone(EVENT_TIMEZONE)
+  );
 
-  const [logoFailed, setLogoFailed] =
-    useState(false);
-
-  const [publicPosts, setPublicPosts] =
-    useState<PublicPost[]>([]);
-
-    const [publicRunners, setPublicRunners] =
-  useState<PublicRunnerProfile[]>([]);
-
-    const [selectedPost, setSelectedPost] =
-  useState<PublicPost | null>(null);
-
-const [postDialogOpen, setPostDialogOpen] =
-  useState(false);
-
-function openPost(post: PublicPost) {
-  setSelectedPost(post);
-  setPostDialogOpen(true);
-}
-const [selectedRunner, setSelectedRunner] =
-  useState<PublicRunnerProfile | null>(null);
-
-const [runnerDialogOpen, setRunnerDialogOpen] =
-  useState(false);
-
-function openRunner(runner: PublicRunnerProfile) {
-  setSelectedRunner(runner);
-  setRunnerDialogOpen(true);
-}
   useEffect(() => {
-    loadHomeData();
+    loadInitialData();
   }, []);
-async function loadPublicRunners() {
-  try {
-    const runners =
-      await getPublicRunnerProfiles();
 
-    setPublicRunners(
-      Array.isArray(runners)
-        ? runners
-        : []
-    );
-  } catch (error) {
-    console.error(error);
-    setPublicRunners([]);
-  }
-}
-  async function loadHomeData() {
+  async function loadInitialData() {
     await Promise.all([
-      loadActiveEventStatus(),
-      loadPublicPosts(),
-      loadPublicRunners(),
-      loadActiveTheme(),
+      loadPublicSchedule(),
+      loadPublicSettings(),
     ]);
   }
 
-  async function loadActiveTheme() {
+  async function loadPublicSettings() {
     try {
-      const theme =
-        await getActiveDesignTheme();
+      const settings =
+        await getPublicSettings();
 
-      setActiveSeasonKey(
-        theme?.seasonKey ?? "Summer"
-      );
+      setPublicSettings(settings);
     } catch (error) {
       console.error(error);
-      setActiveSeasonKey("Summer");
+      setPublicSettings(null);
     }
   }
 
-  async function loadActiveEventStatus() {
-    try {
-      const activeEvent =
-        await getActivePublicEvent();
+  useEffect(() => {
+  const interval =
+    window.setInterval(() => {
+      setNow(
+        DateTime.now().setZone(EVENT_TIMEZONE)
+      );
+    }, 30000);
 
-      if (!activeEvent) {
-        setActiveEvent(null);
-        setHasActivePublicEvent(false);
-        setApplicationsOpen(false);
+  return () =>
+    window.clearInterval(interval);
+}, []);
+
+useEffect(() => {
+  setSchedule((currentSchedule) =>
+    currentSchedule.map((entry) => {
+      if (entry.runStatus) {
+        return entry;
+      }
+
+      const statusInfo =
+        getScheduleStatus(
+          entry.dayDate,
+          entry.time,
+          entry.durationMinutes,
+          now
+        );
+
+      return {
+        ...entry,
+        status:
+          statusInfo.status,
+        statusText:
+          statusInfo.statusText,
+      };
+    })
+  );
+}, [now]);
+
+  async function loadPublicSchedule() {
+    try {
+      setLoading(true);
+
+      const data: PublicScheduleResponse =
+        await getCurrentPublicSchedule();
+
+      setIsPublished(data.isPublished);
+
+      setEventName(
+        data.event ?? "SGames"
+      );
+
+      setEventDateLabel(
+        formatEventDateRange(
+          data.eventStartDate,
+          data.eventEndDate,
+          data.entries ?? []
+        )
+      );
+
+      if (!data.isPublished) {
+        setMessage(
+          data.message ??
+            "El horario aún no ha sido publicado."
+        );
+
+        setSchedule([]);
         return;
       }
 
-      setActiveEvent(activeEvent);
-      setHasActivePublicEvent(true);
-      setApplicationsOpen(
-        activeEvent.applicationsOpen ?? false
-      );
+     const currentNow =
+  DateTime.now().setZone(EVENT_TIMEZONE);
+
+const mappedEntries =
+  (data.entries ?? [])
+    .map((entry) =>
+      mapPublicEntry(
+        entry,
+        currentNow
+      )
+    )
+    .sort(compareEntries);
+
+      setSchedule(mappedEntries);
     } catch (error) {
       console.error(error);
-      setHasActivePublicEvent(false);
-      setApplicationsOpen(false);
+
+      setMessage(
+        "No se pudo cargar el horario."
+      );
+
+      setSchedule([]);
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function loadPublicPosts() {
-    try {
-      const posts =
-        await getPublicPosts();
-
-      const normalizedPosts =
-        Array.isArray(posts)
-          ? posts
-          : [];
-
-      setPublicPosts(
-        normalizedPosts.slice(0, 3)
-      );
-    } catch (error) {
-      console.error(error);
-      setPublicPosts([]);
-    }
-  }
-
-  const features = [
-    {
-      icon: Play,
-      title: "Speedruns en vivo",
-      description:
-        "Runs preparadas por la comunidad para compartir juegos, categorías y rutas con otros espectadores.",
-    },
-    {
-      icon: Users,
-      title: "Comunidad",
-      description:
-        "Un espacio para runners, espectadores y organizadores que disfrutan los videojuegos y los retos cronometrados.",
-    },
-    {
-      icon: Trophy,
-      title: "Competencia amistosa",
-      description:
-        "El objetivo es mostrar talento, constancia y buen ambiente, sin perder el respeto entre participantes.",
-    },
-    {
-      icon: Gamepad2,
-      title: "Variedad de plataformas",
-      description:
-        "Aceptamos propuestas de PC, consolas modernas, retro, portátiles y otras plataformas válidas.",
-    },
-  ];
-
-  const eventInfo = [
-    {
-      icon: CalendarDays,
-      title: "Fecha del evento",
-      value: formatEventDateRange(
-        activeEvent?.startDate,
-        activeEvent?.endDate
-      ),
-      description:
-        formatEventDateDescription(
-          activeEvent
-        ),
-    },
-    {
-      icon: ClipboardCheck,
-      title: "Postulaciones",
-      value: applicationsOpen
-        ? "Abiertas"
-        : "Cerradas",
-      description: applicationsOpen
-        ? "Envía tu run desde el formulario público para revisión del staff."
-        : "Las postulaciones para esta edición ya fueron cerradas por el staff.",
-    },
-    {
-      icon: Clock3,
-      title: "Horario",
-      value: activeEvent?.isPublished
-        ? "Publicado por el staff"
-        : "Pendiente de publicación",
-      description: activeEvent?.isPublished
-        ? "El calendario se actualizará conforme se aprueben y acomoden las runs."
-        : "El staff publicará el horario cuando el acomodo esté listo.",
-    },
-    {
-      icon: Sparkles,
-      title: "Talento",
-      value: "Elegido por SGames",
-      description:
-        "Tenemos variedad de juegos, categorías, plataformas y runners.",
-    },
-  ];
-
-  const faqs = [
-    {
-      question: "¿Cómo puedo participar?",
-      answer:
-        'Ve a la sección "Postulación" y completa el formulario con tu nombre, juego, categoría, plataforma, tiempo estimado, video demostrativo y datos de contacto. El staff revisará tu propuesta.',
-    },
-    {
-      question: "¿Qué juegos son aceptados?",
-      answer:
-        "Puedes postular juegos de distintas plataformas y generaciones. La selección final dependerá de la calidad de la propuesta, variedad del lineup, duración y organización del evento.",
-    },
-    {
-      question: "¿Necesito video demostrativo?",
-      answer:
-        "Sí. El video demostrativo ayuda al staff a revisar que la run sea viable, que el tiempo estimado sea razonable y que la categoría esté clara.",
-    },
-    {
-      question: "¿Cuándo se publica el horario?",
-      answer:
-        'El horario se publicará cuando el staff acomode las runs aprobadas. Podrás consultarlo en la sección "Horario".',
-    },
-    {
-      question: "¿Puedo poner redes sociales?",
-      answer:
-        "Sí. Son opcionales, pero recomendadas para que la comunidad pueda conocer tu contenido o seguirte durante el evento.",
-    },
-  ];
-
-  const runnerCarouselItems =
-    publicRunners.length > 1
-      ? [
-          ...publicRunners,
-          ...publicRunners,
-        ]
-      : publicRunners;
-
-  const seasonAssetKey =
-    normalizeSeasonAssetKey(activeSeasonKey);
-
-  const seasonVideoSrc =
-    getSeasonVideoSrc(seasonAssetKey);
-
-  const seasonLogoCandidates =
-    getSeasonLogoCandidates(
-      seasonAssetKey
+  const dayOptions: DayOption[] =
+    Array.from(
+      new Map(
+        schedule.map((entry) => [
+          entry.dayDate,
+          {
+            dayDate: entry.dayDate,
+            label: entry.dayLabel,
+            shortLabel: entry.shortDayLabel,
+          },
+        ])
+      ).values()
+    ).sort(
+      (a, b) =>
+        parseLocalDate(a.dayDate).getTime() -
+        parseLocalDate(b.dayDate).getTime()
     );
 
-  const seasonLogoSrc =
-    seasonLogoCandidates[
-      Math.min(
-        logoFallbackIndex,
-        seasonLogoCandidates.length - 1
+  const games =
+    Array.from(
+      new Set(
+        schedule
+          .map((entry) => entry.game)
+          .filter(Boolean)
       )
-    ];
+    ).sort();
 
-  const heroEyebrowText =
-    activeEvent?.heroEyebrow?.trim() ||
-    "Speedrun Event";
+  const platforms =
+    Array.from(
+      new Set(
+        schedule
+          .map((entry) => entry.platform)
+          .filter(Boolean)
+      )
+    ).sort();
 
-  const heroTitleText =
-    activeEvent?.heroTitle?.trim() ||
-    "SGames";
+  const filteredSchedule =
+    schedule.filter((entry) => {
+      if (
+        selectedDay !== "todos" &&
+        entry.dayDate !== selectedDay
+      ) {
+        return false;
+      }
 
-  const heroDescriptionText =
-    activeEvent?.heroDescription?.trim() ||
-    "Un evento comunitario para reunir speedrunners de distintos juegos, categorías y plataformas.";
+      if (
+        selectedGame !== "todos" &&
+        entry.game !== selectedGame
+      ) {
+        return false;
+      }
 
-  const heroMetaText =
-    activeEvent?.heroMetaText?.trim() ||
-    `Del ${formatEventDateRange(
-      activeEvent?.startDate,
-      activeEvent?.endDate
-    )}. Postula tu run, comparte tu talento y forma parte del lineup.`;
+      if (
+        selectedPlatform !== "todos" &&
+        entry.platform !== selectedPlatform
+      ) {
+        return false;
+      }
 
+      return true;
+    });
 
-  useEffect(() => {
-    setLogoFallbackIndex(0);
-    setLogoFailed(false);
-  }, [seasonAssetKey]);
+  const displayDayOptions =
+    dayOptions.filter((day) => {
+      if (
+        selectedDay !== "todos" &&
+        day.dayDate !== selectedDay
+      ) {
+        return false;
+      }
 
-  return (
-    <div className="overflow-hidden bg-[var(--sg-background)]">
-      {/* Hero Section */}
-      <section className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[var(--sg-background)] py-20 lg:py-28">
-        {/* Video Background */}
-        <video
-          key={seasonVideoSrc}
-          className="absolute inset-0 h-full w-full object-cover opacity-90"
-          src={seasonVideoSrc}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
-        />
+      if (selectedDay === "todos") {
+        return filteredSchedule.some(
+          (entry) =>
+            entry.dayDate === day.dayDate
+        );
+      }
 
-        {/* Video Overlays */}
-        <div
-          className="absolute inset-0 bg-black"
-          style={{
-            opacity:
-              seasonAssetKey === "Fall"
-                ? 0.34
-                : 0.48,
-          }}
-        />
+      return true;
+    });
 
-        <div
-          className="absolute inset-0"
-          style={{
-            background: "var(--sg-hero-gradient)",
-            opacity:
-              seasonAssetKey === "Fall"
-                ? 0.42
-                : 0.62,
-          }}
-        />
+  const hasActiveFilters =
+    selectedDay !== "todos" ||
+    selectedGame !== "todos" ||
+    selectedPlatform !== "todos";
 
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
+  function clearFilters() {
+    setSelectedDay("todos");
+    setSelectedGame("todos");
+    setSelectedPlatform("todos");
+  }
 
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--sg-background)] to-transparent" />
+  const twitchUrl =
+    publicSettings?.twitchUrl?.trim();
 
-        <div className="absolute left-8 top-20 hidden text-[var(--sg-primary)] opacity-40 lg:block">
-          <div className="font-mono text-sm">
-            00:15:42.31
-          </div>
-        </div>
+  const hasTwitchUrl =
+    Boolean(twitchUrl);
 
-        <div className="absolute right-12 top-32 hidden text-[var(--sg-accent)] opacity-40 lg:block">
-          <div className="font-mono text-sm">
-            PB: 00:14:58
-          </div>
-        </div>
-
-        <div className="absolute bottom-24 left-16 hidden text-[var(--sg-secondary)] opacity-40 lg:block">
-          <div className="font-mono text-sm">
-            RUN READY
-          </div>
-        </div>
-
-        <div className="container relative z-10 mx-auto px-4 text-center">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-8 flex justify-center">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-[2rem] bg-[var(--sg-accent)]/40 blur-2xl" />
-
-                {!logoFailed ? (
-                  <img
-                    src={seasonLogoSrc}
-                    alt={`Logo de SGames ${seasonAssetKey}`}
-                    onError={() => {
-                      setLogoFallbackIndex((current) => {
-                        if (
-                          current <
-                          seasonLogoCandidates.length - 1
-                        ) {
-                          return current + 1;
-                        }
-
-                        setLogoFailed(true);
-                        return current;
-                      });
-                    }}
-                    className="sgames-logo-shadow relative h-36 w-36 rounded-[2rem] border border-white/25 object-cover md:h-44 md:w-44"
-                  />
-                ) : (
-                  <div className="sgames-logo-shadow relative flex h-36 w-36 items-center justify-center rounded-[2rem] border border-white/25 bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] text-4xl font-black text-white md:h-44 md:w-44 md:text-5xl">
-                    SG
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.4em] text-[var(--sg-primary)]">
-              {heroEyebrowText}
-            </p>
-
-            <h1 className="sgames-neon-text mb-6 text-5xl font-black tracking-tight md:text-7xl lg:text-8xl">
-              {heroTitleText}
-            </h1>
-
-            <p className="mx-auto mb-4 max-w-3xl text-lg text-[var(--sg-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-xl lg:text-2xl">
-              {heroDescriptionText}
-            </p>
-
-            {hasActivePublicEvent && (
-              <p className="mx-auto mb-8 max-w-2xl text-sm text-[var(--sg-muted-text)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)] md:text-base">
-                {heroMetaText}
-              </p>
-            )}
-
-            {hasActivePublicEvent && (
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              {applicationsOpen ? (
-                <Link to="/postulacion">
-                  <Button
-                    size="lg"
-                    className="sgames-primary-button text-base font-bold sgames-neon-border"
-                  >
-                    <Zap className="mr-2 h-5 w-5" />
-                    Enviar Postulación
-                  </Button>
-                </Link>
-              ) : (
-                <Button
-                  size="lg"
-                  disabled
-                  className="cursor-not-allowed bg-gray-700 text-base font-bold text-gray-300"
-                >
-                  <Zap className="mr-2 h-5 w-5" />
-                  Postulaciones cerradas
-                </Button>
-              )}
-
-              <Link to="/horario">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="sgames-outline-button text-base font-bold backdrop-blur-md"
-                >
-                  Ver Horario
-                </Button>
-              </Link>
-            </div>
-            )}
-          </div>
-
-          <div className="mt-16 flex justify-center">
-            <ChevronDown className="h-8 w-8 animate-bounce text-[var(--sg-primary)]" />
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="bg-[var(--sg-background)] py-20">
+  if (loading) {
+    return (
+      <div className="sgames-schedule-page min-h-screen py-12">
+        <style>{horarioThemeCss}</style>
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-black text-[var(--sg-text)] md:text-4xl">
-            ¿Por qué participar en{" "}
-            <span className="sgames-neon-text">
-              SGames
-            </span>
-            ?
-          </h2>
+          <Card className="sgames-schedule-card mx-auto max-w-2xl">
+            <CardContent className="p-10 text-center">
+              <div className="sgames-schedule-gradient-box mx-auto mb-4 h-12 w-12 animate-pulse rounded-2xl" />
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-
-              return (
-                <Card
-                  key={index}
-                  className="sgames-glass group transition-all hover:-translate-y-1 hover:border-[var(--sg-accent)]/50 hover:shadow-xl"
-                >
-                  <CardContent className="p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] sgames-neon-border">
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
-
-                    <h3 className="mb-2 text-xl font-bold text-[var(--sg-text)]">
-                      {feature.title}
-                    </h3>
-
-                    <p className="text-sm leading-relaxed text-[var(--sg-muted-text)]">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Event Info Section */}
-      {hasActivePublicEvent && (
-      <section className="border-y border-[var(--sg-border)] py-16" style={{ background: "var(--sg-card-gradient)" }}>
-        <div className="container mx-auto px-4">
-          <div className="mb-10 text-center">
-            <h2 className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
-              Información del evento
-            </h2>
-
-            <p className="mt-3 text-[var(--sg-muted-text)]">
-              Datos base para participantes y espectadores.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {eventInfo.map((item, index) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={index}
-                  className="sgames-glass rounded-2xl p-6 shadow-[0_0_30px_rgba(15,23,42,0.35)]"
-                >
-                  <Icon className="mb-4 h-7 w-7 text-[var(--sg-primary)]" />
-
-                  <p className="mb-2 text-sm uppercase tracking-[0.2em] text-[var(--sg-muted-text)] opacity-70">
-                    {item.title}
-                  </p>
-
-                  <p className="mb-3 text-xl font-black text-[var(--sg-text)]">
-                    {item.value}
-                  </p>
-
-                  <p className="text-sm leading-relaxed text-[var(--sg-muted-text)]">
-                    {item.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-      )}
-
-            {/* Official Announcements Section */}
-{hasActivePublicEvent && publicPosts.length > 0 && (
-  <section className="bg-[var(--sg-background)] py-20">
-    <div className="container mx-auto px-4">
-      <div className="mb-12 text-center">
-        <div className="mb-4 flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] sgames-neon-border">
-            <Megaphone className="h-7 w-7 text-white" />
-          </div>
-        </div>
-
-        <h2 className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
-          Anuncios oficiales
-        </h2>
-
-        <p className="mx-auto mt-3 max-w-2xl text-[var(--sg-muted-text)]">
-          Noticias, avisos y actualizaciones importantes del staff de SGames.
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {publicPosts.map((post) => (
-          <Card
-            key={post.id}
-            role="button"
-            tabIndex={0}
-            onClick={() =>
-              openPost(post)
-            }
-            onKeyDown={(event) => {
-              if (
-                event.key === "Enter" ||
-                event.key === " "
-              ) {
-                openPost(post);
-              }
-            }}
-            className="sgames-glass group cursor-pointer transition-all hover:-translate-y-1 hover:border-[var(--sg-primary)]/50 hover:shadow-xl"
-          >
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--sg-primary)]/10 text-[var(--sg-primary)]">
-                  <Newspaper className="h-5 w-5" />
-                </div>
-
-                {post.category && (
-                  <span className="rounded-full border border-[var(--sg-accent)]/30 bg-[var(--sg-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--sg-accent)]">
-                    {post.category}
-                  </span>
-                )}
-              </div>
-
-              <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--sg-muted-text)] opacity-70">
-                {formatPostDate(
-                  post.publishDate ??
-                    post.createdAt
-                )}
-              </p>
-
-              <h3 className="mb-3 text-xl font-black text-[var(--sg-text)] transition-colors group-hover:text-[var(--sg-primary)]">
-                {post.title}
-              </h3>
-
-              <p className="text-sm leading-relaxed text-[var(--sg-muted-text)]">
-                {getPostPreview(
-                  post.content
-                )}
-              </p>
-
-              <p className="mt-5 text-sm font-semibold text-[var(--sg-primary)] transition-colors group-hover:text-[var(--sg-accent)]">
-                Ver anuncio completo
+              <p className="text-[var(--sg-muted-text)]">
+                Cargando horario oficial...
               </p>
             </CardContent>
           </Card>
-        ))}
-      </div>
-    </div>
-  </section>
-)}
-
-
-{publicRunners.length > 0 && (
-  <section className="bg-[var(--sg-background)] py-20">
-    <style>
-      {`
-        @keyframes sgames-runner-carousel-scroll {
-          from {
-            transform: translateX(0);
-          }
-
-          to {
-            transform: translateX(-50%);
-          }
-        }
-
-        .sgames-runner-track {
-          animation: sgames-runner-carousel-scroll 38s linear infinite;
-        }
-
-        .sgames-runner-carousel:hover .sgames-runner-track,
-        .sgames-runner-carousel:focus-within .sgames-runner-track {
-          animation-play-state: paused;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .sgames-runner-track {
-            animation: none;
-          }
-        }
-      `}
-    </style>
-
-    <div className="container mx-auto px-4">
-      <div className="mb-12 text-center">
-        <div className="mb-4 flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--sg-primary),var(--sg-secondary),var(--sg-accent))] sgames-neon-border">
-            <Users className="h-7 w-7 text-white" />
-          </div>
         </div>
-
-        <h2 className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
-          Runners participantes
-        </h2>
-
-        <p className="mx-auto mt-3 max-w-2xl text-[var(--sg-muted-text)]">
-          Conoce a todos los runners que formarán parte de esta primera maratón.
-          El carrusel se pausa al pasar el cursor o enfocar una tarjeta.
-        </p>
       </div>
+    );
+  }
 
-      <div className="sgames-runner-carousel relative overflow-hidden py-3">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[var(--sg-background)] to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[var(--sg-background)] to-transparent" />
+  if (!isPublished) {
+    return (
+      <div className="sgames-schedule-page min-h-screen py-12">
+        <style>{horarioThemeCss}</style>
+        <div className="container mx-auto px-4">
+          <div className="mb-10 text-center">
+            <Badge className="mb-4 border border-yellow-400/30 bg-yellow-400/10 text-yellow-300">
+              Horario pendiente
+            </Badge>
 
-        <div
-          className={`flex w-max gap-4 ${
-            publicRunners.length > 1
-              ? "sgames-runner-track"
-              : ""
-          }`}
-        >
-          {runnerCarouselItems.map((runner, index) => (
-            <Card
-              key={`${runner.id}-${index}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => openRunner(runner)}
-              onKeyDown={(event) => {
-                if (
-                  event.key === "Enter" ||
-                  event.key === " "
-                ) {
-                  openRunner(runner);
-                }
-              }}
-              className="sgames-glass group w-[230px] shrink-0 cursor-pointer overflow-hidden transition-all hover:-translate-y-1 hover:border-[var(--sg-primary)]/50 hover:shadow-xl sm:w-[250px] lg:w-[270px]"
-            >
-              <div className="aspect-square bg-[var(--sg-background)]">
-                {runner.photoUrl ? (
-                  <img
-                    src={runner.photoUrl}
-                    alt={runner.displayName}
-                    onError={(event) => {
-                      event.currentTarget.style.display = "none";
-                    }}
-                    className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Users className="h-10 w-10 text-slate-700" />
-                  </div>
-                )}
-              </div>
+            <h1 className="sgames-neon-text mb-4 text-4xl font-black md:text-5xl">
+              Horario Oficial
+            </h1>
 
-              <CardContent className="p-4">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--sg-primary)]">
-                  Runner
-                </p>
+            <p className="mx-auto max-w-2xl text-[var(--sg-muted-text)]">
+              El staff está preparando el programa oficial del evento.
+            </p>
+          </div>
 
-                <h3 className="line-clamp-1 text-lg font-black text-[var(--sg-text)]">
-                  {runner.displayName}
-                </h3>
-
-                {runner.country && (
-                  <p className="mt-1 line-clamp-1 text-xs text-[var(--sg-muted-text)]">
-                    {runner.country}
+          {hasTwitchUrl && (
+            <Card className="sgames-schedule-twitch-card mx-auto mb-6 max-w-2xl">
+              <CardContent className="flex flex-col gap-4 p-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--sg-accent)]">
+                    Transmisión oficial
                   </p>
-                )}
 
-                {runner.bio && (
-                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-[var(--sg-muted-text)]">
-                    {runner.bio}
+                  <h2 className="mt-2 text-2xl font-black text-[var(--sg-text)]">
+                    Mira el directo en Twitch
+                  </h2>
+
+                  <p className="mt-2 text-sm text-[var(--sg-muted-text)]">
+                    Aunque el horario todavía no esté publicado, puedes ir al canal oficial de Super Games.
                   </p>
-                )}
+                </div>
 
-                <p className="mt-4 text-xs font-semibold text-[var(--sg-primary)] transition-colors group-hover:text-[var(--sg-accent)]">
-                  Ver perfil completo
-                </p>
+                <a
+                  href={twitchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0"
+                >
+                  <Button className="sgames-schedule-twitch-button w-full md:w-auto">
+                    <Twitch className="mr-2 h-5 w-5" />
+                    Ir al Twitch
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-)}
+          )}
 
-{/* Announcement Detail Dialog */}
-<Dialog
-  open={postDialogOpen}
-  onOpenChange={setPostDialogOpen}
->
-  <DialogContent className="sgames-glass max-h-[90vh] w-[95vw] max-w-2xl overflow-hidden p-0 text-[var(--sg-text)]">
-    <DialogHeader className="border-b border-[var(--sg-border)] px-6 py-5">
-      <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--sg-primary)]/10 text-[var(--sg-primary)]">
-          <Megaphone className="h-5 w-5" />
-        </div>
+          <Card className="mx-auto max-w-2xl border-yellow-500/40 bg-yellow-500/10 shadow-[0_0_30px_rgba(234,179,8,0.08)]">
+            <CardContent className="p-10 text-center">
+              <Calendar className="mx-auto mb-4 h-14 w-14 text-yellow-300" />
 
-        {selectedPost?.category && (
-          <span className="rounded-full border border-[var(--sg-accent)]/30 bg-[var(--sg-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--sg-accent)]">
-            {selectedPost.category}
-          </span>
-        )}
-      </div>
+              <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
+                Horario aún no publicado
+              </h2>
 
-      <DialogTitle className="text-2xl font-black text-[var(--sg-text)]">
-        {selectedPost?.title}
-      </DialogTitle>
+              <p className="mx-auto mb-6 max-w-xl text-[var(--sg-muted-text)]">
+                {message ||
+                  "El equipo de SGames todavía está organizando el horario oficial."}
+              </p>
 
-      <p className="mt-2 text-sm uppercase tracking-[0.18em] text-[var(--sg-muted-text)] opacity-70">
-        {formatPostDate(
-          selectedPost?.publishDate ??
-            selectedPost?.createdAt
-        )}
-      </p>
-    </DialogHeader>
+              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                <Link to="/postulacion">
+                  <Button className="sgames-primary-button">
+                    <ClipboardEdit className="mr-2 h-4 w-4" />
+                    Enviar postulación
+                  </Button>
+                </Link>
 
-    <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
-      {selectedPost?.content?.trim() ? (
-        <p className="whitespace-pre-wrap break-words text-base leading-relaxed text-[var(--sg-muted-text)]">
-          {selectedPost.content}
-        </p>
-      ) : (
-        <p className="text-[var(--sg-muted-text)]">
-          Este anuncio no tiene contenido adicional.
-        </p>
-      )}
-    </div>
-
-    <DialogFooter className="border-t border-[var(--sg-border)] px-6 py-4">
-      <Button
-        variant="outline"
-        onClick={() =>
-          setPostDialogOpen(false)
-        }
-        className="border-[var(--sg-primary)]/40 text-[var(--sg-primary)] hover:bg-[var(--sg-primary)]/10"
-      >
-        Cerrar
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
-{/* Runner Profile Section */}
-<Dialog
-  open={runnerDialogOpen}
-  onOpenChange={setRunnerDialogOpen}
->
-  <DialogContent className="sgames-glass flex h-[92vh] w-[calc(100vw-2rem)] flex-col overflow-hidden p-0 text-[var(--sg-text)] sm:max-w-[1200px] xl:max-w-[1280px]">
-    <DialogHeader className="shrink-0 border-b border-[var(--sg-border)] px-6 py-5">
-      <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--sg-primary)]">
-          Perfil del runner
-        </p>
-
-        <DialogTitle className="text-3xl font-black text-[var(--sg-text)] md:text-4xl">
-          {selectedRunner?.displayName}
-        </DialogTitle>
-
-        <DialogDescription className="mt-2 text-sm text-[var(--sg-muted-text)]">
-          {selectedRunner?.country
-            ? selectedRunner.country
-            : "Runner participante de SGames"}
-        </DialogDescription>
-      </div>
-    </DialogHeader>
-
-    <div className="flex-1 overflow-y-auto overflow-x-hidden">
-      <div className="grid gap-0 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[430px_minmax(0,1fr)]">
-        {/* Imagen */}
-        <div className="min-w-0 border-b border-[var(--sg-border)] bg-[var(--sg-background)] p-5 lg:border-b-0 lg:border-r lg:border-[var(--sg-border)]">
-          <div className="mx-auto aspect-[4/5] max-h-[66vh] overflow-hidden rounded-3xl border border-[var(--sg-border)] bg-black/40 shadow-[0_0_35px_rgba(56,189,248,0.10)]">
-            {selectedRunner?.photoUrl ? (
-              <img
-                src={selectedRunner.photoUrl}
-                alt={selectedRunner.displayName}
-                className="h-full w-full object-contain object-center"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <Users className="h-16 w-16 text-slate-700" />
+                <Link to="/">
+                  <Button
+                    variant="outline"
+                    className="border-violet-500/30 bg-white/5 text-slate-200 hover:bg-white/10"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Volver al inicio
+                  </Button>
+                </Link>
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
+    );
+  }
 
-        {/* Info + video */}
-        <div className="min-w-0 space-y-5 p-5 md:p-6">
-          <div className="sgames-glass rounded-3xl p-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--sg-primary)]">
-              Presentación
-            </p>
+  return (
+    <div className="sgames-schedule-page min-h-screen py-12">
+        <style>{horarioThemeCss}</style>
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-3">
+            <Badge className="sgames-schedule-badge-primary">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              {eventDateLabel}
+            </Badge>
 
-            <h3 className="text-2xl font-black text-[var(--sg-text)]">
-              {selectedRunner?.displayName}
-            </h3>
-
-            {selectedRunner?.bio ? (
-              <p className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-[var(--sg-muted-text)]">
-                {selectedRunner.bio}
-              </p>
-            ) : (
-              <p className="mt-4 text-[var(--sg-muted-text)] opacity-70">
-                Este runner todavía no tiene presentación escrita.
-              </p>
-            )}
+            <Badge className="sgames-schedule-badge-accent">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Horario sujeto a cambios
+            </Badge>
           </div>
 
-          <div className="sgames-glass rounded-3xl p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--sg-accent)]">
-              Video
+          <h1 className="sgames-neon-text mb-4 text-4xl font-black md:text-5xl">
+            Horario Oficial
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-[var(--sg-muted-text)]">
+            Programa publicado de{" "}
+            <span className="font-semibold text-slate-200">
+              {eventName}
+            </span>
+            . Revisa horarios, runners, juegos, categorías,
+            plataformas y duración estimada.
+          </p>
+        </div>
+
+        {/* Notice */}
+        <Card className="mb-8 border-cyan-400/20 bg-cyan-400/5">
+          <CardContent className="flex flex-col gap-3 p-5 text-sm text-[var(--sg-muted-text)] md:flex-row md:items-center">
+            <Info className="h-5 w-5 shrink-0 text-cyan-300" />
+
+            <p>
+              El horario puede recibir ajustes por organización,
+              disponibilidad de runners o necesidades del evento.
+              Te recomendamos revisarlo de nuevo antes del evento.
             </p>
+          </CardContent>
+        </Card>
 
-            <h3 className="mt-1 mb-4 text-2xl font-black text-[var(--sg-text)]">
-              Video de presentación
-            </h3>
+        {hasTwitchUrl && (
+          <Card className="sgames-schedule-twitch-card mb-8">
+            <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--sg-accent)_14%,transparent)] text-[var(--sg-accent)]">
+                  <Twitch className="h-6 w-6" />
+                </div>
 
-            {selectedRunner?.presentationVideoUrl ? (
-              <div className="overflow-hidden rounded-2xl border border-[var(--sg-accent)]/20 bg-black">
-                <video
-                  src={selectedRunner.presentationVideoUrl}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="aspect-video w-full bg-black"
-                >
-                  Tu navegador no puede reproducir este video.
-                </video>
-              </div>
-            ) : (
-              <div className="flex aspect-video items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-black/30 text-center">
                 <div>
-                  <p className="font-semibold text-[var(--sg-text)]">
-                    Sin video de presentación
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--sg-accent)]">
+                    Transmisión oficial
                   </p>
 
-                  <p className="mt-1 text-sm text-[var(--sg-muted-text)] opacity-70">
-                    Cuando el staff suba un video, aparecerá aquí.
+                  <h2 className="mt-1 text-2xl font-black text-[var(--sg-text)]">
+                    Sigue el evento en Twitch
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm text-[var(--sg-muted-text)]">
+                    Abre el canal oficial de Super Games para ver el directo mientras consultas el horario.
                   </p>
                 </div>
               </div>
-            )}
-          </div>
 
-          {selectedRunner?.socialLinks?.length ? (
-            <div className="sgames-glass rounded-3xl p-5">
-              <p className="mb-3 text-sm font-semibold text-[var(--sg-primary)]">
-                Redes sociales
-              </p>
+              <a
+                href={twitchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0"
+              >
+                <Button className="sgames-schedule-twitch-button w-full md:w-auto">
+                  <Twitch className="mr-2 h-5 w-5" />
+                  Ver directo
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
+        )}
 
-              <div className="flex flex-wrap gap-2">
-                {selectedRunner.socialLinks.map((link) => (
-                  <a
-                    key={`${selectedRunner.id}-${link.socialNetworkId}-${link.url}`}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full border border-[var(--sg-primary)]/30 bg-[var(--sg-primary)]/10 px-4 py-2 text-sm font-semibold text-[var(--sg-primary)] hover:bg-[var(--sg-primary)]/20"
-                  >
-                    {link.name}
-                  </a>
-                ))}
+        {/* Filters */}
+        <Card className="mb-8 border-[var(--sg-border)] bg-[color-mix(in_srgb,var(--sg-surface)_70%,transparent)] backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5 text-cyan-300" />
+
+                <span className="font-semibold text-[var(--sg-text)]">
+                  Filtros:
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-4">
+                <Select
+                  value={selectedDay}
+                  onValueChange={setSelectedDay}
+                >
+                  <SelectTrigger className="border-[var(--sg-border)] bg-[#0b1022] text-[var(--sg-text)]">
+                    <SelectValue placeholder="Todos los días" />
+                  </SelectTrigger>
+
+                  <SelectContent className="border-[var(--sg-border)] bg-[#10182b]">
+                    <SelectItem value="todos">
+                      Todos los días
+                    </SelectItem>
+
+                    {dayOptions.map((day) => (
+                      <SelectItem
+                        key={day.dayDate}
+                        value={day.dayDate}
+                      >
+                        {capitalize(day.label)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={selectedGame}
+                  onValueChange={setSelectedGame}
+                >
+                  <SelectTrigger className="border-[var(--sg-border)] bg-[#0b1022] text-[var(--sg-text)]">
+                    <SelectValue placeholder="Todos los juegos" />
+                  </SelectTrigger>
+
+                  <SelectContent className="border-[var(--sg-border)] bg-[#10182b]">
+                    <SelectItem value="todos">
+                      Todos los juegos
+                    </SelectItem>
+
+                    {games.map((game) => (
+                      <SelectItem
+                        key={game}
+                        value={game}
+                      >
+                        {game}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={selectedPlatform}
+                  onValueChange={setSelectedPlatform}
+                >
+                  <SelectTrigger className="border-[var(--sg-border)] bg-[#0b1022] text-[var(--sg-text)]">
+                    <SelectValue placeholder="Todas las plataformas" />
+                  </SelectTrigger>
+
+                  <SelectContent className="border-[var(--sg-border)] bg-[#10182b]">
+                    <SelectItem value="todos">
+                      Todas las plataformas
+                    </SelectItem>
+
+                    {platforms.map((platform) => (
+                      <SelectItem
+                        key={platform}
+                        value={platform}
+                      >
+                        {platform}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  disabled={!hasActiveFilters}
+                  className="border-violet-500/30 bg-white/5 text-[var(--sg-muted-text)] hover:bg-white/10 hover:text-[var(--sg-text)] disabled:opacity-40"
+                >
+                  Limpiar filtros
+                </Button>
               </div>
             </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
+          </CardContent>
+        </Card>
 
-    <DialogFooter className="shrink-0 border-t border-[var(--sg-border)] px-6 py-4">
-      <Button
-        variant="outline"
-        onClick={() => setRunnerDialogOpen(false)}
-        className="border-[var(--sg-primary)]/40 text-[var(--sg-primary)] hover:bg-[var(--sg-primary)]/10"
-      >
-        Cerrar
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+        {/* No entries after filters */}
+        {filteredSchedule.length === 0 &&
+          schedule.length > 0 && (
+            <Card className="sgames-schedule-card">
+              <CardContent className="p-10 text-center">
+                <SearchX className="mx-auto mb-4 h-12 w-12 text-slate-500" />
 
+                <h2 className="mb-2 text-2xl font-black text-[var(--sg-text)]">
+                  No hay resultados con esos filtros
+                </h2>
 
-      {/* FAQ Section */}
-      <section
-        id="faq"
-        className="bg-[var(--sg-background)] py-20"
-      >
-        <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-black text-[var(--sg-text)] md:text-4xl">
-            Preguntas Frecuentes
-          </h2>
+                <p className="mb-6 text-[var(--sg-muted-text)]">
+                  Prueba cambiando el día, juego o plataforma.
+                </p>
 
-          <div className="mx-auto max-w-3xl">
-            <Accordion
-              type="single"
-              collapsible
-              className="space-y-4"
-            >
-              {faqs.map((faq, index) => (
-                <AccordionItem
-                  key={index}
-                  value={`item-${index}`}
-                  className="sgames-glass rounded-2xl px-6"
+                <Button
+                  onClick={clearFilters}
+                  className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-[var(--sg-text)]"
                 >
-                  <AccordionTrigger className="text-left text-lg font-bold text-[var(--sg-text)] hover:text-[var(--sg-primary)]">
-                    {faq.question}
-                  </AccordionTrigger>
-
-                  <AccordionContent className="leading-relaxed text-[var(--sg-muted-text)]">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      {hasActivePublicEvent && (
-      <section className="relative overflow-hidden py-20" style={{ background: "var(--sg-card-gradient)" }}>
-        <div className="absolute inset-0 opacity-30" style={{ background: "var(--sg-hero-gradient)" }} />
-
-        <div className="container relative mx-auto px-4 text-center">
-          <Heart className="mx-auto mb-6 h-16 w-16 text-[var(--sg-accent)]" />
-
-          <h2 className="mb-4 text-3xl font-black text-[var(--sg-text)] md:text-4xl">
-            ¿Listo para mostrar tu run?
-          </h2>
-
-          <p className="mx-auto mb-8 max-w-2xl text-lg text-[var(--sg-muted-text)]">
-            Envía tu postulación y ayúdanos a construir un
-            lineup variado, entretenido y memorable.
-          </p>
-
-          {applicationsOpen ? (
-            <Link to="/postulacion">
-              <Button
-                size="lg"
-                className="sgames-primary-button text-lg font-bold sgames-neon-border"
-              >
-                <Zap className="mr-2 h-5 w-5" />
-                Enviar mi Postulación
-              </Button>
-            </Link>
-          ) : (
-            <Button
-              size="lg"
-              disabled
-              className="cursor-not-allowed bg-gray-700 text-lg font-bold text-gray-300"
-            >
-              <Zap className="mr-2 h-5 w-5" />
-              Postulaciones cerradas
-            </Button>
+                  Limpiar filtros
+                </Button>
+              </CardContent>
+            </Card>
           )}
+
+        {/* Schedule by Day */}
+        <div className="space-y-10">
+          {displayDayOptions.map((day) => {
+            const dayEntries =
+              filteredSchedule.filter(
+                (entry) =>
+                  entry.dayDate === day.dayDate
+              );
+
+            if (
+              dayEntries.length === 0 &&
+              selectedDay === "todos"
+            ) {
+              return null;
+            }
+
+            return (
+              <section key={day.dayDate}>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <div className="mb-2 flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-pink-500 shadow-[0_0_25px_rgba(217,70,239,0.18)]">
+                        <Calendar className="h-5 w-5 text-[var(--sg-text)]" />
+                      </div>
+
+                      <div>
+                        <p className="text-sm uppercase tracking-[0.25em] text-slate-500">
+                          {day.shortLabel}
+                        </p>
+
+                        <h2 className="text-2xl font-black capitalize text-[var(--sg-text)] md:text-3xl">
+                          {day.label}
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Badge
+                    variant="outline"
+                    className="w-fit border-violet-500/30 bg-white/5 text-[var(--sg-muted-text)]"
+                  >
+                    {dayEntries.length}{" "}
+                    {dayEntries.length === 1
+                      ? "run"
+                      : "runs"}
+                  </Badge>
+                </div>
+
+                {dayEntries.length === 0 ? (
+                  <Card className="border-dashed border-[var(--sg-border)] bg-[#10182b]/40">
+                    <CardContent className="p-8 text-center text-slate-500">
+                      No hay runs programadas para este día con
+                      los filtros seleccionados.
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {dayEntries.map((entry) => (
+                      <Card
+                        key={entry.id}
+                        className={`group border-[var(--sg-border)] bg-[#10182b]/75 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-cyan-400/45 hover:shadow-[0_0_28px_rgba(34,211,238,0.12)] ${
+                         entry.status === "live"
+  ? "border-green-500/50 shadow-lg shadow-green-500/20"
+  : entry.status === "preparing"
+    ? "border-yellow-500/50 shadow-lg shadow-yellow-500/10"
+    : entry.status === "scheduled"
+      ? "border-cyan-500/40"
+      : ""
+                        }`}
+                      >
+                        <CardContent className="p-4 md:p-6">
+                          <div className="grid gap-5 lg:grid-cols-[120px_1fr_160px] lg:items-center">
+                            {/* Time */}
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/10">
+                                <Clock className="h-5 w-5 text-cyan-300" />
+                              </div>
+
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                                  Hora
+                                </p>
+
+                                <p className="font-mono text-xl font-black text-cyan-300">
+                                  {entry.time}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Main Info */}
+                            <div className="grid gap-4 md:grid-cols-[180px_1fr] md:items-center">
+                              <div className="flex items-center gap-3">
+                                <User className="h-5 w-5 text-pink-300" />
+
+                                <div>
+                                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                                    Runner
+                                  </p>
+
+                                  <p className="break-words font-bold text-[var(--sg-text)]">
+                                    {entry.runner}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-3">
+                                <Gamepad2 className="mt-1 h-5 w-5 shrink-0 text-violet-300" />
+
+                                <div>
+                                  <p className="break-words text-lg font-black text-[var(--sg-text)]">
+                                    {entry.game}
+                                  </p>
+
+                                  <p className="break-words text-sm text-[var(--sg-muted-text)]">
+                                    {entry.category}
+                                  </p>
+
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    <Badge
+                                      variant="outline"
+                                      className="border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+                                    >
+                                      <Monitor className="mr-1.5 h-3.5 w-3.5" />
+                                      {entry.platform}
+                                    </Badge>
+
+                                    <Badge
+                                      variant="outline"
+                                      className="border-pink-400/30 bg-pink-400/10 text-pink-200"
+                                    >
+                                      <Timer className="mr-1.5 h-3.5 w-3.5" />
+                                      {entry.duration}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="flex flex-col items-start gap-1 lg:items-end">
+  {getStatusBadge(entry.status)}
+
+  <p className="max-w-[160px] text-xs text-slate-500 lg:text-right">
+    {entry.statusText}
+  </p>
+</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
-      </section>
-      )}
+
+        {/* Empty Schedule */}
+        {schedule.length === 0 && (
+          <Card className="mt-8 border-[var(--sg-border)] bg-[color-mix(in_srgb,var(--sg-surface)_70%,transparent)]">
+            <CardContent className="p-10 text-center">
+              <CalendarDays className="mx-auto mb-4 h-14 w-14 text-cyan-300" />
+
+              <h2 className="mb-3 text-2xl font-black text-[var(--sg-text)]">
+                Horario publicado próximamente
+              </h2>
+
+              <p className="mx-auto mb-6 max-w-xl text-[var(--sg-muted-text)]">
+                El horario ya fue habilitado, pero todavía no hay
+                runs agregadas. Vuelve pronto para consultar el
+                programa completo.
+              </p>
+
+              <Link to="/postulacion">
+                <Button className="bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-[var(--sg-text)]">
+                  <ClipboardEdit className="mr-2 h-4 w-4" />
+                  Enviar postulación
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Bottom CTA */}
+        {schedule.length > 0 && (
+          <Card className="mt-12 border-[var(--sg-border)] bg-gradient-to-r from-cyan-400/10 via-violet-500/10 to-pink-500/10">
+            <CardContent className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-xl font-black text-[var(--sg-text)]">
+                  ¿Quieres formar parte del evento?
+                </h3>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  Las postulaciones pueden seguir abiertas según
+                  la organización del evento.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link to="/postulacion">
+                  <Button className="w-full bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 text-[var(--sg-text)] sm:w-auto">
+                    <ClipboardEdit className="mr-2 h-4 w-4" />
+                    Ir a postulaciones
+                  </Button>
+                </Link>
+
+                <Link to="/">
+                  <Button
+                    variant="outline"
+                    className="w-full border-violet-500/30 bg-white/5 text-slate-200 hover:bg-white/10 sm:w-auto"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Volver al inicio
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
