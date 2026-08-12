@@ -50,7 +50,7 @@ import {
   createStreamQueueItem,
   deleteStreamQueueItem,
   getStreamPanelAdmin,
-  getStreamPanelPublicUrl,
+  getStreamOverlayUrl,
   markStreamQueueItemDone,
   moveStreamQueueItem,
   restoreStreamQueueItem,
@@ -574,14 +574,14 @@ export default function AdminStream() {
 
   async function handleCopyOverlayUrl() {
     const url =
-      getStreamPanelPublicUrl();
+      getStreamOverlayUrl();
 
     await navigator.clipboard.writeText(
       url
     );
 
     toast.success(
-      "URL del overlay copiada"
+      "URL visual del overlay copiada"
     );
   }
 
@@ -620,7 +620,7 @@ export default function AdminStream() {
             className="border-[var(--sg-admin-border)] text-[var(--sg-primary)]"
           >
             <Copy className="mr-2 h-4 w-4" />
-            Copiar endpoint OBS
+            Copiar URL overlay OBS
           </Button>
 
           <Button

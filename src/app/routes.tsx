@@ -19,6 +19,7 @@ import RunsPage from "./pages/RunsPage";
 import ClipsPage from "./pages/ClipsPage";
 import AdminClips from "./pages/admin/AdminClips";
 import AdminStream from "./pages/admin/AdminStream";
+import StreamOverlayPage from "./pages/StreamOverlayPage";
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
           { path: "runs", Component: RunsPage },
           { path: "clips", Component: ClipsPage },
         ],
+      },
+      {
+        path: "/overlay/stream",
+        Component: StreamOverlayPage,
       },
       {
         path: "/admin/login",

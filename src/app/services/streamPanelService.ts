@@ -107,6 +107,38 @@ export function getStreamPanelPublicUrl() {
   return `${API_URL}/StreamPanel/public`;
 }
 
+export function getStreamOverlayUrl() {
+  return `${window.location.origin}/overlay/stream`;
+}
+
+export async function getStreamPanelPublic() {
+  const response =
+    await fetch(
+      `${API_URL}/StreamPanel/public?t=${Date.now()}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+  if (
+    response.status === 204 ||
+    response.status === 404
+  ) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudo cargar el overlay de stream"
+      )
+    );
+  }
+
+  return await response.json() as StreamPanelData;
+}
+
 export async function getStreamPanelAdmin() {
   const response =
     await fetch(
