@@ -28,7 +28,7 @@ import {
   Twitch,
   ExternalLink,
 } from "lucide-react";
-import { getPublicSchedule } from "../services/scheduleService";
+import { getCurrentPublicSchedule } from "../services/scheduleService";
 import {
   getPublicSettings,
   type PublicSettings,
@@ -65,7 +65,10 @@ type PublicScheduleResponse = {
   eventActive?: boolean;
   isPublished: boolean;
   message?: string;
+  eventId?: string;
   event?: string;
+  eventStartDate?: string;
+  eventEndDate?: string;
   entries?: PublicScheduleEntryDto[];
 };
 
@@ -91,10 +94,7 @@ type DayOption = {
   shortLabel: string;
 };
 
-const EVENT_ID =
-  "04337355-98CA-4836-A1C1-5A8F84869F6D";
-
-  const EVENT_TIMEZONE =
+const EVENT_TIMEZONE =
   "America/Mexico_City";
 
 const PREPARING_MINUTES =
@@ -339,6 +339,75 @@ function formatShortDay(dayDate: string) {
     });
 
   return capitalize(day);
+}
+
+function formatEventDateRange(
+  startDate?: string,
+  endDate?: string,
+  entries: PublicScheduleEntryDto[] = []
+) {
+  const entryDates =
+    entries
+      .map((entry) =>
+        normalizeDateOnly(entry.dayDate)
+      )
+      .filter(Boolean)
+      .sort();
+
+  const cleanStart =
+    startDate
+      ? normalizeDateOnly(startDate)
+      : entryDates[0];
+
+  const cleanEnd =
+    endDate
+      ? normalizeDateOnly(endDate)
+      : entryDates[entryDates.length - 1];
+
+  if (!cleanStart || !cleanEnd) {
+    return "Fechas por confirmar";
+  }
+
+  const start =
+    parseLocalDate(cleanStart);
+
+  const end =
+    parseLocalDate(cleanEnd);
+
+  const startDay =
+    start.getDate();
+
+  const endDay =
+    end.getDate();
+
+  const startMonth =
+    start.toLocaleDateString("es-MX", {
+      month: "long",
+    });
+
+  const endMonth =
+    end.toLocaleDateString("es-MX", {
+      month: "long",
+    });
+
+  const startYear =
+    start.getFullYear();
+
+  const endYear =
+    end.getFullYear();
+
+  if (
+    startMonth === endMonth &&
+    startYear === endYear
+  ) {
+    return `${startDay} - ${endDay} ${startMonth} ${startYear}`;
+  }
+
+  if (startYear === endYear) {
+    return `${startDay} ${startMonth} - ${endDay} ${endMonth} ${startYear}`;
+  }
+
+  return `${startDay} ${startMonth} ${startYear} - ${endDay} ${endMonth} ${endYear}`;
 }
 
 function formatDuration(minutes: number) {
@@ -626,14 +695,14 @@ export default function HorarioPage() {
   const [eventName, setEventName] =
     useState("SGames");
 
+  const [eventDateLabel, setEventDateLabel] =
+    useState("Fechas por confirmar");
+
   const [publicSettings, setPublicSettings] =
     useState<PublicSettings | null>(null);
 
   const [isPublished, setIsPublished] =
     useState(false);
-
-  const [hasActivePublicEvent, setHasActivePublicEvent] =
-    useState(true);
 
   const [message, setMessage] =
     useState("");
@@ -712,18 +781,21 @@ useEffect(() => {
       setLoading(true);
 
       const data: PublicScheduleResponse =
-        await getPublicSchedule(EVENT_ID);
+        await getCurrentPublicSchedule();
 
-      if (data.eventActive === false) {
-        setHasActivePublicEvent(false);
-        setIsPublished(false);
-        setMessage("");
-        setSchedule([]);
-        return;
-      }
-
-      setHasActivePublicEvent(true);
       setIsPublished(data.isPublished);
+
+      setEventName(
+        data.event ?? "SGames"
+      );
+
+      setEventDateLabel(
+        formatEventDateRange(
+          data.eventStartDate,
+          data.eventEndDate,
+          data.entries ?? []
+        )
+      );
 
       if (!data.isPublished) {
         setMessage(
@@ -734,10 +806,6 @@ useEffect(() => {
         setSchedule([]);
         return;
       }
-
-      setEventName(
-        data.event ?? "SGames"
-      );
 
      const currentNow =
   DateTime.now().setZone(EVENT_TIMEZONE);
@@ -883,14 +951,6 @@ const mappedEntries =
     );
   }
 
-  if (!hasActivePublicEvent) {
-    return (
-      <div className="sgames-schedule-page min-h-screen py-12">
-        <style>{horarioThemeCss}</style>
-      </div>
-    );
-  }
-
   if (!isPublished) {
     return (
       <div className="sgames-schedule-page min-h-screen py-12">
@@ -990,7 +1050,7 @@ const mappedEntries =
           <div className="mb-4 flex flex-wrap items-center justify-center gap-3">
             <Badge className="sgames-schedule-badge-primary">
               <CalendarDays className="mr-2 h-4 w-4" />
-              31 julio - 2 agosto 2026
+              {eventDateLabel}
             </Badge>
 
             <Badge className="sgames-schedule-badge-accent">
