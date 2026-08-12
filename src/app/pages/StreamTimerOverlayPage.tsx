@@ -252,6 +252,7 @@ export default function StreamTimerOverlayPage() {
             padding: 24px 36px;
             border: 3px solid var(--timer-border);
             border-radius: 4px;
+            overflow: hidden;
             background:
               linear-gradient(180deg, rgba(255,255,255,0.07), transparent 40%),
               var(--timer-bg);
@@ -266,6 +267,8 @@ export default function StreamTimerOverlayPage() {
           }
 
           .sg-stream-timer-label {
+            position: relative;
+            z-index: 2;
             margin-bottom: 8px;
             font-size: 22px;
             font-weight: 900;
@@ -276,6 +279,8 @@ export default function StreamTimerOverlayPage() {
           }
 
           .sg-stream-timer-value {
+            position: relative;
+            z-index: 2;
             font-size: clamp(56px, 10vw, 132px);
             line-height: 0.95;
             font-weight: 1000;
@@ -292,6 +297,8 @@ export default function StreamTimerOverlayPage() {
           }
 
           .sg-stream-timer-final {
+            position: relative;
+            z-index: 2;
             margin-top: 8px;
             font-size: 18px;
             font-weight: 900;
@@ -303,14 +310,14 @@ export default function StreamTimerOverlayPage() {
           .sg-stream-timer-gl {
             position: absolute;
             inset: 0;
+            z-index: 3;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: inherit;
             background:
-              radial-gradient(circle at center, color-mix(in srgb, var(--timer-secondary) 18%, transparent), transparent 60%),
-              rgba(0, 0, 0, 0.42);
-            color: var(--timer-text);
+              radial-gradient(circle at center, color-mix(in srgb, var(--timer-secondary) 16%, transparent), transparent 58%);
+            color: color-mix(in srgb, var(--timer-text) 92%, white);
             font-size: clamp(70px, 14vw, 190px);
             font-weight: 1000;
             letter-spacing: -0.05em;
@@ -319,7 +326,7 @@ export default function StreamTimerOverlayPage() {
               0 0 26px var(--timer-secondary),
               0 0 42px var(--timer-accent);
             pointer-events: none;
-            z-index: 9;
+            mix-blend-mode: screen;
             animation: sgTimerGlStart 1.8s steps(8) forwards;
           }
 
@@ -348,20 +355,20 @@ export default function StreamTimerOverlayPage() {
               transform: scale(0.58) rotate(-2deg);
               filter: blur(10px) saturate(1);
             }
-            16% {
-              opacity: 1;
-              transform: scale(1.14) rotate(1deg);
+            14% {
+              opacity: 0.98;
+              transform: scale(1.16) rotate(1deg);
               filter: blur(0) saturate(1.5);
             }
-            52% {
-              opacity: 1;
+            48% {
+              opacity: 0.86;
               transform: scale(1) rotate(0);
               filter: blur(0) saturate(1.25);
             }
             100% {
               opacity: 0;
-              transform: scale(1.2) rotate(1deg);
-              filter: blur(4px) saturate(1.8);
+              transform: scale(1.22) rotate(1deg);
+              filter: blur(5px) saturate(1.8);
             }
           }
 

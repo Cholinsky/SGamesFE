@@ -303,14 +303,14 @@ function TimerCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-black/50 p-5 text-center">
+        <div className="overflow-hidden rounded-2xl border border-[var(--sg-admin-border)] bg-black/50 p-5 text-center">
           <div className="relative">
-            <div className="font-mono text-4xl font-black tracking-tight text-yellow-300 drop-shadow md:text-5xl">
+            <div className="relative z-[1] font-mono text-4xl font-black tracking-tight text-yellow-300 drop-shadow md:text-5xl">
               {formatTimerMs(elapsed)}
             </div>
 
             {showGl && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 text-5xl font-black tracking-tight text-yellow-200 animate-pulse">
+              <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center rounded-xl bg-transparent text-5xl font-black tracking-tight text-yellow-100 opacity-90 mix-blend-screen animate-pulse [text-shadow:4px_4px_0_rgba(0,0,0,0.9),0_0_22px_rgba(34,211,238,0.9),0_0_36px_rgba(250,204,21,0.7)]">
                 GL
               </div>
             )}
