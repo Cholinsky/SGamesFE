@@ -47,6 +47,7 @@ import {
 import { toast } from "sonner";
 import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 import AdminStreamOverlayLibrary from "../../components/admin/AdminStreamOverlayLibrary";
+import AdminStreamDynamicOverlayTools from "../../components/admin/AdminStreamDynamicOverlayTools";
 import {
   createStreamQueueItem,
   deleteStreamQueueItem,
@@ -80,6 +81,15 @@ type QueueForm = {
   subtitle: string;
   detailText: string;
   sourceLabel: string;
+  runnerName: string;
+  runner2Name: string;
+  gameName: string;
+  categoryName: string;
+  platformName: string;
+  estimate: string;
+  commentators: string;
+  language: string;
+  note: string;
 };
 
 const emptyQueueForm: QueueForm = {
@@ -88,6 +98,15 @@ const emptyQueueForm: QueueForm = {
   subtitle: "",
   detailText: "",
   sourceLabel: "",
+  runnerName: "",
+  runner2Name: "",
+  gameName: "",
+  categoryName: "",
+  platformName: "",
+  estimate: "",
+  commentators: "",
+  language: "ES",
+  note: "",
 };
 
 function toSafeString(
@@ -477,6 +496,39 @@ export default function AdminStream() {
     }));
   }
 
+  function buildDisplayDataJson() {
+    const displayData = {
+      runnerName:
+        queueForm.runnerName.trim(),
+      runner2Name:
+        queueForm.runner2Name.trim(),
+      gameName:
+        queueForm.gameName.trim(),
+      categoryName:
+        queueForm.categoryName.trim(),
+      platformName:
+        queueForm.platformName.trim(),
+      estimate:
+        queueForm.estimate.trim(),
+      commentators:
+        queueForm.commentators.trim(),
+      language:
+        queueForm.language.trim() || "ES",
+      note:
+        queueForm.note.trim(),
+    };
+
+    const cleanData =
+      Object.fromEntries(
+        Object.entries(displayData)
+          .filter(([, value]) => Boolean(value))
+      );
+
+    return Object.keys(cleanData).length > 0
+      ? JSON.stringify(cleanData)
+      : null;
+  }
+
   async function handleSaveSettings() {
     try {
       setSaving(true);
@@ -527,6 +579,8 @@ export default function AdminStream() {
           queueForm.detailText.trim() || null,
         sourceLabel:
           queueForm.sourceLabel.trim() || null,
+        displayDataJson:
+          buildDisplayDataJson(),
       };
 
       await createStreamQueueItem(
@@ -716,6 +770,8 @@ export default function AdminStream() {
           </div>
         </MonitorCard>
       </div>
+
+      <AdminStreamDynamicOverlayTools />
 
       <AdminStreamOverlayLibrary
         activeSeasonKey={panelData?.seasonKey}
@@ -1269,6 +1325,182 @@ export default function AdminStream() {
                 className="mt-1.5 min-h-[100px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="Texto extra para producción o overlay"
               />
+            </div>
+
+            <div className="md:col-span-2 rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+              <div className="mb-4">
+                <p className="font-bold text-[var(--sg-text)]">
+                  Datos para overlays dinámicos
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                  Estos campos alimentan Current Run, Next Run, Runner Tag e Info Bar en OBS. Si los dejas vacíos, el overlay usa título/subtítulo/detalle.
+                </p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Runner principal
+                  </Label>
+
+                  <Input
+                    value={queueForm.runnerName}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "runnerName",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Ej. FedzMX"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Runner 2 / Race opcional
+                  </Label>
+
+                  <Input
+                    value={queueForm.runner2Name}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "runner2Name",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Sólo si aplica"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Juego
+                  </Label>
+
+                  <Input
+                    value={queueForm.gameName}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "gameName",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Ej. No More Halos"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Categoría
+                  </Label>
+
+                  <Input
+                    value={queueForm.categoryName}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "categoryName",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Ej. Switch 2020"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Plataforma
+                  </Label>
+
+                  <Input
+                    value={queueForm.platformName}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "platformName",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Ej. PC / Switch"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Estimado
+                  </Label>
+
+                  <Input
+                    value={queueForm.estimate}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "estimate",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Ej. 01:30:00"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Idioma
+                  </Label>
+
+                  <Input
+                    value={queueForm.language}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "language",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="ES"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Comentaristas / staff
+                  </Label>
+
+                  <Input
+                    value={queueForm.commentators}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "commentators",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Ej. N6+SweetX"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label className="text-[var(--sg-muted-text)]">
+                    Nota para Info Bar
+                  </Label>
+
+                  <Input
+                    value={queueForm.note}
+                    onChange={(event) =>
+                      updateQueueForm(
+                        "note",
+                        event.target.value
+                      )
+                    }
+                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    placeholder="Mensaje corto opcional"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

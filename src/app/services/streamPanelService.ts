@@ -27,6 +27,7 @@ export type StreamQueueItem = {
   subtitle?: string | null;
   detailText?: string | null;
   sourceLabel?: string | null;
+  displayDataJson?: string | null;
   sortOrder: number;
   isActive: boolean;
   isDone: boolean;
@@ -67,6 +68,7 @@ export type StreamQueuePayload = {
   subtitle?: string | null;
   detailText?: string | null;
   sourceLabel?: string | null;
+  displayDataJson?: string | null;
   sortOrder?: number;
 };
 
@@ -109,6 +111,12 @@ export function getStreamPanelPublicUrl() {
 
 export function getStreamOverlayUrl() {
   return `${window.location.origin}/overlay/stream`;
+}
+
+export function getStreamDynamicOverlayUrl(
+  view: "current-run" | "next-run" | "runner-tag" | "info-bar" | "intermission" = "current-run"
+) {
+  return `${window.location.origin}/overlay/stream/dynamic?view=${view}`;
 }
 
 export async function getStreamPanelPublic() {
