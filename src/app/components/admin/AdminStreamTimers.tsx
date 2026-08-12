@@ -110,6 +110,92 @@ function getPrimaryAction(
   };
 }
 
+function applyOptimisticTimerAction(
+  timer: StreamTimer,
+  action: TimerAction,
+  nowMs: number
+): StreamTimer {
+  const nowIso =
+    new Date(nowMs).toISOString();
+
+  const visibleElapsed =
+    calculateVisibleElapsedMs(
+      timer,
+      nowMs
+    );
+
+  if (action === "start") {
+    return {
+      ...timer,
+      status: "Running",
+      baseElapsedMs: 0,
+      currentElapsedMs: 0,
+      startedAtUtc: nowIso,
+      pausedAtUtc: null,
+      stoppedAtUtc: null,
+      finishAnimationEndsAtUtc: null,
+      shouldShowFinishAnimation: false,
+    };
+  }
+
+  if (action === "resume") {
+    return {
+      ...timer,
+      status: "Running",
+      baseElapsedMs: visibleElapsed,
+      currentElapsedMs: visibleElapsed,
+      startedAtUtc: nowIso,
+      pausedAtUtc: null,
+      stoppedAtUtc: null,
+      finishAnimationEndsAtUtc: null,
+      shouldShowFinishAnimation: false,
+    };
+  }
+
+  if (action === "pause") {
+    return {
+      ...timer,
+      status: "Paused",
+      baseElapsedMs: visibleElapsed,
+      currentElapsedMs: visibleElapsed,
+      startedAtUtc: null,
+      pausedAtUtc: nowIso,
+      shouldShowFinishAnimation: false,
+    };
+  }
+
+  if (action === "stop") {
+    return {
+      ...timer,
+      status: "Stopped",
+      baseElapsedMs: visibleElapsed,
+      currentElapsedMs: visibleElapsed,
+      startedAtUtc: null,
+      pausedAtUtc: null,
+      stoppedAtUtc: nowIso,
+      finishAnimationEndsAtUtc:
+        new Date(nowMs + 4000).toISOString(),
+      shouldShowFinishAnimation: true,
+    };
+  }
+
+  if (action === "reset") {
+    return {
+      ...timer,
+      status: "Idle",
+      baseElapsedMs: 0,
+      currentElapsedMs: 0,
+      startedAtUtc: null,
+      pausedAtUtc: null,
+      stoppedAtUtc: null,
+      finishAnimationEndsAtUtc: null,
+      shouldShowFinishAnimation: false,
+    };
+  }
+
+  return timer;
+}
+
 type TimerCardProps = {
   timer: StreamTimer;
   nowMs: number;
@@ -159,6 +245,11 @@ function TimerCard({
       nowMs
     );
 
+  const showGl =
+    String(timer.status ?? "").toLowerCase() === "running" &&
+    elapsed >= 0 &&
+    elapsed < 1800;
+
   return (
     <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
       <CardHeader>
@@ -172,6 +263,12 @@ function TimerCard({
               <Badge className={statusClass(timer.status)}>
                 {statusLabel(timer.status)}
               </Badge>
+
+              {showGl && (
+                <Badge className="bg-cyan-500/15 text-cyan-300">
+                  GL
+                </Badge>
+              )}
 
               {timer.shouldShowFinishAnimation && (
                 <Badge className="bg-yellow-500/15 text-yellow-300">
@@ -207,8 +304,16 @@ function TimerCard({
 
       <CardContent className="space-y-4">
         <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-black/50 p-5 text-center">
-          <div className="font-mono text-4xl font-black tracking-tight text-yellow-300 drop-shadow md:text-5xl">
-            {formatTimerMs(elapsed)}
+          <div className="relative">
+            <div className="font-mono text-4xl font-black tracking-tight text-yellow-300 drop-shadow md:text-5xl">
+              {formatTimerMs(elapsed)}
+            </div>
+
+            {showGl && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 text-5xl font-black tracking-tight text-yellow-200 animate-pulse">
+                GL
+              </div>
+            )}
           </div>
 
           {timer.status === "Stopped" && (
@@ -374,7 +479,7 @@ export default function AdminStreamTimers() {
     const refresh =
       window.setInterval(() => {
         loadTimers(true);
-      }, 3000);
+      }, 1000);
 
     return () =>
       window.clearInterval(refresh);
@@ -394,6 +499,26 @@ export default function AdminStreamTimers() {
     slot: number,
     action: TimerAction
   ) {
+    const optimisticNowMs =
+      Date.now();
+
+    const previousTimers =
+      timers;
+
+    setNowMs(optimisticNowMs);
+
+    setTimers((currentTimers) =>
+      currentTimers.map((timer) =>
+        timer.slot === slot
+          ? applyOptimisticTimerAction(
+              timer,
+              action,
+              optimisticNowMs
+            )
+          : timer
+      )
+    );
+
     try {
       await runStreamTimerAction(
         slot,
@@ -403,6 +528,8 @@ export default function AdminStreamTimers() {
       await loadTimers(true);
     } catch (error) {
       console.error(error);
+
+      setTimers(previousTimers);
 
       toast.error(
         error instanceof Error
@@ -415,6 +542,27 @@ export default function AdminStreamTimers() {
   async function handleRaceAction(
     action: TimerAction
   ) {
+    const optimisticNowMs =
+      Date.now();
+
+    const previousTimers =
+      timers;
+
+    setNowMs(optimisticNowMs);
+
+    setTimers((currentTimers) =>
+      currentTimers.map((timer) =>
+        timer.slot === 2 ||
+        timer.slot === 3
+          ? applyOptimisticTimerAction(
+              timer,
+              action,
+              optimisticNowMs
+            )
+          : timer
+      )
+    );
+
     try {
       await runRaceTimerAction(
         action
@@ -423,6 +571,8 @@ export default function AdminStreamTimers() {
       await loadTimers(true);
     } catch (error) {
       console.error(error);
+
+      setTimers(previousTimers);
 
       toast.error(
         error instanceof Error

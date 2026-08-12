@@ -80,6 +80,11 @@ function TimerOverlayCard({
       timer.finishAnimationEndsAtUtc
     ).getTime() > nowMs;
 
+  const showGl =
+    String(timer.status ?? "").toLowerCase() === "running" &&
+    elapsed >= 0 &&
+    elapsed < 1800;
+
   return (
     <div className={`sg-stream-timer-card ${compact ? "is-compact" : ""}`}>
       <div className="sg-stream-timer-label">
@@ -93,6 +98,12 @@ function TimerOverlayCard({
       {timer.status === "Stopped" && (
         <div className="sg-stream-timer-final">
           FINAL
+        </div>
+      )}
+
+      {showGl && !showGg && (
+        <div className="sg-stream-timer-gl">
+          GL
         </div>
       )}
 
@@ -152,7 +163,7 @@ export default function StreamTimerOverlayPage() {
     const refresh =
       window.setInterval(() => {
         loadTimers();
-      }, 1000);
+      }, 500);
 
     return () =>
       window.clearInterval(refresh);
@@ -289,6 +300,29 @@ export default function StreamTimerOverlayPage() {
             text-shadow: 3px 3px 0 var(--timer-shadow);
           }
 
+          .sg-stream-timer-gl {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: inherit;
+            background:
+              radial-gradient(circle at center, color-mix(in srgb, var(--timer-secondary) 18%, transparent), transparent 60%),
+              rgba(0, 0, 0, 0.42);
+            color: var(--timer-text);
+            font-size: clamp(70px, 14vw, 190px);
+            font-weight: 1000;
+            letter-spacing: -0.05em;
+            text-shadow:
+              7px 7px 0 var(--timer-shadow),
+              0 0 26px var(--timer-secondary),
+              0 0 42px var(--timer-accent);
+            pointer-events: none;
+            z-index: 9;
+            animation: sgTimerGlStart 1.8s steps(8) forwards;
+          }
+
           .sg-stream-timer-gg {
             position: absolute;
             inset: 0;
@@ -305,6 +339,30 @@ export default function StreamTimerOverlayPage() {
               8px 8px 0 var(--timer-shadow),
               0 0 34px var(--timer-accent);
             animation: sgTimerGgPop 0.75s steps(6) infinite alternate;
+            z-index: 10;
+          }
+
+          @keyframes sgTimerGlStart {
+            0% {
+              opacity: 0;
+              transform: scale(0.58) rotate(-2deg);
+              filter: blur(10px) saturate(1);
+            }
+            16% {
+              opacity: 1;
+              transform: scale(1.14) rotate(1deg);
+              filter: blur(0) saturate(1.5);
+            }
+            52% {
+              opacity: 1;
+              transform: scale(1) rotate(0);
+              filter: blur(0) saturate(1.25);
+            }
+            100% {
+              opacity: 0;
+              transform: scale(1.2) rotate(1deg);
+              filter: blur(4px) saturate(1.8);
+            }
           }
 
           @keyframes sgTimerGgPop {
