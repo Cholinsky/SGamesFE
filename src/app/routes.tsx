@@ -21,6 +21,7 @@ import AdminClips from "./pages/admin/AdminClips";
 import AdminStream from "./pages/admin/AdminStream";
 import StreamOverlayPage from "./pages/StreamOverlayPage";
 import StreamDynamicOverlayPage from "./pages/StreamDynamicOverlayPage";
+import StreamTimerOverlayPage from "./pages/StreamTimerOverlayPage";
 
 export const router = createBrowserRouter([
   {
@@ -46,9 +47,18 @@ export const router = createBrowserRouter([
         Component: StreamDynamicOverlayPage,
       },
       {
+        path: "/overlay/stream/timer",
+        Component: StreamTimerOverlayPage,
+      },
+      {
+        path: "/overlay/stream/timers",
+        Component: StreamTimerOverlayPage,
+      },
+      {
         path: "/admin/login",
         Component: AdminLogin,
       },
+      
       {
         path: "/admin",
         element: (
