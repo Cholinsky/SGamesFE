@@ -214,6 +214,41 @@ export function getStreamTimersOverlayUrl() {
   return `${window.location.origin}/overlay/stream/timers`;
 }
 
+function parseApiUtcDateMs(
+  value?: string | null
+) {
+  if (!value) {
+    return Number.NaN;
+  }
+
+  const clean =
+    String(value).trim();
+
+  if (!clean) {
+    return Number.NaN;
+  }
+
+  /*
+   * SQL Server / EF puede devolver DateTime como:
+   * 2026-08-12T22:40:10.123
+   *
+   * Sin "Z", JavaScript lo interpreta como hora local.
+   * Eso hace que el timer parezca congelado porque startedAtUtc
+   * queda desplazado por la zona horaria.
+   *
+   * Si no trae Z ni offset, lo tratamos explícitamente como UTC.
+   */
+  const hasTimezone =
+    /z$/i.test(clean) ||
+    /[+-]\d{2}:\d{2}$/.test(clean);
+
+  return new Date(
+    hasTimezone
+      ? clean
+      : `${clean}Z`
+  ).getTime();
+}
+
 export function calculateVisibleElapsedMs(
   timer: StreamTimer,
   nowMs: number = Date.now()
@@ -221,23 +256,31 @@ export function calculateVisibleElapsedMs(
   const base =
     Number(timer.baseElapsedMs ?? 0);
 
+  const current =
+    Number(timer.currentElapsedMs ?? base);
+
+  const status =
+    String(timer.status ?? "").toLowerCase();
+
   if (
-    timer.status !== "Running" ||
+    status !== "running" ||
     !timer.startedAtUtc
   ) {
     return Math.max(
       0,
-      Number(timer.currentElapsedMs ?? base)
+      current
     );
   }
 
   const startedAt =
-    new Date(timer.startedAtUtc).getTime();
+    parseApiUtcDateMs(
+      timer.startedAtUtc
+    );
 
   if (Number.isNaN(startedAt)) {
     return Math.max(
       0,
-      Number(timer.currentElapsedMs ?? base)
+      current
     );
   }
 
