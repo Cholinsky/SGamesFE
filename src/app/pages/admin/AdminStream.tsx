@@ -50,6 +50,7 @@ import { toast } from "sonner";
 import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 import AdminStreamOverlayLibrary from "../../components/admin/AdminStreamOverlayLibrary";
 import AdminStreamDynamicOverlayTools from "../../components/admin/AdminStreamDynamicOverlayTools";
+import AdminStreamTimers from "../../components/admin/AdminStreamTimers";
 import {
   createStreamQueueItem,
   deleteStreamQueueItem,
@@ -1194,6 +1195,8 @@ export default function AdminStream() {
       </div>
 
       <AdminStreamDynamicOverlayTools />
+
+      <AdminStreamTimers />
 
       <AdminStreamOverlayLibrary
         activeSeasonKey={panelData?.seasonKey}
