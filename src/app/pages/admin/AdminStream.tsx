@@ -57,6 +57,9 @@ import {
   getStreamOverlayUrl,
   getStreamScheduleCandidates,
   importScheduleEntryToStream,
+  importScheduleEntriesBulkToStream,
+  syncAllStreamQueueItems,
+  clearActiveStreamQueue,
   syncStreamQueueItemNow,
   markStreamQueueItemDone,
   moveStreamQueueItem,
@@ -140,6 +143,62 @@ function formatDateRange(
   }
 
   return `${new Date(startDate).toLocaleDateString("es-MX")} - ${new Date(endDate).toLocaleDateString("es-MX")}`;
+}
+
+function normalizeScheduleDate(
+  value?: string | null
+) {
+  return value
+    ? String(value).slice(0, 10)
+    : "";
+}
+
+function formatScheduleDate(
+  value?: string | null
+) {
+  const clean =
+    normalizeScheduleDate(value);
+
+  if (!clean) {
+    return "Fecha pendiente";
+  }
+
+  const [year, month, day] =
+    clean.split("-").map(Number);
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  ).toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatScheduleDayLong(
+  value?: string | null
+) {
+  const clean =
+    normalizeScheduleDate(value);
+
+  if (!clean) {
+    return "Día pendiente";
+  }
+
+  const [year, month, day] =
+    clean.split("-").map(Number);
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  ).toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 }
 
 function extractTwitchChannel(
@@ -387,6 +446,9 @@ export default function AdminStream() {
   const [importingScheduleId, setImportingScheduleId] =
     useState("");
 
+  const [bulkImportingMode, setBulkImportingMode] =
+    useState("");
+
   const [importSyncWithSchedule, setImportSyncWithSchedule] =
     useState(true);
 
@@ -542,6 +604,54 @@ export default function AdminStream() {
       scheduleSearch,
     ]);
 
+  const availableFilteredScheduleCandidates =
+    useMemo(
+      () =>
+        filteredScheduleCandidates.filter(
+          (run) => !run.isAlreadyInQueue
+        ),
+      [
+        filteredScheduleCandidates,
+      ]
+    );
+
+  const scheduleDaysForImport =
+    useMemo(() => {
+      const map =
+        new Map<string, number>();
+
+      scheduleCandidates.forEach((run) => {
+        const day =
+          normalizeScheduleDate(
+            run.dayDate
+          );
+
+        if (!day) {
+          return;
+        }
+
+        if (run.isAlreadyInQueue) {
+          return;
+        }
+
+        map.set(
+          day,
+          (map.get(day) ?? 0) + 1
+        );
+      });
+
+      return Array.from(map.entries())
+        .map(([dayDate, count]) => ({
+          dayDate,
+          count,
+        }))
+        .sort((a, b) =>
+          a.dayDate.localeCompare(b.dayDate)
+        );
+    }, [
+      scheduleCandidates,
+    ]);
+
   function updateFormField(
     field: keyof StreamSettingsForm,
     value: string | boolean
@@ -674,12 +784,7 @@ export default function AdminStream() {
           : "Run importada como snapshot"
       );
 
-      setScheduleDialogOpen(false);
-      setImportCommentators("");
-      setImportLanguage("ES");
-      setImportNote("");
-      setScheduleSearch("");
-
+      await openScheduleImportDialog();
       await loadPanel();
     } catch (error) {
       console.error(error);
@@ -691,6 +796,186 @@ export default function AdminStream() {
       );
     } finally {
       setImportingScheduleId("");
+    }
+  }
+
+  async function handleImportAllScheduleRuns() {
+    try {
+      setBulkImportingMode("all");
+
+      const result =
+        await importScheduleEntriesBulkToStream({
+          importAll: true,
+          sourceLabel: "Horario",
+          commentators:
+            importCommentators.trim() || null,
+          language:
+            importLanguage.trim() || "ES",
+          note:
+            importNote.trim() || null,
+          syncWithSchedule:
+            importSyncWithSchedule,
+        });
+
+      toast.success(
+        `Importadas: ${result.imported}. Ya estaban en cola: ${result.skippedExisting}.`
+      );
+
+      await openScheduleImportDialog();
+      await loadPanel();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo importar todo el horario"
+      );
+    } finally {
+      setBulkImportingMode("");
+    }
+  }
+
+  async function handleImportVisibleScheduleRuns() {
+    const ids =
+      availableFilteredScheduleCandidates.map(
+        (run) => run.scheduleEntryId
+      );
+
+    if (ids.length === 0) {
+      toast.info(
+        "No hay runs disponibles para importar con estos filtros"
+      );
+      return;
+    }
+
+    try {
+      setBulkImportingMode("visible");
+
+      const result =
+        await importScheduleEntriesBulkToStream({
+          scheduleEntryIds: ids,
+          importAll: false,
+          sourceLabel: "Horario",
+          commentators:
+            importCommentators.trim() || null,
+          language:
+            importLanguage.trim() || "ES",
+          note:
+            importNote.trim() || null,
+          syncWithSchedule:
+            importSyncWithSchedule,
+        });
+
+      toast.success(
+        `Importadas: ${result.imported}. Ya estaban en cola: ${result.skippedExisting}.`
+      );
+
+      await openScheduleImportDialog();
+      await loadPanel();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron importar las runs filtradas"
+      );
+    } finally {
+      setBulkImportingMode("");
+    }
+  }
+
+  async function handleImportScheduleDay(
+    dayDate: string
+  ) {
+    try {
+      setBulkImportingMode(
+        `day-${dayDate}`
+      );
+
+      const result =
+        await importScheduleEntriesBulkToStream({
+          dayDate,
+          importAll: false,
+          sourceLabel: "Horario",
+          commentators:
+            importCommentators.trim() || null,
+          language:
+            importLanguage.trim() || "ES",
+          note:
+            importNote.trim() || null,
+          syncWithSchedule:
+            importSyncWithSchedule,
+        });
+
+      toast.success(
+        `${formatScheduleDayLong(dayDate)}: ${result.imported} importadas, ${result.skippedExisting} ya estaban en cola.`
+      );
+
+      await openScheduleImportDialog();
+      await loadPanel();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo importar el día"
+      );
+    } finally {
+      setBulkImportingMode("");
+    }
+  }
+
+  async function handleSyncAllQueueItems() {
+    try {
+      const result =
+        await syncAllStreamQueueItems();
+
+      toast.success(
+        result.message || "Cola sincronizada"
+      );
+
+      await loadPanel();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo sincronizar la cola"
+      );
+    }
+  }
+
+  async function handleClearActiveQueue() {
+    const confirmed =
+      window.confirm(
+        "¿Mover todos los items activos de la cola al historial? No se borran, pero dejarán de aparecer como cola activa."
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const result =
+        await clearActiveStreamQueue();
+
+      toast.success(
+        result.message || "Cola limpia"
+      );
+
+      await loadPanel();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo limpiar la cola"
+      );
     }
   }
 
@@ -1141,6 +1426,26 @@ export default function AdminStream() {
 
               <div className="flex flex-wrap gap-2">
                 <Button
+                  onClick={handleSyncAllQueueItems}
+                  variant="outline"
+                  className="border-blue-500/30 text-blue-300"
+                  disabled={!panelData || panelData.queue.length === 0}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Sincronizar cola
+                </Button>
+
+                <Button
+                  onClick={handleClearActiveQueue}
+                  variant="outline"
+                  className="border-red-500/30 text-red-300"
+                  disabled={!panelData || panelData.queue.length === 0}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Limpiar cola
+                </Button>
+
+                <Button
                   onClick={openScheduleImportDialog}
                   variant="outline"
                   className="border-[var(--sg-admin-border)] text-[var(--sg-primary)]"
@@ -1482,6 +1787,77 @@ export default function AdminStream() {
               </div>
             </div>
 
+            <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div>
+                  <p className="font-semibold text-[var(--sg-text)]">
+                    Importación rápida
+                  </p>
+
+                  <p className="text-sm text-[var(--sg-muted-text)]">
+                    Las runs que ya estén activas en cola se saltan automáticamente para evitar duplicados.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={handleImportAllScheduleRuns}
+                    disabled={
+                      loadingSchedule ||
+                      bulkImportingMode === "all" ||
+                      scheduleCandidates.length === 0
+                    }
+                    className="sgames-admin-primary-button"
+                  >
+                    <CalendarPlus className="mr-2 h-4 w-4" />
+                    {bulkImportingMode === "all"
+                      ? "Importando..."
+                      : "Importar todo"}
+                  </Button>
+
+                  <Button
+                    onClick={handleImportVisibleScheduleRuns}
+                    disabled={
+                      loadingSchedule ||
+                      bulkImportingMode === "visible" ||
+                      availableFilteredScheduleCandidates.length === 0
+                    }
+                    variant="outline"
+                    className="border-[var(--sg-admin-border)] text-[var(--sg-primary)]"
+                  >
+                    <CalendarPlus className="mr-2 h-4 w-4" />
+                    Importar filtradas
+                  </Button>
+                </div>
+              </div>
+
+              {scheduleDaysForImport.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {scheduleDaysForImport.map((day) => (
+                    <Button
+                      key={day.dayDate}
+                      onClick={() =>
+                        handleImportScheduleDay(
+                          day.dayDate
+                        )
+                      }
+                      disabled={
+                        bulkImportingMode === `day-${day.dayDate}`
+                      }
+                      variant="outline"
+                      className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
+                    >
+                      <CalendarPlus className="mr-2 h-4 w-4" />
+                      {formatScheduleDayLong(day.dayDate)}
+                      <Badge className="ml-2 bg-black/30 text-current">
+                        {day.count}
+                      </Badge>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {loadingSchedule ? (
               <div className="rounded-2xl border border-dashed border-[var(--sg-admin-border)] p-10 text-center text-[var(--sg-muted-text)]">
                 Cargando runs del horario...
@@ -1507,7 +1883,7 @@ export default function AdminStream() {
                       <div className="min-w-0">
                         <div className="mb-2 flex flex-wrap items-center gap-2">
                           <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
-                            {new Date(run.dayDate).toLocaleDateString("es-MX")}
+                            {formatScheduleDate(run.dayDate)}
                           </Badge>
 
                           <Badge className="bg-black/30 text-[var(--sg-muted-text)]">
@@ -1517,6 +1893,18 @@ export default function AdminStream() {
                           <Badge className="bg-green-500/15 text-green-300">
                             {run.runType || "Solo"}
                           </Badge>
+
+                          {run.isAlreadyInQueue && (
+                            <Badge className="bg-blue-500/20 text-blue-300">
+                              Ya en cola
+                            </Badge>
+                          )}
+
+                          {!run.isAlreadyInQueue && run.isDoneInQueue && (
+                            <Badge className="bg-slate-500/20 text-slate-300">
+                              Ya estuvo en historial
+                            </Badge>
+                          )}
                         </div>
 
                         <h3 className="text-lg font-bold text-[var(--sg-text)]">
@@ -1542,14 +1930,26 @@ export default function AdminStream() {
                           handleImportScheduleRun(run)
                         }
                         disabled={
+                          run.isAlreadyInQueue ||
                           importingScheduleId === run.scheduleEntryId
                         }
-                        className="sgames-admin-primary-button"
+                        className={
+                          run.isAlreadyInQueue
+                            ? "border-blue-500/30 text-blue-300"
+                            : "sgames-admin-primary-button"
+                        }
+                        variant={
+                          run.isAlreadyInQueue
+                            ? "outline"
+                            : "default"
+                        }
                       >
                         <CalendarPlus className="mr-2 h-4 w-4" />
-                        {importingScheduleId === run.scheduleEntryId
-                          ? "Importando..."
-                          : "Importar"}
+                        {run.isAlreadyInQueue
+                          ? "Ya en cola"
+                          : importingScheduleId === run.scheduleEntryId
+                            ? "Importando..."
+                            : "Importar"}
                       </Button>
                     </div>
                   </div>

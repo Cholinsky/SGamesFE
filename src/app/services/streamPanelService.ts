@@ -70,6 +70,9 @@ export type StreamScheduleCandidate = {
   title: string;
   subtitle: string;
   displayDataJson: string;
+  isAlreadyInQueue: boolean;
+  isDoneInQueue: boolean;
+  streamQueueItemId?: string | null;
 };
 
 export type ImportScheduleEntryToStreamPayload = {
@@ -80,6 +83,30 @@ export type ImportScheduleEntryToStreamPayload = {
   note?: string | null;
   syncWithSchedule: boolean;
   sortOrder?: number;
+};
+
+export type BulkImportScheduleEntriesToStreamPayload = {
+  scheduleEntryIds?: string[];
+  dayDate?: string | null;
+  importAll: boolean;
+  sourceLabel?: string | null;
+  commentators?: string | null;
+  language?: string | null;
+  note?: string | null;
+  syncWithSchedule: boolean;
+};
+
+export type BulkImportScheduleEntriesResult = {
+  totalRequested: number;
+  imported: number;
+  skippedExisting: number;
+  skippedMissing: number;
+  items: StreamQueueItem[];
+};
+
+export type StreamQueueMaintenanceResult = {
+  affected: number;
+  message: string;
 };
 
 export type UpdateStreamSettingsPayload = {
@@ -467,4 +494,74 @@ export async function syncStreamQueueItemNow(
   }
 
   return await response.json() as StreamQueueItem;
+}
+
+
+export async function importScheduleEntriesBulkToStream(
+  payload: BulkImportScheduleEntriesToStreamPayload
+) {
+  const response =
+    await fetch(
+      `${API_URL}/StreamPanel/queue/import-schedule-bulk`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudieron importar las runs del horario"
+      )
+    );
+  }
+
+  return await response.json() as BulkImportScheduleEntriesResult;
+}
+
+export async function syncAllStreamQueueItems() {
+  const response =
+    await fetch(
+      `${API_URL}/StreamPanel/queue/sync-all`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudo sincronizar toda la cola"
+      )
+    );
+  }
+
+  return await response.json() as StreamQueueMaintenanceResult;
+}
+
+export async function clearActiveStreamQueue() {
+  const response =
+    await fetch(
+      `${API_URL}/StreamPanel/queue/clear-active`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "No se pudo limpiar la cola activa"
+      )
+    );
+  }
+
+  return await response.json() as StreamQueueMaintenanceResult;
 }
