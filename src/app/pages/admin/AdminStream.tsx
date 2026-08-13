@@ -51,6 +51,7 @@ import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 import AdminStreamOverlayLibrary from "../../components/admin/AdminStreamOverlayLibrary";
 import AdminStreamDynamicOverlayTools from "../../components/admin/AdminStreamDynamicOverlayTools";
 import AdminStreamTimers from "../../components/admin/AdminStreamTimers";
+import AdminTwitchStreamTools from "../../components/admin/AdminTwitchStreamTools";
 import {
   createStreamQueueItem,
   deleteStreamQueueItem,
@@ -1197,6 +1198,8 @@ export default function AdminStream() {
       <AdminStreamDynamicOverlayTools />
 
       <AdminStreamTimers />
+
+      <AdminTwitchStreamTools />
 
       <AdminStreamOverlayLibrary
         activeSeasonKey={panelData?.seasonKey}
