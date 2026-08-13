@@ -3,7 +3,7 @@ import {
   getActiveDesignTheme,
   type PublicDesignTheme,
 } from "../services/publicDesignThemeService";
-import "../styles/adminSeasonTheme.css";
+import "../../styles/adminSeasonTheme.css";
 
 function normalizeAdminSeasonKey(
   seasonKey?: string | null
