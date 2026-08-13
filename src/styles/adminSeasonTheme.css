@@ -222,7 +222,6 @@ html[data-admin-season-theme="Winter"] body.sgames-admin-theme-active {
       var(--sg-accent)
     ) !important;
 }
-
 .sgames-admin-theme-active button[class*="border-cyan"],
 .sgames-admin-theme-active button[class*="border-blue"],
 .sgames-admin-theme-active button[class*="border-green"],
