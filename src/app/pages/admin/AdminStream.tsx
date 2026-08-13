@@ -51,7 +51,7 @@ import { useAdminSeasonTheme } from "../../hooks/useAdminSeasonTheme";
 import AdminStreamOverlayLibrary from "../../components/admin/AdminStreamOverlayLibrary";
 import AdminStreamDynamicOverlayTools from "../../components/admin/AdminStreamDynamicOverlayTools";
 import AdminStreamTimers from "../../components/admin/AdminStreamTimers";
-import AdminTwitchStreamTools from "../../components/admin/AdminTwitchStreamTools";
+import AdminStreamBroadcastPanel from "../../components/admin/AdminStreamBroadcastPanel";
 import {
   createStreamQueueItem,
   deleteStreamQueueItem,
@@ -1199,223 +1199,19 @@ export default function AdminStream() {
 
       <AdminStreamTimers />
 
-      <AdminTwitchStreamTools />
 
       <AdminStreamOverlayLibrary
         activeSeasonKey={panelData?.seasonKey}
       />
 
       <div className="grid gap-5 xl:grid-cols-[1fr_1.15fr]">
-        <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
-          <CardHeader>
-            <CardTitle className="text-[var(--sg-text)]">
-              Información del stream
-            </CardTitle>
-
-            <p className="text-sm text-[var(--sg-muted-text)]">
-              Estos textos pueden alimentar paneles, overlays o referencias para el staff.
-            </p>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-[var(--sg-muted-text)]">
-                Título del directo
-              </Label>
-
-              <Input
-                value={form.streamTitle}
-                onChange={(event) =>
-                  updateFormField(
-                    "streamTitle",
-                    event.target.value
-                  )
-                }
-                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                placeholder="SGames Fall 2026"
-              />
-            </div>
-
-            <div>
-              <Label className="text-[var(--sg-muted-text)]">
-                Estado corto
-              </Label>
-
-              <Input
-                value={form.streamStatus}
-                onChange={(event) =>
-                  updateFormField(
-                    "streamStatus",
-                    event.target.value
-                  )
-                }
-                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                placeholder="En vivo / Intermedio / Próximamente"
-              />
-            </div>
-
-            <div>
-              <Label className="text-[var(--sg-muted-text)]">
-                Descripción del stream
-              </Label>
-
-              <Textarea
-                value={form.streamDescription}
-                onChange={(event) =>
-                  updateFormField(
-                    "streamDescription",
-                    event.target.value
-                  )
-                }
-                className="mt-1.5 min-h-[90px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                placeholder="Descripción visible para staff u overlay"
-              />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <Label className="text-[var(--sg-muted-text)]">
-                  Twitch
-                </Label>
-
-                <Input
-                  value={form.twitchChannelUrl}
-                  onChange={(event) =>
-                    updateFormField(
-                      "twitchChannelUrl",
-                      event.target.value
-                    )
-                  }
-                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                  placeholder="https://www.twitch.tv/sprgames_"
-                />
-              </div>
-
-              <div>
-                <Label className="text-[var(--sg-muted-text)]">
-                  YouTube
-                </Label>
-
-                <Input
-                  value={form.youtubeLiveUrl}
-                  onChange={(event) =>
-                    updateFormField(
-                      "youtubeLiveUrl",
-                      event.target.value
-                    )
-                  }
-                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                  placeholder="https://youtube.com/watch?v=..."
-                />
-              </div>
-
-              <div>
-                <Label className="text-[var(--sg-muted-text)]">
-                  TikTok
-                </Label>
-
-                <Input
-                  value={form.tiktokLiveUrl}
-                  onChange={(event) =>
-                    updateFormField(
-                      "tiktokLiveUrl",
-                      event.target.value
-                    )
-                  }
-                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                  placeholder="https://www.tiktok.com/@..."
-                />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
-              <h3 className="mb-3 font-bold text-[var(--sg-text)]">
-                Texto para overlay / OBS
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-[var(--sg-muted-text)]">
-                    Headline
-                  </Label>
-
-                  <Input
-                    value={form.overlayHeadline}
-                    onChange={(event) =>
-                      updateFormField(
-                        "overlayHeadline",
-                        event.target.value
-                      )
-                    }
-                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                    placeholder="Ahora en stream"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-[var(--sg-muted-text)]">
-                    Subheadline
-                  </Label>
-
-                  <Input
-                    value={form.overlaySubheadline}
-                    onChange={(event) =>
-                      updateFormField(
-                        "overlaySubheadline",
-                        event.target.value
-                      )
-                    }
-                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                    placeholder="Próximo run / categoría / mensaje"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-[var(--sg-muted-text)]">
-                    Notas de escena
-                  </Label>
-
-                  <Textarea
-                    value={form.currentSceneNotes}
-                    onChange={(event) =>
-                      updateFormField(
-                        "currentSceneNotes",
-                        event.target.value
-                      )
-                    }
-                    className="mt-1.5 min-h-[80px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                    placeholder="Notas internas para producción"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <label className="flex items-center gap-3 rounded-xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] px-4 py-3 text-sm text-[var(--sg-muted-text)]">
-              <input
-                type="checkbox"
-                checked={form.isMonitorEnabled}
-                onChange={(event) =>
-                  updateFormField(
-                    "isMonitorEnabled",
-                    event.target.checked
-                  )
-                }
-              />
-              Panel de monitoreo habilitado
-            </label>
-
-            <Button
-              onClick={handleSaveSettings}
-              disabled={saving}
-              className="w-full sgames-admin-primary-button"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {saving
-                ? "Guardando..."
-                : "Guardar información del stream"}
-            </Button>
-          </CardContent>
-        </Card>
+        <AdminStreamBroadcastPanel
+          form={form}
+          panelData={panelData}
+          saving={saving}
+          updateFormField={updateFormField}
+          onSaveSettings={handleSaveSettings}
+        />
 
         <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
           <CardHeader>
