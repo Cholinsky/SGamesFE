@@ -3,14 +3,38 @@
 :root {
   --font-size: 16px;
 
-  --sg-primary: #22d3ee;
-  --sg-secondary: #8b5cf6;
-  --sg-accent: #ec4899;
+  /*
+   * Paleta SGames de 5 colores.
+   * Por default se usa Summer. Las temporadas pueden sobrescribir estos
+   * valores desde DesignThemes.
+   */
   --sg-background: #070817;
   --sg-surface: #10182b;
+  --sg-secondary: #8b5cf6;
+  --sg-primary: #22d3ee;
+  --sg-accent: #ec4899;
+
+  --sg-palette-1: var(--sg-background);
+  --sg-palette-2: var(--sg-surface);
+  --sg-palette-3: var(--sg-secondary);
+  --sg-palette-4: var(--sg-primary);
+  --sg-palette-5: var(--sg-accent);
+
   --sg-text: #f8f7ff;
   --sg-muted-text: #93a4bd;
-  --sg-border: rgba(139, 92, 246, 0.22);
+  --sg-border: rgba(34, 211, 238, 0.24);
+
+  --sg-hero-gradient:
+    radial-gradient(circle at 18% 12%, rgba(34, 211, 238, 0.28), transparent 30rem),
+    radial-gradient(circle at 82% 18%, rgba(236, 72, 153, 0.22), transparent 32rem),
+    linear-gradient(135deg, #070817 0%, #10182b 48%, #2b124c 100%);
+
+  --sg-card-gradient:
+    linear-gradient(135deg, rgba(16, 24, 43, 0.92), rgba(7, 8, 23, 0.88)),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.13), transparent 18rem);
+
+  --sg-glow-primary: color-mix(in srgb, var(--sg-primary) 30%, transparent);
+  --sg-glow-secondary: color-mix(in srgb, var(--sg-accent) 18%, transparent);
 
   --background: var(--sg-background);
   --foreground: var(--sg-text);
@@ -22,7 +46,7 @@
   --popover-foreground: var(--sg-text);
 
   --primary: var(--sg-primary);
-  --primary-foreground: #ffffff;
+  --primary-foreground: #06111f;
 
   --secondary: color-mix(
     in srgb,
@@ -38,8 +62,12 @@
   );
   --muted-foreground: var(--sg-muted-text);
 
-  --accent: var(--sg-accent);
-  --accent-foreground: #ffffff;
+  --accent: color-mix(
+    in srgb,
+    var(--sg-accent) 18%,
+    var(--sg-surface)
+  );
+  --accent-foreground: var(--sg-text);
 
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
@@ -61,8 +89,8 @@
   --chart-1: var(--sg-primary);
   --chart-2: var(--sg-secondary);
   --chart-3: var(--sg-accent);
-  --chart-4: #facc15;
-  --chart-5: #34d399;
+  --chart-4: color-mix(in srgb, var(--sg-primary) 55%, var(--sg-accent));
+  --chart-5: color-mix(in srgb, var(--sg-secondary) 45%, var(--sg-accent));
 
   --radius: 0.875rem;
 
@@ -84,6 +112,40 @@
   --sidebar-ring: var(--sg-primary);
 }
 
+html[data-season-theme="Summer"] {
+  --sg-background: #070817;
+  --sg-surface: #10182b;
+  --sg-secondary: #8b5cf6;
+  --sg-primary: #22d3ee;
+  --sg-accent: #ec4899;
+  --sg-text: #f8f7ff;
+  --sg-muted-text: #93a4bd;
+  --sg-border: rgba(34, 211, 238, 0.24);
+}
+
+html[data-season-theme="Autumn"],
+html[data-season-theme="Fall"] {
+  --sg-background: #05070c;
+  --sg-surface: #111827;
+  --sg-secondary: #334155;
+  --sg-primary: #ef4444;
+  --sg-accent: #f97316;
+  --sg-text: #f8fafc;
+  --sg-muted-text: #94a3b8;
+  --sg-border: rgba(239, 68, 68, 0.24);
+}
+
+html[data-season-theme="Winter"] {
+  --sg-background: #012d3a;
+  --sg-surface: #118087;
+  --sg-secondary: #0a5b6d;
+  --sg-primary: #12dd78;
+  --sg-accent: #1ae7ca;
+  --sg-text: #f2fbff;
+  --sg-muted-text: #b7d7de;
+  --sg-border: rgba(26, 231, 202, 0.24);
+}
+
 .dark {
   --background: var(--sg-background);
   --foreground: var(--sg-text);
@@ -95,7 +157,7 @@
   --popover-foreground: var(--sg-text);
 
   --primary: var(--sg-primary);
-  --primary-foreground: #ffffff;
+  --primary-foreground: #06111f;
 
   --secondary: color-mix(
     in srgb,
@@ -111,8 +173,12 @@
   );
   --muted-foreground: var(--sg-muted-text);
 
-  --accent: var(--sg-accent);
-  --accent-foreground: #ffffff;
+  --accent: color-mix(
+    in srgb,
+    var(--sg-accent) 18%,
+    var(--sg-surface)
+  );
+  --accent-foreground: var(--sg-text);
 
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
@@ -133,8 +199,8 @@
   --chart-1: var(--sg-primary);
   --chart-2: var(--sg-secondary);
   --chart-3: var(--sg-accent);
-  --chart-4: #facc15;
-  --chart-5: #34d399;
+  --chart-4: color-mix(in srgb, var(--sg-primary) 55%, var(--sg-accent));
+  --chart-5: color-mix(in srgb, var(--sg-secondary) 45%, var(--sg-accent));
 
   --sidebar: color-mix(
     in srgb,

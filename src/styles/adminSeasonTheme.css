@@ -1,25 +1,39 @@
 body.sgames-admin-theme-active {
   background:
-    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 14%, transparent), transparent 30rem),
-    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 12%, transparent), transparent 32rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 58%, var(--sg-background) 42%) 0%, var(--sg-background) 46%, var(--sg-background) 100%);
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--sg-primary) 15%, transparent), transparent 30rem),
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--sg-accent) 13%, transparent), transparent 32rem),
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--sg-secondary) 10%, transparent), transparent 34rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--sg-surface) 58%, var(--sg-background) 42%) 0%,
+      var(--sg-background) 46%,
+      var(--sg-background) 100%
+    );
   color: var(--sg-text);
+}
+
+html[data-admin-season-theme="Summer"] body.sgames-admin-theme-active {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(34, 211, 238, 0.18), transparent 30rem),
+    radial-gradient(circle at 88% 12%, rgba(236, 72, 153, 0.15), transparent 32rem),
+    radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.11), transparent 34rem),
+    linear-gradient(180deg, #10182b 0%, #070817 48%, #070817 100%);
 }
 
 html[data-admin-season-theme="Autumn"] body.sgames-admin-theme-active {
   background:
-    radial-gradient(circle at 12% 8%, rgba(249, 115, 22, 0.17), transparent 30rem),
-    radial-gradient(circle at 88% 12%, rgba(185, 28, 28, 0.14), transparent 32rem),
-    radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.08), transparent 34rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+    radial-gradient(circle at 12% 8%, rgba(239, 68, 68, 0.17), transparent 30rem),
+    radial-gradient(circle at 88% 12%, rgba(249, 115, 22, 0.14), transparent 32rem),
+    radial-gradient(circle at 50% 100%, rgba(51, 65, 85, 0.16), transparent 34rem),
+    linear-gradient(180deg, #111827 0%, #05070c 48%, #05070c 100%);
 }
 
 html[data-admin-season-theme="Winter"] body.sgames-admin-theme-active {
   background:
-    radial-gradient(circle at 12% 8%, rgba(103, 232, 249, 0.16), transparent 30rem),
-    radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.16), transparent 32rem),
-    radial-gradient(circle at 50% 100%, rgba(196, 181, 253, 0.08), transparent 34rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--sg-surface) 66%, var(--sg-background) 34%) 0%, var(--sg-background) 48%, var(--sg-background) 100%);
+    radial-gradient(circle at 12% 8%, rgba(18, 221, 120, 0.20), transparent 30rem),
+    radial-gradient(circle at 88% 12%, rgba(26, 231, 202, 0.18), transparent 32rem),
+    radial-gradient(circle at 50% 100%, rgba(17, 128, 135, 0.15), transparent 34rem),
+    linear-gradient(180deg, #0a5b6d 0%, #012d3a 48%, #012d3a 100%);
 }
 
 .sgames-admin-page {
@@ -93,47 +107,59 @@ html[data-admin-season-theme="Winter"] body.sgames-admin-theme-active {
 }
 
 .sgames-admin-theme-active [class*="text-cyan-"],
-.sgames-admin-theme-active [class*="text-blue-"] {
+.sgames-admin-theme-active [class*="text-blue-"],
+.sgames-admin-theme-active [class*="text-green-"] {
   color: var(--sg-primary) !important;
 }
 
 .sgames-admin-theme-active [class*="text-purple-"],
-.sgames-admin-theme-active [class*="text-violet-"] {
+.sgames-admin-theme-active [class*="text-violet-"],
+.sgames-admin-theme-active [class*="text-slate-"] {
   color: var(--sg-secondary) !important;
 }
 
 .sgames-admin-theme-active [class*="text-pink-"],
-.sgames-admin-theme-active [class*="text-fuchsia-"] {
+.sgames-admin-theme-active [class*="text-fuchsia-"],
+.sgames-admin-theme-active [class*="text-orange-"],
+.sgames-admin-theme-active [class*="text-red-"] {
   color: var(--sg-accent) !important;
 }
 
 .sgames-admin-theme-active [class*="bg-cyan-"],
-.sgames-admin-theme-active [class*="bg-blue-"] {
+.sgames-admin-theme-active [class*="bg-blue-"],
+.sgames-admin-theme-active [class*="bg-green-"] {
   background-color: color-mix(in srgb, var(--sg-primary) 13%, transparent) !important;
 }
 
 .sgames-admin-theme-active [class*="bg-purple-"],
-.sgames-admin-theme-active [class*="bg-violet-"] {
+.sgames-admin-theme-active [class*="bg-violet-"],
+.sgames-admin-theme-active [class*="bg-slate-"] {
   background-color: color-mix(in srgb, var(--sg-secondary) 13%, transparent) !important;
 }
 
 .sgames-admin-theme-active [class*="bg-pink-"],
-.sgames-admin-theme-active [class*="bg-fuchsia-"] {
+.sgames-admin-theme-active [class*="bg-fuchsia-"],
+.sgames-admin-theme-active [class*="bg-orange-"],
+.sgames-admin-theme-active [class*="bg-red-"] {
   background-color: color-mix(in srgb, var(--sg-accent) 13%, transparent) !important;
 }
 
 .sgames-admin-theme-active [class*="border-cyan-"],
-.sgames-admin-theme-active [class*="border-blue-"] {
+.sgames-admin-theme-active [class*="border-blue-"],
+.sgames-admin-theme-active [class*="border-green-"] {
   border-color: color-mix(in srgb, var(--sg-primary) 38%, transparent) !important;
 }
 
 .sgames-admin-theme-active [class*="border-purple-"],
-.sgames-admin-theme-active [class*="border-violet-"] {
+.sgames-admin-theme-active [class*="border-violet-"],
+.sgames-admin-theme-active [class*="border-slate-"] {
   border-color: color-mix(in srgb, var(--sg-secondary) 38%, transparent) !important;
 }
 
 .sgames-admin-theme-active [class*="border-pink-"],
-.sgames-admin-theme-active [class*="border-fuchsia-"] {
+.sgames-admin-theme-active [class*="border-fuchsia-"],
+.sgames-admin-theme-active [class*="border-orange-"],
+.sgames-admin-theme-active [class*="border-red-"] {
   border-color: color-mix(in srgb, var(--sg-accent) 38%, transparent) !important;
 }
 
@@ -181,10 +207,13 @@ html[data-admin-season-theme="Winter"] body.sgames-admin-theme-active {
 .sgames-admin-theme-active button[class*="bg-gradient-to-br"],
 .sgames-admin-theme-active [class*="from-cyan-"],
 .sgames-admin-theme-active [class*="from-blue-"],
+.sgames-admin-theme-active [class*="from-green-"],
 .sgames-admin-theme-active [class*="from-purple-"],
 .sgames-admin-theme-active [class*="from-violet-"],
 .sgames-admin-theme-active [class*="from-pink-"],
-.sgames-admin-theme-active [class*="from-fuchsia-"] {
+.sgames-admin-theme-active [class*="from-fuchsia-"],
+.sgames-admin-theme-active [class*="from-orange-"],
+.sgames-admin-theme-active [class*="from-red-"] {
   background-image:
     linear-gradient(
       135deg,
@@ -195,17 +224,25 @@ html[data-admin-season-theme="Winter"] body.sgames-admin-theme-active {
 }
 
 .sgames-admin-theme-active button[class*="border-cyan"],
+.sgames-admin-theme-active button[class*="border-blue"],
+.sgames-admin-theme-active button[class*="border-green"],
 .sgames-admin-theme-active button[class*="border-purple"],
 .sgames-admin-theme-active button[class*="border-violet"],
-.sgames-admin-theme-active button[class*="border-pink"] {
+.sgames-admin-theme-active button[class*="border-pink"],
+.sgames-admin-theme-active button[class*="border-orange"],
+.sgames-admin-theme-active button[class*="border-red"] {
   border-color: color-mix(in srgb, var(--sg-primary) 42%, transparent) !important;
   color: var(--sg-primary) !important;
 }
 
 .sgames-admin-theme-active button[class*="border-cyan"]:hover,
+.sgames-admin-theme-active button[class*="border-blue"]:hover,
+.sgames-admin-theme-active button[class*="border-green"]:hover,
 .sgames-admin-theme-active button[class*="border-purple"]:hover,
 .sgames-admin-theme-active button[class*="border-violet"]:hover,
-.sgames-admin-theme-active button[class*="border-pink"]:hover {
+.sgames-admin-theme-active button[class*="border-pink"]:hover,
+.sgames-admin-theme-active button[class*="border-orange"]:hover,
+.sgames-admin-theme-active button[class*="border-red"]:hover {
   background: color-mix(in srgb, var(--sg-accent) 10%, transparent) !important;
   color: var(--sg-accent) !important;
 }
@@ -238,4 +275,28 @@ html[data-admin-season-theme="Winter"] body.sgames-admin-theme-active {
   box-shadow:
     0 0 32px color-mix(in srgb, var(--sg-accent) 12%, transparent);
   backdrop-filter: blur(14px);
+}
+
+.sgames-admin-theme-active .sgames-admin-primary-button {
+  border: 0 !important;
+  background:
+    linear-gradient(
+      135deg,
+      var(--sg-primary),
+      color-mix(in srgb, var(--sg-primary) 55%, var(--sg-accent)),
+      var(--sg-accent)
+    ) !important;
+  color: #041016 !important;
+  font-weight: 800;
+  box-shadow:
+    0 0 28px color-mix(in srgb, var(--sg-primary) 22%, transparent);
+}
+
+.sgames-admin-theme-active .sgames-admin-primary-button:hover {
+  filter: brightness(1.08) saturate(1.08);
+}
+
+.sgames-admin-theme-active .sgames-admin-card-soft,
+.sgames-admin-theme-active [class*="sgames-admin-card-bg-soft"] {
+  background: color-mix(in srgb, var(--sg-surface) 52%, transparent) !important;
 }

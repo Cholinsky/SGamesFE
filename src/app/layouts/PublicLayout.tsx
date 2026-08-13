@@ -238,6 +238,45 @@ export function PublicLayout() {
       activeTheme.borderColor
     );
 
+    const seasonKey =
+      activeTheme.seasonKey === "Winter" ||
+      activeTheme.seasonKey === "Autumn" ||
+      activeTheme.seasonKey === "Summer"
+        ? activeTheme.seasonKey
+        : "Summer";
+
+    root.dataset.seasonTheme =
+      seasonKey;
+
+    root.style.setProperty(
+      "--sg-palette-1",
+      activeTheme.backgroundColor
+    );
+    root.style.setProperty(
+      "--sg-palette-2",
+      activeTheme.surfaceColor
+    );
+    root.style.setProperty(
+      "--sg-palette-3",
+      activeTheme.secondaryColor
+    );
+    root.style.setProperty(
+      "--sg-palette-4",
+      activeTheme.primaryColor
+    );
+    root.style.setProperty(
+      "--sg-palette-5",
+      activeTheme.accentColor
+    );
+    root.style.setProperty(
+      "--sg-glow-primary",
+      `color-mix(in srgb, ${activeTheme.primaryColor} 30%, transparent)`
+    );
+    root.style.setProperty(
+      "--sg-glow-secondary",
+      `color-mix(in srgb, ${activeTheme.accentColor} 18%, transparent)`
+    );
+
     if (activeTheme.heroGradient) {
       root.style.setProperty(
         "--sg-hero-gradient",
@@ -420,13 +459,6 @@ export function PublicLayout() {
             </Link>
 
             <Link
-              to="/clips"
-              className={navLinkClass("/clips")}
-            >
-              Clips
-            </Link>
-
-            <Link
               to="/horario"
               className={navLinkClass("/horario")}
             >
@@ -500,16 +532,6 @@ export function PublicLayout() {
                 className={navLinkClass("/runs")}
               >
                 Runs
-              </Link>
-
-              <Link
-                to="/clips"
-                onClick={() =>
-                  setMobileMenuOpen(false)
-                }
-                className={navLinkClass("/clips")}
-              >
-                Clips
               </Link>
 
               <Link

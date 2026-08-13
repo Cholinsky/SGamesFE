@@ -204,39 +204,59 @@ export default function StreamTimerOverlayPage() {
             justify-content: center;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
             color: var(--timer-text);
-            --timer-text: #ffe66d;
-            --timer-shadow: #090014;
-            --timer-border: rgba(255, 230, 109, 0.55);
-            --timer-bg: rgba(5, 4, 35, 0.88);
-            --timer-accent: #ff4fd8;
-            --timer-secondary: #43e6ff;
+            --timer-color-1: #070817;
+            --timer-color-2: #10182b;
+            --timer-color-3: #8b5cf6;
+            --timer-color-4: #22d3ee;
+            --timer-color-5: #ec4899;
+            --timer-text: #f8f7ff;
+            --timer-shadow: #070817;
+            --timer-border: rgba(34, 211, 238, 0.58);
+            --timer-bg: rgba(7, 8, 23, 0.9);
+            --timer-accent: #ec4899;
+            --timer-secondary: #22d3ee;
           }
 
           .sg-timer-season-summer {
-            --timer-text: #ffe66d;
-            --timer-shadow: #15003d;
-            --timer-border: rgba(255, 230, 109, 0.55);
-            --timer-bg: rgba(9, 8, 58, 0.9);
-            --timer-accent: #ff4fd8;
-            --timer-secondary: #43e6ff;
+            --timer-color-1: #070817;
+            --timer-color-2: #10182b;
+            --timer-color-3: #8b5cf6;
+            --timer-color-4: #22d3ee;
+            --timer-color-5: #ec4899;
+            --timer-text: #f8f7ff;
+            --timer-shadow: #070817;
+            --timer-border: rgba(34, 211, 238, 0.58);
+            --timer-bg: rgba(7, 8, 23, 0.9);
+            --timer-accent: #ec4899;
+            --timer-secondary: #22d3ee;
           }
 
           .sg-timer-season-autumn {
+            --timer-color-1: #05070c;
+            --timer-color-2: #111827;
+            --timer-color-3: #334155;
+            --timer-color-4: #ef4444;
+            --timer-color-5: #f97316;
             --timer-text: #f8fafc;
-            --timer-shadow: #030712;
-            --timer-border: rgba(239, 68, 68, 0.65);
-            --timer-bg: rgba(8, 13, 22, 0.92);
-            --timer-accent: #ef4444;
-            --timer-secondary: #94a3b8;
+            --timer-shadow: #05070c;
+            --timer-border: rgba(239, 68, 68, 0.64);
+            --timer-bg: rgba(5, 7, 12, 0.92);
+            --timer-accent: #f97316;
+            --timer-secondary: #ef4444;
           }
 
           .sg-timer-season-winter {
-            --timer-text: #ecfeff;
-            --timer-shadow: #082f49;
-            --timer-border: rgba(103, 232, 249, 0.7);
-            --timer-bg: rgba(8, 47, 73, 0.86);
-            --timer-accent: #67e8f9;
-            --timer-secondary: #dbeafe;
+            --timer-color-1: #012d3a;
+            --timer-color-2: #118087;
+            --timer-color-3: #0a5b6d;
+            --timer-color-4: #12dd78;
+            --timer-color-5: #1ae7ca;
+            --timer-text: #f2fbff;
+            --timer-shadow: #012d3a;
+            --timer-border: rgba(26, 231, 202, 0.70);
+            --timer-bg: rgba(1, 45, 58, 0.88);
+            --timer-accent: #1ae7ca;
+            --timer-secondary: #12dd78;
           }
 
           .sg-stream-timers-grid {
