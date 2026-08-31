@@ -58,6 +58,29 @@ function timerAccentClass(
   }
 }
 
+function CheckeredFlags({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={`sg-checkered-flags ${compact ? "is-compact" : ""}`}
+      aria-hidden="true"
+    >
+      <div className="sg-checkered-flag sg-checkered-flag-left">
+        <span className="sg-checkered-pole" />
+        <span className="sg-checkered-cloth" />
+      </div>
+
+      <div className="sg-checkered-flag sg-checkered-flag-right">
+        <span className="sg-checkered-pole" />
+        <span className="sg-checkered-cloth" />
+      </div>
+    </div>
+  );
+}
+
 function TimerOverlayCard({
   timer,
   nowMs,
@@ -73,6 +96,15 @@ function TimerOverlayCard({
       nowMs
     );
 
+  const status =
+    String(timer.status ?? "").toLowerCase();
+
+  const isStopped =
+    status === "stopped";
+
+  const finalTimeText =
+    formatTimerMs(elapsed);
+
   const showGg =
     timer.shouldShowFinishAnimation &&
     timer.finishAnimationEndsAtUtc &&
@@ -81,12 +113,18 @@ function TimerOverlayCard({
     ).getTime() > nowMs;
 
   const showGl =
-    String(timer.status ?? "").toLowerCase() === "running" &&
+    status === "running" &&
     elapsed >= 0 &&
     elapsed < 1800;
 
   return (
-    <div className={`sg-stream-timer-card ${compact ? "is-compact" : ""}`}>
+    <div className={`sg-stream-timer-card ${compact ? "is-compact" : ""} ${isStopped ? "is-stopped" : ""}`}>
+      <div className="sg-stream-timer-scanline" />
+
+      {isStopped && (
+        <CheckeredFlags compact={compact} />
+      )}
+
       <div className="sg-stream-timer-label">
         {timer.label}
       </div>
@@ -95,9 +133,9 @@ function TimerOverlayCard({
         {formatTimerMs(elapsed)}
       </div>
 
-      {timer.status === "Stopped" && (
+      {isStopped && (
         <div className="sg-stream-timer-final">
-          FINAL
+          Tiempo final: {finalTimeText}
         </div>
       )}
 
@@ -109,7 +147,17 @@ function TimerOverlayCard({
 
       {showGg && (
         <div className="sg-stream-timer-gg">
-          {timer.finishAnimationText || "GG"}
+          <CheckeredFlags compact={compact} />
+
+          <div className="sg-stream-timer-gg-inner">
+            <div className="sg-stream-timer-gg-text">
+              {timer.finishAnimationText || "GG"}
+            </div>
+
+            <div className="sg-stream-timer-gg-final">
+              Tiempo final {finalTimeText}
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -186,6 +234,17 @@ export default function StreamTimerOverlayPage() {
     <div className={`sg-stream-timer-overlay ${seasonClass}`}>
       <style>
         {`
+          @font-face {
+            font-family: "Berani";
+            src:
+              url("/fonts/Berani.woff2") format("woff2"),
+              url("/fonts/Berani.otf") format("opentype"),
+              url("/fonts/Berani.ttf") format("truetype");
+            font-weight: 400 1000;
+            font-style: normal;
+            font-display: swap;
+          }
+
           html,
           body,
           #root {
@@ -202,7 +261,7 @@ export default function StreamTimerOverlayPage() {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-family: "Berani", "Arial Black", Impact, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
             color: var(--timer-text);
             --timer-color-1: #070817;
             --timer-color-2: #10182b;
@@ -268,17 +327,23 @@ export default function StreamTimerOverlayPage() {
 
           .sg-stream-timer-card {
             position: relative;
-            min-width: min(92vw, 760px);
-            padding: 24px 36px;
+            min-width: min(92vw, 800px);
+            padding: 26px 42px;
             border: 3px solid var(--timer-border);
-            border-radius: 4px;
+            border-radius: 10px;
             overflow: hidden;
             background:
-              linear-gradient(180deg, rgba(255,255,255,0.07), transparent 40%),
+              linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+              radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--timer-accent) 18%, transparent), transparent 42%),
               var(--timer-bg);
             box-shadow:
               0 0 0 5px rgba(0,0,0,0.22),
               0 0 32px color-mix(in srgb, var(--timer-accent) 45%, transparent);
+          }
+
+          .sg-stream-timer-card.is-stopped {
+            padding-left: 132px;
+            padding-right: 132px;
           }
 
           .sg-stream-timer-card.is-compact {
@@ -286,30 +351,60 @@ export default function StreamTimerOverlayPage() {
             padding: 18px 20px;
           }
 
+          .sg-stream-timer-card.is-compact.is-stopped {
+            padding-left: 72px;
+            padding-right: 72px;
+          }
+
+          .sg-stream-timer-scanline {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: 0.22;
+            pointer-events: none;
+            background:
+              repeating-linear-gradient(
+                180deg,
+                rgba(255,255,255,0.10) 0,
+                rgba(255,255,255,0.10) 1px,
+                transparent 1px,
+                transparent 5px
+              );
+            mix-blend-mode: overlay;
+          }
+
           .sg-stream-timer-label {
             position: relative;
-            z-index: 2;
+            z-index: 6;
             margin-bottom: 8px;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
             color: var(--timer-secondary);
-            text-shadow: 3px 3px 0 var(--timer-shadow);
+            text-shadow:
+              3px 3px 0 var(--timer-shadow),
+              0 0 18px color-mix(in srgb, var(--timer-secondary) 55%, transparent);
           }
 
           .sg-stream-timer-value {
             position: relative;
-            z-index: 2;
-            font-size: clamp(56px, 10vw, 132px);
+            z-index: 6;
+            font-size: clamp(58px, 10vw, 142px);
             line-height: 0.95;
             font-weight: 1000;
-            letter-spacing: -0.08em;
+            letter-spacing: -0.055em;
             color: var(--timer-text);
             text-shadow:
-              5px 5px 0 var(--timer-shadow),
-              0 0 24px color-mix(in srgb, var(--timer-text) 35%, transparent);
+              6px 6px 0 var(--timer-shadow),
+              0 0 24px color-mix(in srgb, var(--timer-text) 35%, transparent),
+              0 0 42px color-mix(in srgb, var(--timer-accent) 30%, transparent);
             font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum" 1;
+          }
+
+          .sg-stream-timer-card.is-compact .sg-stream-timer-label {
+            font-size: 16px;
           }
 
           .sg-stream-timer-card.is-compact .sg-stream-timer-value {
@@ -318,13 +413,21 @@ export default function StreamTimerOverlayPage() {
 
           .sg-stream-timer-final {
             position: relative;
-            z-index: 2;
-            margin-top: 8px;
-            font-size: 18px;
+            z-index: 6;
+            margin-top: 10px;
+            font-size: clamp(16px, 2vw, 24px);
             font-weight: 900;
-            letter-spacing: 0.26em;
+            letter-spacing: 0.10em;
             color: var(--timer-accent);
-            text-shadow: 3px 3px 0 var(--timer-shadow);
+            text-transform: uppercase;
+            text-shadow:
+              3px 3px 0 var(--timer-shadow),
+              0 0 18px color-mix(in srgb, var(--timer-accent) 70%, transparent);
+          }
+
+          .sg-stream-timer-card.is-compact .sg-stream-timer-final {
+            font-size: 13px;
+            letter-spacing: 0.04em;
           }
 
           .sg-stream-timer-gl {
@@ -353,20 +456,193 @@ export default function StreamTimerOverlayPage() {
           .sg-stream-timer-gg {
             position: absolute;
             inset: 0;
+            z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: inherit;
-            background: rgba(0, 0, 0, 0.62);
+            background:
+              radial-gradient(circle at center, rgba(255,255,255,0.10), transparent 30%),
+              rgba(0, 0, 0, 0.66);
+            pointer-events: none;
+          }
+
+          .sg-stream-timer-gg-inner {
+            position: relative;
+            z-index: 14;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            animation: sgTimerGgPop 0.75s steps(6) infinite alternate;
+          }
+
+          .sg-stream-timer-gg-text {
             color: var(--timer-text);
-            font-size: clamp(72px, 18vw, 220px);
+            font-size: clamp(78px, 18vw, 230px);
             font-weight: 1000;
+            line-height: 0.82;
             letter-spacing: -0.08em;
             text-shadow:
-              8px 8px 0 var(--timer-shadow),
-              0 0 34px var(--timer-accent);
-            animation: sgTimerGgPop 0.75s steps(6) infinite alternate;
-            z-index: 10;
+              9px 9px 0 var(--timer-shadow),
+              0 0 34px var(--timer-accent),
+              0 0 58px color-mix(in srgb, var(--timer-secondary) 55%, transparent);
+          }
+
+          .sg-stream-timer-gg-final {
+            border: 2px solid color-mix(in srgb, var(--timer-accent) 72%, white 8%);
+            border-radius: 999px;
+            padding: 8px 18px;
+            background: rgba(0,0,0,0.58);
+            color: var(--timer-secondary);
+            font-size: clamp(18px, 3vw, 34px);
+            font-weight: 1000;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-shadow:
+              3px 3px 0 var(--timer-shadow),
+              0 0 20px color-mix(in srgb, var(--timer-secondary) 60%, transparent);
+          }
+
+          .sg-stream-timer-card.is-compact .sg-stream-timer-gg-text {
+            font-size: clamp(48px, 8vw, 112px);
+          }
+
+          .sg-stream-timer-card.is-compact .sg-stream-timer-gg-final {
+            font-size: clamp(12px, 1.6vw, 18px);
+            padding: 5px 10px;
+          }
+
+          .sg-checkered-flags {
+            position: absolute;
+            inset: 0;
+            z-index: 12;
+            pointer-events: none;
+          }
+
+          .sg-stream-timer-card > .sg-checkered-flags {
+            z-index: 5;
+            opacity: 0.86;
+          }
+
+          .sg-checkered-flag {
+            position: absolute;
+            top: 50%;
+            width: 126px;
+            height: 98px;
+            transform-style: preserve-3d;
+            filter:
+              drop-shadow(4px 4px 0 rgba(0,0,0,0.52))
+              drop-shadow(0 0 18px color-mix(in srgb, var(--timer-accent) 48%, transparent));
+          }
+
+          .sg-checkered-flag-left {
+            left: 18px;
+            transform: translateY(-50%) rotate(-8deg);
+          }
+
+          .sg-checkered-flag-right {
+            right: 18px;
+            transform: translateY(-50%) rotate(8deg) scaleX(-1);
+          }
+
+          .sg-checkered-pole {
+            position: absolute;
+            left: 8px;
+            top: 2px;
+            width: 6px;
+            height: 96px;
+            border-radius: 999px;
+            background:
+              linear-gradient(90deg, #ffffff, #a7b0bd 40%, #ffffff 72%);
+            box-shadow:
+              0 0 0 2px rgba(0,0,0,0.35),
+              0 0 12px color-mix(in srgb, var(--timer-secondary) 35%, transparent);
+          }
+
+          .sg-checkered-cloth {
+            position: absolute;
+            left: 14px;
+            top: 8px;
+            display: block;
+            width: 104px;
+            height: 66px;
+            transform-origin: left center;
+            clip-path: polygon(
+              0% 0%,
+              100% 5%,
+              90% 50%,
+              100% 95%,
+              0% 100%
+            );
+            background:
+              radial-gradient(circle at 12% 20%, rgba(255,255,255,0.28), transparent 24%),
+              repeating-conic-gradient(
+                from 0deg,
+                #f8fafc 0deg 90deg,
+                #020617 90deg 180deg,
+                #f8fafc 180deg 270deg,
+                #020617 270deg 360deg
+              );
+            background-size:
+              100% 100%,
+              22px 22px;
+            border: 2px solid rgba(255,255,255,0.72);
+            box-shadow:
+              inset 0 0 18px rgba(255,255,255,0.18),
+              inset -16px 0 18px rgba(0,0,0,0.28);
+            animation: sgFlagWave 0.95s ease-in-out infinite alternate;
+          }
+
+          .sg-checkered-flag-right .sg-checkered-cloth {
+            animation-delay: -0.35s;
+          }
+
+          .sg-checkered-flags.is-compact .sg-checkered-flag {
+            width: 70px;
+            height: 58px;
+          }
+
+          .sg-checkered-flags.is-compact .sg-checkered-flag-left {
+            left: 8px;
+          }
+
+          .sg-checkered-flags.is-compact .sg-checkered-flag-right {
+            right: 8px;
+          }
+
+          .sg-checkered-flags.is-compact .sg-checkered-pole {
+            width: 4px;
+            height: 58px;
+          }
+
+          .sg-checkered-flags.is-compact .sg-checkered-cloth {
+            left: 10px;
+            top: 6px;
+            width: 56px;
+            height: 36px;
+            background-size:
+              100% 100%,
+              14px 14px;
+          }
+
+          @keyframes sgFlagWave {
+            0% {
+              transform: perspective(120px) rotateY(-22deg) skewY(-1deg) translateX(0);
+              filter: brightness(0.92);
+            }
+            35% {
+              transform: perspective(120px) rotateY(16deg) skewY(4deg) translateX(1px);
+              filter: brightness(1.08);
+            }
+            70% {
+              transform: perspective(120px) rotateY(-12deg) skewY(-3deg) translateX(-1px);
+              filter: brightness(1);
+            }
+            100% {
+              transform: perspective(120px) rotateY(24deg) skewY(3deg) translateX(2px);
+              filter: brightness(1.14);
+            }
           }
 
           @keyframes sgTimerGlStart {
@@ -395,13 +671,13 @@ export default function StreamTimerOverlayPage() {
           @keyframes sgTimerGgPop {
             0% {
               transform: scale(0.92) rotate(-1deg);
-              opacity: 0.82;
+              opacity: 0.86;
               filter: saturate(1);
             }
             100% {
               transform: scale(1.05) rotate(1deg);
               opacity: 1;
-              filter: saturate(1.4);
+              filter: saturate(1.42);
             }
           }
         `}
