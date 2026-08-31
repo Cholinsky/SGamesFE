@@ -1,6 +1,8 @@
 import {
   useEffect,
+  useMemo,
   useState,
+  type ReactNode,
 } from "react";
 import {
   Card,
@@ -9,31 +11,37 @@ import {
 import { Button } from "../ui/button";
 import {
   Mail,
+  PlugZap,
   RefreshCw,
   Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  getApprovalEmailProviderStatus,
   getPendingApprovalEmails,
   sendPendingApprovalEmails,
   type ApprovalEmailPendingGroup,
+  type ApprovalEmailProviderStatus,
 } from "../../services/applicationService";
 
 function SmallPill({
   children,
   tone = "default",
 }: {
-  children: React.ReactNode;
-  tone?: "default" | "muted";
+  children: ReactNode;
+  tone?: "default" | "muted" | "success" | "danger";
 }) {
-  return (
-    <span
-      className={
-        tone === "muted"
+  const className =
+    tone === "success"
+      ? "inline-flex items-center rounded-md border border-green-500/30 bg-green-500/15 px-2 py-0.5 text-xs font-semibold text-green-300"
+      : tone === "danger"
+        ? "inline-flex items-center rounded-md border border-red-500/30 bg-red-500/15 px-2 py-0.5 text-xs font-semibold text-red-300"
+        : tone === "muted"
           ? "inline-flex items-center rounded-md border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--sg-muted-text)]"
-          : "inline-flex items-center rounded-md border border-[var(--sg-admin-border)] bg-[var(--sg-admin-primary-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--sg-primary)]"
-      }
-    >
+          : "inline-flex items-center rounded-md border border-[var(--sg-admin-border)] bg-[var(--sg-admin-primary-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--sg-primary)]";
+
+  return (
+    <span className={className}>
       {children}
     </span>
   );
@@ -46,18 +54,39 @@ export default function AdminApprovalEmailPanel() {
   const [totalRuns, setTotalRuns] =
     useState(0);
 
+  const [providerStatus, setProviderStatus] =
+    useState<ApprovalEmailProviderStatus | null>(null);
+
   const [loading, setLoading] =
+    useState(false);
+
+  const [loadingProvider, setLoadingProvider] =
     useState(false);
 
   const [sending, setSending] =
     useState(false);
+
+  const providerLabel =
+    useMemo(() => {
+      if (!providerStatus) {
+        return "Revisando correo...";
+      }
+
+      if (!providerStatus.isConfigured) {
+        return "Gmail SMTP no configurado";
+      }
+
+      return `${providerStatus.provider}: ${providerStatus.fromEmail}`;
+    }, [
+      providerStatus,
+    ]);
 
   async function loadPendingEmails() {
     try {
       setLoading(true);
 
       const result =
-        await getPendingApprovalEmails(false);
+        await getPendingApprovalEmails(true);
 
       setGroups(
         result.pendingGroups ?? []
@@ -79,10 +108,57 @@ export default function AdminApprovalEmailPanel() {
     }
   }
 
+  async function loadProviderStatus(
+    silent = false
+  ) {
+    try {
+      if (!silent) {
+        setLoadingProvider(true);
+      }
+
+      const result =
+        await getApprovalEmailProviderStatus();
+
+      setProviderStatus(
+        result
+      );
+    } catch (error) {
+      console.error(error);
+
+      if (!silent) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "No se pudo revisar Gmail SMTP"
+        );
+      }
+    } finally {
+      if (!silent) {
+        setLoadingProvider(false);
+      }
+    }
+  }
+
+  async function handleRefresh() {
+    await Promise.all([
+      loadPendingEmails(),
+      loadProviderStatus(true),
+    ]);
+  }
+
   async function handleSendPendingEmails() {
     if (!groups.length) {
       toast.message(
         "No hay correos pendientes"
+      );
+
+      return;
+    }
+
+    if (!providerStatus?.isConfigured) {
+      toast.error(
+        providerStatus?.message ||
+        "Configura Gmail SMTP antes de enviar correos."
       );
 
       return;
@@ -102,7 +178,7 @@ export default function AdminApprovalEmailPanel() {
 
       const result =
         await sendPendingApprovalEmails({
-          includeFailed: false,
+          includeFailed: true,
           dryRun: false,
         });
 
@@ -133,6 +209,7 @@ export default function AdminApprovalEmailPanel() {
 
   useEffect(() => {
     loadPendingEmails();
+    loadProviderStatus();
   }, []);
 
   return (
@@ -156,17 +233,37 @@ export default function AdminApprovalEmailPanel() {
               <SmallPill tone="muted">
                 {totalRuns} run(s)
               </SmallPill>
+
+              <SmallPill
+                tone={providerStatus?.isConfigured ? "success" : "danger"}
+              >
+                {loadingProvider
+                  ? "Revisando Gmail SMTP..."
+                  : providerLabel}
+              </SmallPill>
             </div>
 
             <p className="text-sm text-[var(--sg-muted-text)]">
               Al aprobar runs se encolan correos. Al enviar, se agrupan por runner para no mandar spam.
               Las runs rechazadas no se mencionan.
             </p>
+
+            {providerStatus?.message && (
+              <p
+                className={
+                  providerStatus.isConfigured
+                    ? "mt-2 text-xs text-green-300"
+                    : "mt-2 text-xs text-yellow-300"
+                }
+              >
+                {providerStatus.message}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button
-              onClick={loadPendingEmails}
+              onClick={handleRefresh}
               disabled={loading || sending}
               variant="outline"
               className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
@@ -177,10 +274,20 @@ export default function AdminApprovalEmailPanel() {
 
             <Button
               onClick={handleSendPendingEmails}
-              disabled={sending || loading || groups.length === 0}
+              disabled={
+                sending ||
+                loading ||
+                groups.length === 0 ||
+                !providerStatus?.isConfigured
+              }
               className="sgames-admin-primary-button"
             >
-              <Send className="mr-2 h-4 w-4" />
+              {providerStatus?.isConfigured ? (
+                <Send className="mr-2 h-4 w-4" />
+              ) : (
+                <PlugZap className="mr-2 h-4 w-4" />
+              )}
+
               {sending
                 ? "Enviando..."
                 : "Enviar correos pendientes"}

@@ -497,3 +497,37 @@ export async function previewPendingApprovalEmails(
 
   return await response.json() as SendPendingApprovalEmailsResult;
 }
+
+
+export type ApprovalEmailProviderStatus = {
+  provider: string;
+  isConfigured: boolean;
+  fromEmail: string;
+  fromName: string;
+  smtpHost: string;
+  smtpPort: number;
+  enableSsl: boolean;
+  message?: string | null;
+};
+
+export async function getApprovalEmailProviderStatus() {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/approval-emails/provider-status?t=${Date.now()}`,
+      {
+        headers: getHeaders(),
+        cache: "no-store",
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading approval email provider status"
+      )
+    );
+  }
+
+  return await response.json() as ApprovalEmailProviderStatus;
+}
