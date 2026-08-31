@@ -2,6 +2,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type CSSProperties,
 } from "react";
 import {
   calculateVisibleElapsedMs,
@@ -45,6 +46,52 @@ function normalizeSeason(
   return "summer";
 }
 
+function sanitizeFontName(
+  value?: string | null
+) {
+  const clean =
+    String(value ?? "")
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]/g, "");
+
+  return clean || "Berani";
+}
+
+function sanitizeFontExt(
+  value?: string | null
+) {
+  const clean =
+    String(value ?? "ttf")
+      .trim()
+      .toLowerCase();
+
+  if (
+    clean === "ttf" ||
+    clean === "otf" ||
+    clean === "woff" ||
+    clean === "woff2"
+  ) {
+    return clean;
+  }
+
+  return "ttf";
+}
+
+function getFontFormat(
+  extension: string
+) {
+  switch (extension) {
+    case "otf":
+      return "opentype";
+    case "woff":
+      return "woff";
+    case "woff2":
+      return "woff2";
+    default:
+      return "truetype";
+  }
+}
+
 function timerAccentClass(
   season: string
 ) {
@@ -86,11 +133,17 @@ function TimerOverlayCard({
   nowMs,
   compact = false,
   digitFontMode = "berani",
+  timerFontName = "Berani",
+  timerFontExt = "ttf",
+  timerFontFormat = "truetype",
 }: {
   timer: StreamTimer;
   nowMs: number;
   compact?: boolean;
   digitFontMode?: "berani" | "safe";
+  timerFontName?: string;
+  timerFontExt?: string;
+  timerFontFormat?: string;
 }) {
   const elapsed =
     calculateVisibleElapsedMs(
@@ -126,6 +179,13 @@ function TimerOverlayCard({
           ? "digits-safe"
           : "digits-berani"
       }`}
+      style={
+        {
+          "--timer-dynamic-font-family": `"${timerFontName}", "Berani", "Arial Black", Impact, sans-serif`,
+          "--timer-dynamic-font-url": `url("/fonts/${timerFontName}.${timerFontExt}")`,
+          "--timer-dynamic-font-format": `"${timerFontFormat}"`,
+        } as CSSProperties
+      }
     >
       <div className="sg-stream-timer-scanline" />
 
@@ -188,6 +248,21 @@ export default function StreamTimerOverlayPage() {
 
   const digitsParam =
     useQueryParam("digits");
+
+  const fontParam =
+    useQueryParam("font");
+
+  const fontExtParam =
+    useQueryParam("fontExt");
+
+  const timerFontName =
+    sanitizeFontName(fontParam);
+
+  const timerFontExt =
+    sanitizeFontExt(fontExtParam);
+
+  const timerFontFormat =
+    getFontFormat(timerFontExt);
 
   const digitFontMode =
     String(digitsParam ?? "berani").toLowerCase() === "safe"
@@ -261,10 +336,41 @@ export default function StreamTimerOverlayPage() {
       <style>
         {`
           @font-face {
+            font-family: "SGamesSelectedTimerFont";
+            src: url("/fonts/${timerFontName}.${timerFontExt}") format("${timerFontFormat}");
+            font-weight: 400;
+            font-style: normal;
+            font-display: block;
+          }
+
+          @font-face {
             font-family: "Berani";
             src:
               url("/fonts/Berani.ttf") format("truetype"),
               url("/fonts/Berani.otf") format("opentype");
+            font-weight: 400;
+            font-style: normal;
+            font-display: block;
+          }
+
+          .sg-stream-timer-card {
+            --timer-dynamic-font-family: "Berani", "Arial Black", Impact, sans-serif;
+            --timer-dynamic-font-url: url("/fonts/Berani.ttf");
+            --timer-dynamic-font-format: "truetype";
+          }
+
+          .sg-stream-timer-card::before {
+            /*
+             * Este pseudo-elemento no se muestra.
+             * Sólo mantiene viva la variable dinámica para debugging CSS.
+             */
+            content: "";
+            display: none;
+          }
+
+          @font-face {
+            font-family: "SGamesDynamicTimerFont";
+            src: url("/fonts/Berani.ttf") format("truetype");
             font-weight: 400;
             font-style: normal;
             font-display: block;
@@ -288,8 +394,8 @@ export default function StreamTimerOverlayPage() {
             justify-content: center;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             color: var(--timer-text);
-            --timer-display-font: "Berani", "Arial Black", Impact, sans-serif;
-            --timer-digits-font: "Berani", "Arial Black", Impact, sans-serif;
+            --timer-display-font: "SGamesSelectedTimerFont", "Berani", "Arial Black", Impact, sans-serif;
+            --timer-digits-font: "SGamesSelectedTimerFont", "Berani", "Arial Black", Impact, sans-serif;
             --timer-safe-digits-font: "Arial Black", Impact, "Cascadia Mono", "Roboto Mono", "SFMono-Regular", Consolas, monospace;
             --timer-color-1: #070817;
             --timer-color-2: #10182b;
@@ -769,6 +875,9 @@ export default function StreamTimerOverlayPage() {
           timer={selectedTimer}
           nowMs={nowMs}
           digitFontMode={digitFontMode}
+          timerFontName={timerFontName}
+          timerFontExt={timerFontExt}
+          timerFontFormat={timerFontFormat}
         />
       ) : (
         <div className="sg-stream-timers-grid">
@@ -779,6 +888,9 @@ export default function StreamTimerOverlayPage() {
               nowMs={nowMs}
               compact
               digitFontMode={digitFontMode}
+              timerFontName={timerFontName}
+              timerFontExt={timerFontExt}
+              timerFontFormat={timerFontFormat}
             />
           ))}
         </div>
