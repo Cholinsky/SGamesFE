@@ -237,12 +237,11 @@ export default function StreamTimerOverlayPage() {
           @font-face {
             font-family: "Berani";
             src:
-              url("/fonts/Berani.woff2") format("woff2"),
-              url("/fonts/Berani.otf") format("opentype"),
-              url("/fonts/Berani.ttf") format("truetype");
-            font-weight: 400 1000;
+              url("/fonts/Berani.ttf") format("truetype"),
+              url("/fonts/Berani.otf") format("opentype");
+            font-weight: 400;
             font-style: normal;
-            font-display: swap;
+            font-display: block;
           }
 
           html,
@@ -331,7 +330,7 @@ export default function StreamTimerOverlayPage() {
             padding: 26px 42px;
             border: 3px solid var(--timer-border);
             border-radius: 10px;
-            overflow: hidden;
+            overflow: visible;
             background:
               linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
               radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--timer-accent) 18%, transparent), transparent 42%),
@@ -390,17 +389,24 @@ export default function StreamTimerOverlayPage() {
           .sg-stream-timer-value {
             position: relative;
             z-index: 6;
-            font-size: clamp(58px, 10vw, 142px);
-            line-height: 0.95;
-            font-weight: 1000;
-            letter-spacing: -0.055em;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px 12px;
+            overflow: visible;
+            text-align: center;
+            white-space: nowrap;
+            font-size: clamp(44px, 7.8vw, 112px);
+            line-height: 1.12;
+            font-weight: 400;
+            letter-spacing: -0.012em;
             color: var(--timer-text);
             text-shadow:
-              6px 6px 0 var(--timer-shadow),
+              5px 5px 0 var(--timer-shadow),
               0 0 24px color-mix(in srgb, var(--timer-text) 35%, transparent),
               0 0 42px color-mix(in srgb, var(--timer-accent) 30%, transparent);
-            font-variant-numeric: tabular-nums;
-            font-feature-settings: "tnum" 1;
+            font-variant-numeric: normal;
+            font-feature-settings: normal;
           }
 
           .sg-stream-timer-card.is-compact .sg-stream-timer-label {
@@ -408,7 +414,9 @@ export default function StreamTimerOverlayPage() {
           }
 
           .sg-stream-timer-card.is-compact .sg-stream-timer-value {
-            font-size: clamp(34px, 4.8vw, 78px);
+            padding: 6px 8px 9px;
+            font-size: clamp(24px, 3.65vw, 54px);
+            letter-spacing: -0.006em;
           }
 
           .sg-stream-timer-final {
@@ -442,8 +450,8 @@ export default function StreamTimerOverlayPage() {
               radial-gradient(circle at center, color-mix(in srgb, var(--timer-secondary) 16%, transparent), transparent 58%);
             color: color-mix(in srgb, var(--timer-text) 92%, white);
             font-size: clamp(70px, 14vw, 190px);
-            font-weight: 1000;
-            letter-spacing: -0.05em;
+            font-weight: 400;
+            letter-spacing: -0.02em;
             text-shadow:
               7px 7px 0 var(--timer-shadow),
               0 0 26px var(--timer-secondary),
@@ -479,10 +487,10 @@ export default function StreamTimerOverlayPage() {
 
           .sg-stream-timer-gg-text {
             color: var(--timer-text);
-            font-size: clamp(78px, 18vw, 230px);
-            font-weight: 1000;
-            line-height: 0.82;
-            letter-spacing: -0.08em;
+            font-size: clamp(70px, 15vw, 190px);
+            font-weight: 400;
+            line-height: 1;
+            letter-spacing: -0.03em;
             text-shadow:
               9px 9px 0 var(--timer-shadow),
               0 0 34px var(--timer-accent),
@@ -496,8 +504,8 @@ export default function StreamTimerOverlayPage() {
             background: rgba(0,0,0,0.58);
             color: var(--timer-secondary);
             font-size: clamp(18px, 3vw, 34px);
-            font-weight: 1000;
-            letter-spacing: 0.06em;
+            font-weight: 400;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
             text-shadow:
               3px 3px 0 var(--timer-shadow),
