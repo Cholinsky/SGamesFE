@@ -135,7 +135,12 @@ function TimerOverlayCard({
 
       {isStopped && (
         <div className="sg-stream-timer-final">
-          Tiempo final: {finalTimeText}
+          <span className="sg-stream-timer-final-label">
+            Tiempo final:
+          </span>{" "}
+          <span className="sg-stream-timer-digits">
+            {finalTimeText}
+          </span>
         </div>
       )}
 
@@ -155,7 +160,12 @@ function TimerOverlayCard({
             </div>
 
             <div className="sg-stream-timer-gg-final">
-              Tiempo final {finalTimeText}
+              <span className="sg-stream-timer-final-label">
+                Tiempo final
+              </span>{" "}
+              <span className="sg-stream-timer-digits">
+                {finalTimeText}
+              </span>
             </div>
           </div>
         </div>
@@ -260,8 +270,10 @@ export default function StreamTimerOverlayPage() {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: "Berani", "Arial Black", Impact, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             color: var(--timer-text);
+            --timer-display-font: "Berani", "Arial Black", Impact, sans-serif;
+            --timer-digits-font: "Arial Black", Impact, "Cascadia Mono", "Roboto Mono", "SFMono-Regular", Consolas, monospace;
             --timer-color-1: #070817;
             --timer-color-2: #10182b;
             --timer-color-3: #8b5cf6;
@@ -376,8 +388,9 @@ export default function StreamTimerOverlayPage() {
             position: relative;
             z-index: 6;
             margin-bottom: 8px;
+            font-family: var(--timer-display-font);
             font-size: 24px;
-            font-weight: 900;
+            font-weight: 400;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: var(--timer-secondary);
@@ -396,17 +409,18 @@ export default function StreamTimerOverlayPage() {
             overflow: visible;
             text-align: center;
             white-space: nowrap;
+            font-family: var(--timer-digits-font);
             font-size: clamp(44px, 7.8vw, 112px);
             line-height: 1.12;
-            font-weight: 400;
-            letter-spacing: -0.012em;
+            font-weight: 900;
+            letter-spacing: 0.035em;
             color: var(--timer-text);
             text-shadow:
               5px 5px 0 var(--timer-shadow),
               0 0 24px color-mix(in srgb, var(--timer-text) 35%, transparent),
               0 0 42px color-mix(in srgb, var(--timer-accent) 30%, transparent);
-            font-variant-numeric: normal;
-            font-feature-settings: normal;
+            font-variant-numeric: tabular-nums lining-nums;
+            font-feature-settings: "tnum" 1, "lnum" 1;
           }
 
           .sg-stream-timer-card.is-compact .sg-stream-timer-label {
@@ -416,7 +430,7 @@ export default function StreamTimerOverlayPage() {
           .sg-stream-timer-card.is-compact .sg-stream-timer-value {
             padding: 6px 8px 9px;
             font-size: clamp(24px, 3.65vw, 54px);
-            letter-spacing: -0.006em;
+            letter-spacing: 0.025em;
           }
 
           .sg-stream-timer-final {
@@ -431,6 +445,19 @@ export default function StreamTimerOverlayPage() {
             text-shadow:
               3px 3px 0 var(--timer-shadow),
               0 0 18px color-mix(in srgb, var(--timer-accent) 70%, transparent);
+          }
+
+          .sg-stream-timer-final-label {
+            font-family: var(--timer-display-font);
+            font-weight: 400;
+          }
+
+          .sg-stream-timer-digits {
+            font-family: var(--timer-digits-font);
+            font-weight: 900;
+            letter-spacing: 0.035em;
+            font-variant-numeric: tabular-nums lining-nums;
+            font-feature-settings: "tnum" 1, "lnum" 1;
           }
 
           .sg-stream-timer-card.is-compact .sg-stream-timer-final {
@@ -448,6 +475,7 @@ export default function StreamTimerOverlayPage() {
             border-radius: inherit;
             background:
               radial-gradient(circle at center, color-mix(in srgb, var(--timer-secondary) 16%, transparent), transparent 58%);
+            font-family: var(--timer-display-font);
             color: color-mix(in srgb, var(--timer-text) 92%, white);
             font-size: clamp(70px, 14vw, 190px);
             font-weight: 400;
@@ -486,6 +514,7 @@ export default function StreamTimerOverlayPage() {
           }
 
           .sg-stream-timer-gg-text {
+            font-family: var(--timer-display-font);
             color: var(--timer-text);
             font-size: clamp(70px, 15vw, 190px);
             font-weight: 400;
