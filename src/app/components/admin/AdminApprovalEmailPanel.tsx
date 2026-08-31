@@ -19,6 +19,26 @@ import {
   type ApprovalEmailPendingGroup,
 } from "../../services/applicationService";
 
+function SmallPill({
+  children,
+  tone = "default",
+}: {
+  children: React.ReactNode;
+  tone?: "default" | "muted";
+}) {
+  return (
+    <span
+      className={
+        tone === "muted"
+          ? "inline-flex items-center rounded-md border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--sg-muted-text)]"
+          : "inline-flex items-center rounded-md border border-[var(--sg-admin-border)] bg-[var(--sg-admin-primary-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--sg-primary)]"
+      }
+    >
+      {children}
+    </span>
+  );
+}
+
 export default function AdminApprovalEmailPanel() {
   const [groups, setGroups] =
     useState<ApprovalEmailPendingGroup[]>([]);
@@ -129,13 +149,13 @@ export default function AdminApprovalEmailPanel() {
                 </span>
               </div>
 
-              <Badge className="bg-[var(--sg-admin-primary-soft)] text-[var(--sg-primary)]">
+              <SmallPill>
                 {groups.length} correo(s)
-              </Badge>
+              </SmallPill>
 
-              <Badge className="bg-[var(--sg-admin-card-bg-soft)] text-[var(--sg-muted-text)]">
+              <SmallPill tone="muted">
                 {totalRuns} run(s)
-              </Badge>
+              </SmallPill>
             </div>
 
             <p className="text-sm text-[var(--sg-muted-text)]">
