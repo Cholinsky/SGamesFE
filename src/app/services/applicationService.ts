@@ -1,7 +1,8 @@
 import { API_URL } from "../config/api";
 
 function getHeaders() {
-  const token = localStorage.getItem("sgames_token");
+  const token =
+    localStorage.getItem("sgames_token");
 
   return {
     "Content-Type": "application/json",
@@ -23,7 +24,7 @@ async function getErrorMessage(
     await response.text();
 
   if (!responseText) {
-    return fallbackMessage;
+    return `${fallbackMessage} (${response.status})`;
   }
 
   try {
@@ -145,12 +146,14 @@ export type CreateApplicationFromHistoryPayload = {
 export async function getApplications(
   scope: "active" | "history" | "all" = "active"
 ) {
-  const response = await fetch(
-    `${API_URL}/Applications?scope=${scope}`,
-    {
-      headers: getHeaders(),
-    }
-  );
+  const response =
+    await fetch(
+      `${API_URL}/Applications?scope=${scope}&t=${Date.now()}`,
+      {
+        headers: getHeaders(),
+        cache: "no-store",
+      }
+    );
 
   if (!response.ok) {
     throw new Error(
@@ -167,12 +170,14 @@ export async function getApplications(
 export async function getApplicationById(
   id: string
 ) {
-  const response = await fetch(
-    `${API_URL}/Applications/${id}`,
-    {
-      headers: getHeaders(),
-    }
-  );
+  const response =
+    await fetch(
+      `${API_URL}/Applications/${id}?t=${Date.now()}`,
+      {
+        headers: getHeaders(),
+        cache: "no-store",
+      }
+    );
 
   if (!response.ok) {
     throw new Error(
@@ -189,13 +194,14 @@ export async function getApplicationById(
 export async function approveApplication(
   id: string
 ) {
-  const response = await fetch(
-    `${API_URL}/Applications/${id}/approve`,
-    {
-      method: "PUT",
-      headers: getHeaders(),
-    }
-  );
+  const response =
+    await fetch(
+      `${API_URL}/Applications/${id}/approve-and-queue-email`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
 
   if (!response.ok) {
     throw new Error(
@@ -205,18 +211,21 @@ export async function approveApplication(
       )
     );
   }
+
+  return await readJsonResponse(response);
 }
 
 export async function rejectApplication(
   id: string
 ) {
-  const response = await fetch(
-    `${API_URL}/Applications/${id}/reject`,
-    {
-      method: "PUT",
-      headers: getHeaders(),
-    }
-  );
+  const response =
+    await fetch(
+      `${API_URL}/Applications/${id}/reject`,
+      {
+        method: "PUT",
+        headers: getHeaders(),
+      }
+    );
 
   if (!response.ok) {
     throw new Error(
@@ -231,14 +240,15 @@ export async function rejectApplication(
 export async function createApplication(
   data: any
 ) {
-  const response = await fetch(
-    `${API_URL}/Applications`,
-    {
-      method: "POST",
-      headers: getPublicHeaders(),
-      body: JSON.stringify(data),
-    }
-  );
+  const response =
+    await fetch(
+      `${API_URL}/Applications`,
+      {
+        method: "POST",
+        headers: getPublicHeaders(),
+        body: JSON.stringify(data),
+      }
+    );
 
   if (!response.ok) {
     throw new Error(
@@ -279,7 +289,10 @@ export async function deleteApplication(
 export async function getPublicApprovedApplications() {
   const response =
     await fetch(
-      `${API_URL}/Applications/public-approved`
+      `${API_URL}/Applications/public-approved?t=${Date.now()}`,
+      {
+        cache: "no-store",
+      }
     );
 
   if (!response.ok) {
@@ -297,9 +310,10 @@ export async function getPublicApprovedApplications() {
 export async function getApplicationGroupsByEvent() {
   const response =
     await fetch(
-      `${API_URL}/Applications/admin-by-events`,
+      `${API_URL}/Applications/admin-by-events?t=${Date.now()}`,
       {
         headers: getHeaders(),
+        cache: "no-store",
       }
     );
 
@@ -318,9 +332,10 @@ export async function getApplicationGroupsByEvent() {
 export async function getRunnerApplicationHistory() {
   const response =
     await fetch(
-      `${API_URL}/Applications/admin-runner-history`,
+      `${API_URL}/Applications/admin-runner-history?t=${Date.now()}`,
       {
         headers: getHeaders(),
+        cache: "no-store",
       }
     );
 
@@ -359,4 +374,126 @@ export async function createApplicationFromHistory(
   }
 
   return await readJsonResponse(response);
+}
+
+
+export type ApprovalEmailRun = {
+  applicationId: string;
+  runnerName: string;
+  game: string;
+  category: string;
+  platform: string;
+  estimatedTime: string;
+  runType: string;
+  racePartnerName?: string | null;
+};
+
+export type ApprovalEmailPendingGroup = {
+  recipientEmail: string;
+  recipientName: string;
+  eventId: string;
+  eventName: string;
+  totalRuns: number;
+  runs: ApprovalEmailRun[];
+};
+
+export type PendingApprovalEmailsResponse = {
+  groups: number;
+  totalRuns: number;
+  pendingGroups: ApprovalEmailPendingGroup[];
+};
+
+export type SendPendingApprovalEmailsPayload = {
+  eventId?: string | null;
+  recipientEmail?: string | null;
+  includeFailed: boolean;
+  dryRun: boolean;
+};
+
+export type SendPendingApprovalEmailsResult = {
+  dryRun: boolean;
+  groups: number;
+  sentEmails: number;
+  failedEmails: number;
+  totalRuns: number;
+  message: string;
+  pendingGroups: ApprovalEmailPendingGroup[];
+  errors: string[];
+};
+
+export async function getPendingApprovalEmails(
+  includeFailed = false
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/approval-emails/pending?includeFailed=${includeFailed}&t=${Date.now()}`,
+      {
+        headers: getHeaders(),
+        cache: "no-store",
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error loading pending approval emails"
+      )
+    );
+  }
+
+  return await response.json() as PendingApprovalEmailsResponse;
+}
+
+export async function sendPendingApprovalEmails(
+  payload: SendPendingApprovalEmailsPayload
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/approval-emails/send-pending`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error sending approval emails"
+      )
+    );
+  }
+
+  return await response.json() as SendPendingApprovalEmailsResult;
+}
+
+export async function previewPendingApprovalEmails(
+  payload: SendPendingApprovalEmailsPayload
+) {
+  const response =
+    await fetch(
+      `${API_URL}/Applications/approval-emails/preview`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({
+          ...payload,
+          dryRun: true,
+        }),
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Error previewing approval emails"
+      )
+    );
+  }
+
+  return await response.json() as SendPendingApprovalEmailsResult;
 }
