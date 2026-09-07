@@ -1521,7 +1521,7 @@ export default function AdminConfiguracion() {
             <Button
               onClick={handleSaveSettingsConfig}
               disabled={savingSettings}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="sgames-admin-primary-button"
             >
               <Save className="mr-2 h-4 w-4" />
               {savingSettings
