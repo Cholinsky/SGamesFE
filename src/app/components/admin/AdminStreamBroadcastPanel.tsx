@@ -489,10 +489,10 @@ export default function AdminStreamBroadcastPanel({
 
   return (
     <Card className="sgames-admin-card border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg)]">
-      <CardHeader>
-        <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
-          <div>
-            <div className="mb-2 flex flex-wrap items-center gap-2">
+      <CardHeader className="space-y-4">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2 text-[var(--sg-primary)]">
                 <Radio className="h-5 w-5" />
 
@@ -518,20 +518,21 @@ export default function AdminStreamBroadcastPanel({
               Info de stream, overlays y Twitch
             </CardTitle>
 
-            <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
-              Un solo panel para guardar datos en SGames, alimentar overlays y actualizar Twitch.
+            <p className="mt-1 max-w-3xl text-sm text-[var(--sg-muted-text)]">
+              Guarda datos internos de SGames, alimenta overlays y sincroniza título, categoría,
+              idioma y tags del canal de Twitch desde un solo lugar.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex shrink-0 flex-wrap gap-2">
             {status?.isConnected ? (
               <Button
                 onClick={handleDisconnect}
                 variant="outline"
-                className="border-red-500/30 text-red-300"
+                className="border-red-500/30 text-red-300 hover:border-red-400/60 hover:bg-red-500/10"
               >
                 <Unlink className="mr-2 h-4 w-4" />
-                Desconectar
+                Desconectar Twitch
               </Button>
             ) : (
               <Button
@@ -558,8 +559,18 @@ export default function AdminStreamBroadcastPanel({
           </div>
         )}
 
-        <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
-          <div className="space-y-4">
+        <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.35fr)_minmax(420px,0.65fr)]">
+          <section className="space-y-5 rounded-2xl border border-[var(--sg-admin-border)] bg-black/15 p-4 md:p-5">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--sg-primary)]">
+                Datos del directo
+              </p>
+
+              <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
+                Estos campos alimentan SGames, overlays y también pueden mandarse a Twitch.
+              </p>
+            </div>
+
             <div>
               <Label className="text-[var(--sg-muted-text)]">
                 Título del directo
@@ -573,13 +584,17 @@ export default function AdminStreamBroadcastPanel({
                     event.target.value
                   )
                 }
-                className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                className="mt-1.5 h-12 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-base text-[var(--sg-text)]"
                 placeholder="SGames Fall 2026"
                 maxLength={140}
               />
+
+              <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
+                {form.streamTitle.length}/140 caracteres.
+              </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-[0.8fr_1.2fr]">
+            <div className="grid gap-4 lg:grid-cols-[0.7fr_1.3fr]">
               <div>
                 <Label className="text-[var(--sg-muted-text)]">
                   Estado corto
@@ -593,7 +608,7 @@ export default function AdminStreamBroadcastPanel({
                       event.target.value
                     )
                   }
-                  className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  className="mt-1.5 h-12 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                   placeholder="Preparando / En vivo"
                 />
               </div>
@@ -603,14 +618,14 @@ export default function AdminStreamBroadcastPanel({
                   Categoría / juego de Twitch
                 </Label>
 
-                <div className="mt-1.5 grid gap-2 md:grid-cols-[1fr_auto]">
+                <div className="mt-1.5 grid gap-2 sm:grid-cols-[1fr_auto]">
                   <Input
                     value={categoryName}
                     onChange={(event) => {
                       setCategoryName(event.target.value);
                       setCategoryId("");
                     }}
-                    className="border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                    className="h-12 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                     placeholder="Hollow Knight: Silksong"
                   />
 
@@ -621,14 +636,57 @@ export default function AdminStreamBroadcastPanel({
                       searching ||
                       !status?.isConnected
                     }
-                    className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
+                    className="h-12 border-[var(--sg-admin-border)] px-5 text-[var(--sg-muted-text)] hover:border-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
                   >
                     <Search className="mr-2 h-4 w-4" />
                     Buscar
                   </Button>
                 </div>
+
+                {categoryId && (
+                  <p className="mt-1 text-xs text-green-300">
+                    Categoría seleccionada para Twitch.
+                  </p>
+                )}
               </div>
             </div>
+
+            {categories.length > 0 && (
+              <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-3">
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-[var(--sg-muted-text)]">
+                  Resultados de Twitch
+                </p>
+
+                <div className="grid gap-2 md:grid-cols-2">
+                  {categories.slice(0, 4).map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => {
+                        setCategoryId(category.id);
+                        setCategoryName(category.name);
+                        toast.success(
+                          `Categoría seleccionada: ${category.name}`
+                        );
+                      }}
+                      className={`rounded-xl border p-3 text-left text-sm transition ${
+                        category.id === categoryId
+                          ? "border-[var(--sg-primary)] bg-[var(--sg-admin-primary-soft)] text-[var(--sg-text)]"
+                          : "border-[var(--sg-admin-border)] bg-black/20 text-[var(--sg-muted-text)] hover:border-[var(--sg-primary)]"
+                      }`}
+                    >
+                      <p className="font-bold">
+                        {category.name}
+                      </p>
+
+                      <p className="mt-1 text-xs opacity-70">
+                        ID: {category.id}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <Label className="text-[var(--sg-muted-text)]">
@@ -643,86 +701,147 @@ export default function AdminStreamBroadcastPanel({
                     event.target.value
                   )
                 }
-                className="mt-1.5 min-h-[82px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                className="mt-1.5 min-h-[112px] border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
                 placeholder="Descripción visible para staff, Twitch u overlays"
               />
             </div>
 
-            {categories.length > 0 && (
-              <div className="grid gap-2 md:grid-cols-2">
-                {categories.slice(0, 4).map((category) => (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => {
-                      setCategoryId(category.id);
-                      setCategoryName(category.name);
-                      toast.success(
-                        `Categoría seleccionada: ${category.name}`
-                      );
-                    }}
-                    className={`rounded-xl border p-3 text-left text-sm transition ${
-                      category.id === categoryId
-                        ? "border-[var(--sg-primary)] bg-[var(--sg-admin-primary-soft)] text-[var(--sg-text)]"
-                        : "border-[var(--sg-admin-border)] bg-black/20 text-[var(--sg-muted-text)] hover:border-[var(--sg-primary)]"
-                    }`}
-                  >
-                    <p className="font-bold">
-                      {category.name}
-                    </p>
+            <div className="grid gap-4 lg:grid-cols-[110px_1fr]">
+              <div>
+                <Label className="text-[var(--sg-muted-text)]">
+                  Idioma
+                </Label>
 
-                    <p className="mt-1 text-xs opacity-70">
-                      ID: {category.id}
-                    </p>
-                  </button>
-                ))}
+                <Input
+                  value={language}
+                  onChange={(event) =>
+                    setLanguage(event.target.value)
+                  }
+                  className="mt-1.5 h-12 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="es"
+                  maxLength={10}
+                />
               </div>
-            )}
-          </div>
 
-          <div className="space-y-4 rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
-            <div>
-              <p className="text-sm font-bold text-[var(--sg-text)]">
+              <div>
+                <Label className="text-[var(--sg-muted-text)]">
+                  Tags separados por coma
+                </Label>
+
+                <Input
+                  value={tags}
+                  onChange={(event) =>
+                    setTags(event.target.value)
+                  }
+                  className="mt-1.5 h-12 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
+                  placeholder="speedrun, SGames"
+                />
+
+                <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
+                  Se enviarán máximo 10 tags.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <aside className="space-y-4">
+            <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--sg-primary)]">
+                Estado de Twitch
+              </p>
+
+              <div className="mt-4 grid gap-3 text-sm">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--sg-admin-border)] bg-black/20 px-3 py-2">
+                  <span className="text-[var(--sg-muted-text)]">
+                    Conexión
+                  </span>
+
+                  <span className="font-bold text-[var(--sg-text)]">
+                    {loadingStatus
+                      ? "Revisando..."
+                      : connectedLabel}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--sg-admin-border)] bg-black/20 px-3 py-2">
+                  <span className="text-[var(--sg-muted-text)]">
+                    Canal
+                  </span>
+
+                  <span className="font-bold text-[var(--sg-text)]">
+                    {getTwitchChannelFromUrl(form.twitchChannelUrl) ||
+                      status?.broadcasterLogin ||
+                      "sin canal"}
+                  </span>
+                </div>
+
+                <div className="rounded-xl border border-[var(--sg-admin-border)] bg-black/20 px-3 py-2">
+                  <p className="text-[var(--sg-muted-text)]">
+                    Scope requerido
+                  </p>
+
+                  <p className="mt-1 break-words font-mono text-xs text-[var(--sg-text)]">
+                    channel:manage:broadcast
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-card-bg-soft)] p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--sg-primary)]">
                 Acciones rápidas
               </p>
 
               <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
-                Guarda sólo en SGames o sincroniza también con Twitch.
+                Primero rellena datos; luego guarda localmente o sincroniza con Twitch.
               </p>
-            </div>
 
-            <div className="grid gap-2">
-              <Button
-                onClick={applyCurrentRunData}
-                variant="outline"
-                className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
-                disabled={!panelData?.currentItem}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Usar run actual
-              </Button>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 2xl:grid-cols-1">
+                <Button
+                  onClick={applyCurrentRunData}
+                  variant="outline"
+                  className="justify-start border-[var(--sg-admin-border)] text-[var(--sg-muted-text)] hover:border-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
+                  disabled={!panelData?.currentItem}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Usar run actual
+                </Button>
 
-              <Button
-                onClick={applyEventData}
-                variant="outline"
-                className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
-                disabled={!panelData}
-              >
-                <Settings2 className="mr-2 h-4 w-4" />
-                Usar datos del evento
-              </Button>
+                <Button
+                  onClick={applyEventData}
+                  variant="outline"
+                  className="justify-start border-[var(--sg-admin-border)] text-[var(--sg-muted-text)] hover:border-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
+                  disabled={!panelData}
+                >
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  Usar datos del evento
+                </Button>
 
-              <Button
-                onClick={handleSaveOnly}
-                disabled={saving}
-                variant="outline"
-                className="border-[var(--sg-admin-border)] text-[var(--sg-primary)]"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {saving
-                  ? "Guardando..."
-                  : "Guardar en SGames"}
-              </Button>
+                <Button
+                  onClick={handleSaveOnly}
+                  disabled={saving}
+                  variant="outline"
+                  className="justify-start border-[var(--sg-admin-border)] text-[var(--sg-primary)] hover:bg-[var(--sg-admin-primary-soft)]"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving
+                    ? "Guardando..."
+                    : "Guardar en SGames"}
+                </Button>
+
+                <Button
+                  onClick={handleUpdateTwitchManual}
+                  disabled={
+                    savingTwitch ||
+                    !status?.isConnected
+                  }
+                  variant="outline"
+                  className="justify-start border-[var(--sg-admin-border)] text-[var(--sg-muted-text)] hover:border-[var(--sg-primary)] hover:text-[var(--sg-primary)]"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Sólo actualizar Twitch
+                </Button>
+              </div>
 
               <Button
                 onClick={handleSaveAndUpdateTwitch}
@@ -731,70 +850,33 @@ export default function AdminStreamBroadcastPanel({
                   savingTwitch ||
                   !status?.isConnected
                 }
-                className="sgames-admin-primary-button"
+                className="sgames-admin-primary-button mt-3 w-full"
               >
                 <Send className="mr-2 h-4 w-4" />
                 Guardar y actualizar Twitch
               </Button>
-
-              <Button
-                onClick={handleUpdateTwitchManual}
-                disabled={
-                  savingTwitch ||
-                  !status?.isConnected
-                }
-                variant="outline"
-                className="border-[var(--sg-admin-border)] text-[var(--sg-muted-text)]"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Sólo actualizar Twitch
-              </Button>
             </div>
 
-            <div className="space-y-3 border-t border-[var(--sg-admin-border)] pt-4">
-              <div className="grid gap-3 md:grid-cols-[90px_1fr]">
-                <div>
-                  <Label className="text-[var(--sg-muted-text)]">
-                    Idioma
-                  </Label>
+            <div className="rounded-2xl border border-[var(--sg-admin-border)] bg-black/15 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--sg-primary)]">
+                Qué se sincroniza
+              </p>
 
-                  <Input
-                    value={language}
-                    onChange={(event) =>
-                      setLanguage(event.target.value)
-                    }
-                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                    placeholder="es"
-                    maxLength={10}
-                  />
+              <div className="mt-3 grid gap-2 text-xs text-[var(--sg-muted-text)]">
+                <div className="rounded-xl border border-[var(--sg-admin-border)] bg-black/20 px-3 py-2">
+                  Título del directo
                 </div>
 
-                <div>
-                  <Label className="text-[var(--sg-muted-text)]">
-                    Tags
-                  </Label>
-
-                  <Input
-                    value={tags}
-                    onChange={(event) =>
-                      setTags(event.target.value)
-                    }
-                    className="mt-1.5 border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] text-[var(--sg-text)]"
-                    placeholder="speedrun, SGames"
-                  />
+                <div className="rounded-xl border border-[var(--sg-admin-border)] bg-black/20 px-3 py-2">
+                  Categoría / juego de Twitch
                 </div>
-              </div>
 
-              <div className="text-xs text-[var(--sg-muted-text)]">
-                Canal OBS/monitor:{" "}
-                <span className="font-semibold text-[var(--sg-text)]">
-                  {getTwitchChannelFromUrl(form.twitchChannelUrl) ||
-                    status?.broadcasterLogin ||
-                    "sin canal"}
-                </span>
+                <div className="rounded-xl border border-[var(--sg-admin-border)] bg-black/20 px-3 py-2">
+                  Idioma y tags
+                </div>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
 
         <button
@@ -802,7 +884,7 @@ export default function AdminStreamBroadcastPanel({
           onClick={() =>
             setShowAdvanced((current) => !current)
           }
-          className="flex w-full items-center justify-between rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] px-4 py-3 text-left text-sm font-bold text-[var(--sg-text)]"
+          className="flex w-full items-center justify-between rounded-2xl border border-[var(--sg-admin-border)] bg-[var(--sg-admin-input-bg)] px-4 py-3 text-left text-sm font-bold text-[var(--sg-text)] transition hover:border-[var(--sg-primary)]"
         >
           <span>
             Avanzado: URLs, textos de overlay y monitoreo
