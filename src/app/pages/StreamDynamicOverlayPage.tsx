@@ -23,6 +23,9 @@ type DisplayData = {
   gameName?: string;
   categoryName?: string;
   platformName?: string;
+  consoleName?: string;
+  releaseDate?: string;
+  gameReleaseDate?: string;
   estimate?: string;
   commentators?: string;
   language?: string;
@@ -494,6 +497,162 @@ const overlayStyles = `
     display: none;
   }
 
+
+  .sg-schedule-ticker-root {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: stretch;
+    background: transparent;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .sg-schedule-ticker {
+    width: 100vw;
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: stretch;
+    border: 2px solid rgba(0, 0, 0, 0.75);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.18), transparent 42%),
+      linear-gradient(90deg, color-mix(in srgb, var(--overlay-primary) 80%, #111827), color-mix(in srgb, var(--overlay-secondary) 88%, #111827));
+    box-shadow:
+      0 0 16px var(--overlay-shadow-color),
+      inset 0 0 0 1px rgba(255,255,255,0.12);
+    overflow: hidden;
+  }
+
+  .sg-ticker-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 20px;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.18)),
+      color-mix(in srgb, var(--overlay-secondary) 78%, #111827);
+    color: var(--overlay-text);
+    font-family:
+      "Arial Black",
+      Impact,
+      Inter,
+      system-ui,
+      sans-serif;
+    font-size: clamp(16px, 2.4vw, 30px);
+    font-weight: 1000;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-shadow:
+      3px 3px 0 var(--overlay-shadow),
+      0 0 14px rgba(0,0,0,0.9);
+  }
+
+  .sg-ticker-items {
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .sg-ticker-segment {
+    position: relative;
+    min-width: 0;
+    flex: 1 1 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    padding: 6px 22px 6px 28px;
+    clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 50%, calc(100% - 22px) 100%, 0 100%, 22px 50%);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.30), rgba(0,0,0,0.10)),
+      color-mix(in srgb, var(--overlay-primary) 70%, #111827);
+    border-left: 2px solid rgba(0,0,0,0.65);
+    border-right: 2px solid rgba(255,255,255,0.16);
+  }
+
+  .sg-ticker-segment:nth-child(2n) {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.24), rgba(0,0,0,0.14)),
+      color-mix(in srgb, var(--overlay-secondary) 74%, #111827);
+  }
+
+  .sg-ticker-time {
+    color: var(--overlay-accent);
+    font-family:
+      "Arial Black",
+      Impact,
+      Inter,
+      system-ui,
+      sans-serif;
+    font-size: clamp(18px, 2.8vw, 34px);
+    font-weight: 1000;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow:
+      3px 3px 0 rgba(0,0,0,0.75),
+      0 0 12px rgba(0,0,0,0.85);
+  }
+
+  .sg-ticker-main {
+    min-width: 0;
+    color: var(--overlay-text);
+  }
+
+  .sg-ticker-game {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--overlay-text);
+    font-size: clamp(14px, 2.25vw, 28px);
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: uppercase;
+    text-shadow:
+      3px 3px 0 rgba(0,0,0,0.75),
+      0 0 10px rgba(0,0,0,0.85);
+  }
+
+  .sg-ticker-meta {
+    display: block;
+    max-width: 100%;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: rgba(248, 250, 252, 0.88);
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-size: clamp(9px, 1.25vw, 15px);
+    font-weight: 1000;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  .sg-ticker-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    padding: 0 22px;
+    color: var(--overlay-text);
+    font-size: clamp(16px, 2.3vw, 28px);
+    font-weight: 400;
+    text-transform: uppercase;
+  }
+
   @media (max-width: 700px) {
     .sg-schedule-header {
       grid-template-columns: 1fr;
@@ -696,6 +855,54 @@ function getEstimateText(
 ) {
   return data?.estimate ||
     "00:00:00";
+}
+
+function getPlatformName(
+  item?: StreamQueueItem | null,
+  data?: DisplayData
+) {
+  return data?.consoleName ||
+    data?.platformName ||
+    "Consola";
+}
+
+function formatReleaseDateText(
+  value?: string
+) {
+  if (!value) {
+    return "";
+  }
+
+  const date =
+    new Date(`${value}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString(
+    "es-MX",
+    {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    }
+  );
+}
+
+function getReleaseDateText(
+  data?: DisplayData
+) {
+  const value =
+    data?.gameReleaseDate ||
+    data?.releaseDate ||
+    "";
+
+  const formatted =
+    formatReleaseDateText(value);
+
+  return formatted ||
+    "Fecha por definir";
 }
 
 function normalizeScheduleEntries(
@@ -971,6 +1178,46 @@ function EstimateView({
   );
 }
 
+function PlatformNameView({
+  panelData,
+}: {
+  panelData: StreamPanelData;
+}) {
+  const item =
+    panelData.currentItem;
+
+  const data =
+    parseDisplayData(item);
+
+  return (
+    <SingleFieldView
+      value={getPlatformName(item, data)}
+      tone="accent"
+      small
+    />
+  );
+}
+
+function ReleaseDateView({
+  panelData,
+}: {
+  panelData: StreamPanelData;
+}) {
+  const item =
+    panelData.currentItem;
+
+  const data =
+    parseDisplayData(item);
+
+  return (
+    <SingleFieldView
+      value={getReleaseDateText(data)}
+      tone="secondary"
+      small
+    />
+  );
+}
+
 function RunInfoTextView({
   panelData,
 }: {
@@ -1003,6 +1250,87 @@ function RunInfoTextView({
             ? `Comentaristas: ${data.commentators}`
             : getSubtitle(item, data)}
         </p>
+      </div>
+    </section>
+  );
+}
+
+function ScheduleTickerView({
+  panelData,
+  schedule,
+}: {
+  panelData: StreamPanelData;
+  schedule: PublicScheduleResponse | null;
+}) {
+  const entries =
+    normalizeScheduleEntries(schedule);
+
+  const itemsParam =
+    Number(
+      getQueryParam("items", "3")
+    );
+
+  const pageSize =
+    Number.isFinite(itemsParam) &&
+    itemsParam > 0
+      ? Math.min(5, Math.max(1, Math.floor(itemsParam)))
+      : 3;
+
+  const pageCount =
+    Math.max(
+      1,
+      Math.ceil(entries.length / pageSize)
+    );
+
+  const currentPage =
+    Math.floor(Date.now() / 6500) % pageCount;
+
+  const visibleEntries =
+    entries.slice(
+      currentPage * pageSize,
+      currentPage * pageSize + pageSize);
+
+  const eventName =
+    schedule?.event ??
+    schedule?.Event ??
+    panelData.eventName ??
+    "SGames";
+
+  return (
+    <section className="sg-schedule-ticker-root">
+      <div className="sg-schedule-ticker">
+        <div className="sg-ticker-label">
+          Horario
+        </div>
+
+        {visibleEntries.length > 0 ? (
+          <div className="sg-ticker-items">
+            {visibleEntries.map((entry) => (
+              <article
+                key={entry.id}
+                className="sg-ticker-segment"
+              >
+                <div className="sg-ticker-time">
+                  {entry.startTime}
+                </div>
+
+                <div className="sg-ticker-main">
+                  <span className="sg-ticker-game">
+                    {entry.game}
+                  </span>
+
+                  <span className="sg-ticker-meta">
+                    {entry.runnerName} · {formatScheduleDay(entry.dayDate)} · {entry.category} · {entry.platform}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="sg-ticker-empty">
+            {eventName} · Horario pendiente
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1259,9 +1587,24 @@ export default function StreamDynamicOverlayPage() {
         <EstimateView panelData={panelData} />
       )}
 
+      {view === "platform-name" && (
+        <PlatformNameView panelData={panelData} />
+      )}
+
+      {view === "release-date" && (
+        <ReleaseDateView panelData={panelData} />
+      )}
+
+      {(view === "event-schedule-horizontal" ||
+        view === "schedule-ticker") && (
+        <ScheduleTickerView
+          panelData={panelData}
+          schedule={schedule}
+        />
+      )}
+
       {(view === "info-bar" ||
-        view === "event-schedule" ||
-        view === "event-schedule-horizontal") && (
+        view === "event-schedule") && (
         <ScheduleCarouselView
           panelData={panelData}
           schedule={schedule}
@@ -1278,9 +1621,12 @@ export default function StreamDynamicOverlayPage() {
         view !== "info-bar" &&
         view !== "event-schedule" &&
         view !== "event-schedule-horizontal" &&
+        view !== "schedule-ticker" &&
         view !== "game-name" &&
         view !== "category-name" &&
         view !== "estimate" &&
+        view !== "platform-name" &&
+        view !== "release-date" &&
         view !== "intermission" &&
         view !== "runner-info" && (
           <CurrentRunView panelData={panelData} />

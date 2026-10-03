@@ -17,14 +17,16 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getStreamDynamicOverlayUrl } from "../../services/streamPanelService";
 
 type OverlayView =
   | "runner-tag"
   | "game-name"
   | "category-name"
   | "estimate"
+  | "platform-name"
+  | "release-date"
   | "event-schedule-horizontal"
+  | "schedule-ticker"
   | "next-run";
 
 const overlayOptions: Array<{
@@ -35,11 +37,11 @@ const overlayOptions: Array<{
   urlSuffix?: string;
 }> = [
   {
-    view: "event-schedule-horizontal",
-    title: "Horario horizontal",
-    description: "Carrusel compacto para el espacio central de OBS.",
-    recommendedSize: "900x220",
-    urlSuffix: "&rows=2",
+    view: "schedule-ticker",
+    title: "Horario tipo ticker",
+    description: "Barra horizontal segmentada tipo GDQ para OBS.",
+    recommendedSize: "900x70",
+    urlSuffix: "&items=3",
   },
   {
     view: "runner-tag",
@@ -66,6 +68,18 @@ const overlayOptions: Array<{
     recommendedSize: "520x130",
   },
   {
+    view: "platform-name",
+    title: "Consola / plataforma",
+    description: "Sólo letras de la consola o plataforma actual.",
+    recommendedSize: "520x130",
+  },
+  {
+    view: "release-date",
+    title: "Fecha lanzamiento",
+    description: "Sólo letras de la fecha de lanzamiento si existe en los datos.",
+    recommendedSize: "520x130",
+  },
+  {
     view: "next-run",
     title: "Siguiente run",
     description: "Texto para la zona inferior o aviso de siguiente run.",
@@ -77,7 +91,12 @@ function buildOverlayUrl(
   view: OverlayView,
   suffix?: string
 ) {
-  return `${getStreamDynamicOverlayUrl(view)}${suffix ?? ""}`;
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "";
+
+  return `${origin}/overlay/stream/dynamic?view=${view}${suffix ?? ""}`;
 }
 
 export default function AdminStreamDynamicOverlayTools() {

@@ -182,10 +182,13 @@ export type StreamDynamicOverlayView =
   | "intermission"
   | "event-schedule"
   | "event-schedule-horizontal"
+  | "schedule-ticker"
   | "runner-info"
   | "game-name"
   | "category-name"
-  | "estimate";
+  | "estimate"
+  | "platform-name"
+  | "release-date";
 
 export function getStreamDynamicOverlayUrl(
   view: StreamDynamicOverlayView = "current-run"
