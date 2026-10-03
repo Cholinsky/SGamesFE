@@ -20,70 +20,98 @@ import { toast } from "sonner";
 import { getStreamDynamicOverlayUrl } from "../../services/streamPanelService";
 
 type OverlayView =
-  | "current-run"
-  | "next-run"
   | "runner-tag"
-  | "info-bar"
-  | "intermission";
+  | "game-name"
+  | "category-name"
+  | "estimate"
+  | "event-schedule-horizontal"
+  | "next-run";
 
 const overlayOptions: Array<{
   view: OverlayView;
   title: string;
   description: string;
   recommendedSize: string;
+  urlSuffix?: string;
 }> = [
   {
-    view: "current-run",
-    title: "Current Run Text",
-    description: "Texto sin marco: runner, juego, categoría y estimado.",
-    recommendedSize: "1920x1080",
-  },
-  {
-    view: "next-run",
-    title: "Next Run Text",
-    description: "Texto sin marco para anunciar la siguiente run.",
-    recommendedSize: "1920x1080",
+    view: "event-schedule-horizontal",
+    title: "Horario horizontal",
+    description: "Carrusel compacto para el espacio central de OBS.",
+    recommendedSize: "900x220",
+    urlSuffix: "&rows=2",
   },
   {
     view: "runner-tag",
-    title: "Runner Text",
-    description: "Sólo letras del runner, sin recuadro ni fondo.",
+    title: "Nombre del runner",
+    description: "Sólo letras del runner actual, sin fondo ni recuadro.",
     recommendedSize: "800x220",
   },
   {
-    view: "info-bar",
-    title: "Horario Evento",
-    description: "Carrusel tipo GDQ con runs del horario público.",
-    recommendedSize: "1920x1080",
+    view: "game-name",
+    title: "Nombre del juego",
+    description: "Sólo letras del juego actual para colocarlo en el overlay base.",
+    recommendedSize: "800x160",
   },
   {
-    view: "intermission",
-    title: "Info Runner",
-    description: "Texto grande sin marco para runner + juego.",
-    recommendedSize: "1920x1080",
+    view: "category-name",
+    title: "Categoría",
+    description: "Sólo letras de la categoría actual.",
+    recommendedSize: "800x140",
+  },
+  {
+    view: "estimate",
+    title: "Estimado",
+    description: "Sólo texto del estimado de la run actual.",
+    recommendedSize: "520x130",
+  },
+  {
+    view: "next-run",
+    title: "Siguiente run",
+    description: "Texto para la zona inferior o aviso de siguiente run.",
+    recommendedSize: "760x180",
   },
 ];
 
+function buildOverlayUrl(
+  view: OverlayView,
+  suffix?: string
+) {
+  return `${getStreamDynamicOverlayUrl(view)}${suffix ?? ""}`;
+}
+
 export default function AdminStreamDynamicOverlayTools() {
   const [previewView, setPreviewView] =
-    useState<OverlayView>("current-run");
+    useState<OverlayView>("event-schedule-horizontal");
+
+  const previewOption =
+    overlayOptions.find((option) =>
+      option.view === previewView) ??
+    overlayOptions[0];
 
   const previewUrl =
     useMemo(
-      () => getStreamDynamicOverlayUrl(previewView),
-      [previewView]
+      () =>
+        buildOverlayUrl(
+          previewOption.view,
+          previewOption.urlSuffix),
+      [
+        previewOption,
+      ]
     );
 
   async function copyUrl(
-    view: OverlayView
+    option: typeof overlayOptions[number]
   ) {
     const url =
-      getStreamDynamicOverlayUrl(view);
+      buildOverlayUrl(
+        option.view,
+        option.urlSuffix);
 
     await navigator.clipboard.writeText(url);
 
     toast.success(
-      `URL de ${view} copiada`
+      `URL de ${option.title} copiada`
     );
   }
 
@@ -96,7 +124,7 @@ export default function AdminStreamDynamicOverlayTools() {
         </CardTitle>
 
         <p className="text-sm text-[var(--sg-muted-text)]">
-          Estos Browser Sources se actualizan solos con la cola del stream. Úsalos encima de tus overlays base hechos por el equipo.
+          Browser Sources transparentes para poner textos sueltos encima del overlay base de OBS.
         </p>
       </CardHeader>
 
@@ -144,7 +172,7 @@ export default function AdminStreamDynamicOverlayTools() {
                     size="sm"
                     variant="outline"
                     onClick={() =>
-                      copyUrl(option.view)
+                      copyUrl(option)
                     }
                     className="border-[var(--sg-admin-border)] text-[var(--sg-secondary)]"
                   >

@@ -256,52 +256,113 @@ const overlayStyles = `
     font-size: clamp(22px, 3.2vw, 58px);
   }
 
+  .sg-single-field {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3vw;
+    background: transparent;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .sg-single-field.align-left {
+    justify-content: flex-start;
+  }
+
+  .sg-single-field h1 {
+    margin: 0;
+    max-width: 100%;
+    color: var(--overlay-text);
+    font-size: clamp(32px, 13vw, 148px);
+    font-weight: 400;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow:
+      6px 6px 0 var(--overlay-shadow),
+      0 0 24px var(--overlay-shadow-color),
+      0 0 44px rgba(0, 0, 0, 0.85);
+  }
+
+  .sg-single-field.is-secondary h1 {
+    color: var(--overlay-secondary);
+  }
+
+  .sg-single-field.is-accent h1 {
+    color: var(--overlay-accent);
+    font-family:
+      "Arial Black",
+      Impact,
+      "SGamesOverlayFont",
+      Inter,
+      system-ui,
+      sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+
+  .sg-single-field.is-small h1 {
+    font-size: clamp(28px, 9vw, 108px);
+  }
+
+  .sg-single-field.is-estimate h1 {
+    font-size: clamp(32px, 10vw, 128px);
+  }
+
   .sg-schedule-root {
     width: 100vw;
     height: 100vh;
     display: flex;
     align-items: stretch;
-    justify-content: center;
-    padding: 4.6vh 4vw;
+    justify-content: stretch;
+    padding: 0;
     background: transparent;
     pointer-events: none;
   }
 
   .sg-schedule-card {
-    width: min(1780px, 94vw);
-    height: min(920px, 90vh);
+    width: 100vw;
+    height: 100vh;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    border: 4px solid var(--overlay-border);
-    border-radius: 26px;
+    grid-template-rows: auto 1fr;
+    border: 2px solid var(--overlay-border);
+    border-radius: 18px;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 28%),
-      radial-gradient(circle at 20% 0%, var(--overlay-shadow-color), transparent 34%),
-      rgba(5, 7, 12, 0.86);
+      linear-gradient(90deg, rgba(249, 115, 22, 0.20), transparent 36%),
+      radial-gradient(circle at 0% 50%, var(--overlay-shadow-color), transparent 36%),
+      rgba(5, 7, 12, 0.88);
     box-shadow:
-      0 0 0 6px rgba(0, 0, 0, 0.32),
-      0 0 42px var(--overlay-shadow-color);
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 0 28px var(--overlay-shadow-color);
     overflow: hidden;
   }
 
   .sg-schedule-header {
-    display: flex;
+    min-height: 46px;
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 24px 32px 18px;
-    border-bottom: 2px solid color-mix(in srgb, var(--overlay-border) 60%, transparent);
+    gap: 20px;
+    padding: 8px 22px 7px;
+    border-bottom: 1px solid color-mix(in srgb, var(--overlay-border) 70%, transparent);
   }
 
   .sg-schedule-header h1 {
     margin: 0;
     color: var(--overlay-text);
-    font-size: clamp(32px, 3.8vw, 72px);
+    font-size: clamp(22px, 3.4vw, 42px);
     font-weight: 400;
     line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
     text-shadow:
-      5px 5px 0 var(--overlay-shadow),
-      0 0 20px var(--overlay-shadow-color);
+      4px 4px 0 var(--overlay-shadow),
+      0 0 16px var(--overlay-shadow-color);
   }
 
   .sg-schedule-header span {
@@ -313,24 +374,27 @@ const overlayStyles = `
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
-    font-size: clamp(16px, 1.6vw, 30px);
+    font-size: clamp(11px, 1.5vw, 18px);
     font-weight: 1000;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.20em;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .sg-schedule-list {
+    min-height: 0;
     display: grid;
-    grid-template-rows: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
   }
 
   .sg-schedule-row {
+    min-height: 0;
     display: grid;
-    grid-template-columns: 180px 1fr 260px;
+    grid-template-columns: minmax(110px, 0.24fr) minmax(0, 1fr) minmax(130px, 0.42fr);
     align-items: center;
-    gap: 24px;
-    padding: 20px 32px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    gap: clamp(10px, 2vw, 26px);
+    padding: 8px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   }
 
   .sg-schedule-row:nth-child(2n) {
@@ -345,27 +409,36 @@ const overlayStyles = `
       Inter,
       system-ui,
       sans-serif;
-    font-size: clamp(26px, 3.2vw, 60px);
+    font-size: clamp(24px, 4.4vw, 50px);
     font-weight: 900;
     line-height: 1;
+    white-space: nowrap;
     text-shadow:
       4px 4px 0 var(--overlay-shadow),
       0 0 18px var(--overlay-shadow-color);
   }
 
+  .sg-schedule-main {
+    min-width: 0;
+  }
+
   .sg-schedule-main h2 {
     margin: 0;
     color: var(--overlay-text);
-    font-size: clamp(26px, 3vw, 58px);
+    font-size: clamp(20px, 3.5vw, 42px);
     font-weight: 400;
-    line-height: 1.02;
+    line-height: 0.98;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
     text-shadow:
       4px 4px 0 var(--overlay-shadow),
       0 0 18px rgba(0, 0, 0, 0.85);
   }
 
   .sg-schedule-main p {
-    margin: 8px 0 0;
+    margin: 5px 0 0;
     color: var(--overlay-muted);
     font-family:
       Inter,
@@ -374,41 +447,28 @@ const overlayStyles = `
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
-    font-size: clamp(15px, 1.45vw, 28px);
-    font-weight: 900;
-    line-height: 1.22;
+    font-size: clamp(10px, 1.6vw, 18px);
+    font-weight: 1000;
+    line-height: 1.1;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .sg-schedule-runner {
     color: var(--overlay-secondary);
-    font-size: clamp(22px, 2.2vw, 44px);
+    font-size: clamp(16px, 2.5vw, 32px);
     font-weight: 400;
     line-height: 1;
     text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
     text-shadow:
       4px 4px 0 var(--overlay-shadow),
       0 0 18px var(--overlay-shadow-color);
-  }
-
-  .sg-schedule-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 18px 32px 22px;
-    color: var(--overlay-muted);
-    border-top: 2px solid color-mix(in srgb, var(--overlay-border) 60%, transparent);
-    font-family:
-      Inter,
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      sans-serif;
-    font-size: clamp(14px, 1.4vw, 24px);
-    font-weight: 900;
-    text-transform: uppercase;
   }
 
   .sg-schedule-empty {
@@ -416,6 +476,7 @@ const overlayStyles = `
     height: 100%;
     align-items: center;
     justify-content: center;
+    padding: 18px;
     color: var(--overlay-muted);
     font-family:
       Inter,
@@ -424,19 +485,32 @@ const overlayStyles = `
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
-    font-size: clamp(24px, 2.2vw, 42px);
+    font-size: clamp(18px, 2.8vw, 34px);
     font-weight: 900;
     text-align: center;
   }
 
-  @media (max-width: 900px) {
+  .sg-schedule-footer {
+    display: none;
+  }
+
+  @media (max-width: 700px) {
+    .sg-schedule-header {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .sg-schedule-header span {
+      display: none;
+    }
+
     .sg-schedule-row {
-      grid-template-columns: 120px 1fr;
+      grid-template-columns: 90px 1fr;
+      padding: 7px 16px;
     }
 
     .sg-schedule-runner {
-      grid-column: 1 / -1;
-      text-align: left;
+      display: none;
     }
   }
 `;
@@ -597,6 +671,31 @@ function getRunnerLine(
   return data?.runnerName ||
     item?.sourceLabel ||
     "Runner";
+}
+
+function getGameName(
+  item?: StreamQueueItem | null,
+  data?: DisplayData
+) {
+  return data?.gameName ||
+    item?.title ||
+    "Juego";
+}
+
+function getCategoryName(
+  item?: StreamQueueItem | null,
+  data?: DisplayData
+) {
+  return data?.categoryName ||
+    item?.subtitle ||
+    "Categoría";
+}
+
+function getEstimateText(
+  data?: DisplayData
+) {
+  return data?.estimate ||
+    "00:00:00";
 }
 
 function normalizeScheduleEntries(
@@ -786,6 +885,92 @@ function RunnerTagView({
   );
 }
 
+function SingleFieldView({
+  value,
+  tone = "default",
+  small = false,
+}: {
+  value: string;
+  tone?: "default" | "secondary" | "accent";
+  small?: boolean;
+}) {
+  const classNames = [
+    "sg-single-field",
+    tone === "secondary" ? "is-secondary" : "",
+    tone === "accent" ? "is-accent" : "",
+    small ? "is-small" : "",
+    value.length > 12 && tone === "accent" ? "is-estimate" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <section className={classNames}>
+      <h1>
+        {value}
+      </h1>
+    </section>
+  );
+}
+
+function GameNameView({
+  panelData,
+}: {
+  panelData: StreamPanelData;
+}) {
+  const item =
+    panelData.currentItem;
+
+  const data =
+    parseDisplayData(item);
+
+  return (
+    <SingleFieldView
+      value={getGameName(item, data)}
+      small
+    />
+  );
+}
+
+function CategoryNameView({
+  panelData,
+}: {
+  panelData: StreamPanelData;
+}) {
+  const item =
+    panelData.currentItem;
+
+  const data =
+    parseDisplayData(item);
+
+  return (
+    <SingleFieldView
+      value={getCategoryName(item, data)}
+      tone="secondary"
+      small
+    />
+  );
+}
+
+function EstimateView({
+  panelData,
+}: {
+  panelData: StreamPanelData;
+}) {
+  const item =
+    panelData.currentItem;
+
+  const data =
+    parseDisplayData(item);
+
+  return (
+    <SingleFieldView
+      value={`EST: ${getEstimateText(data)}`}
+      tone="accent"
+    />
+  );
+}
+
 function RunInfoTextView({
   panelData,
 }: {
@@ -833,8 +1018,16 @@ function ScheduleCarouselView({
   const entries =
     normalizeScheduleEntries(schedule);
 
+  const rowsParam =
+    Number(
+      getQueryParam("rows", "2")
+    );
+
   const pageSize =
-    4;
+    Number.isFinite(rowsParam) &&
+    rowsParam > 0
+      ? Math.min(4, Math.max(1, Math.floor(rowsParam)))
+      : 2;
 
   const pageCount =
     Math.max(
@@ -1054,8 +1247,21 @@ export default function StreamDynamicOverlayPage() {
         <RunnerTagView panelData={panelData} />
       )}
 
+      {view === "game-name" && (
+        <GameNameView panelData={panelData} />
+      )}
+
+      {view === "category-name" && (
+        <CategoryNameView panelData={panelData} />
+      )}
+
+      {view === "estimate" && (
+        <EstimateView panelData={panelData} />
+      )}
+
       {(view === "info-bar" ||
-        view === "event-schedule") && (
+        view === "event-schedule" ||
+        view === "event-schedule-horizontal") && (
         <ScheduleCarouselView
           panelData={panelData}
           schedule={schedule}
@@ -1071,6 +1277,10 @@ export default function StreamDynamicOverlayPage() {
         view !== "runner-tag" &&
         view !== "info-bar" &&
         view !== "event-schedule" &&
+        view !== "event-schedule-horizontal" &&
+        view !== "game-name" &&
+        view !== "category-name" &&
+        view !== "estimate" &&
         view !== "intermission" &&
         view !== "runner-info" && (
           <CurrentRunView panelData={panelData} />
