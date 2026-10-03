@@ -39,9 +39,9 @@ const overlayOptions: Array<{
   {
     view: "schedule-ticker",
     title: "Horario tipo ticker",
-    description: "Barra horizontal segmentada tipo GDQ para OBS.",
+    description: "Barra segmentada con carrusel continuo hasta terminar el horario.",
     recommendedSize: "900x70",
-    urlSuffix: "&items=3",
+    urlSuffix: "&speed=5&itemWidth=310",
   },
   {
     view: "runner-tag",

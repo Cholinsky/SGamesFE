@@ -2,6 +2,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type CSSProperties,
 } from "react";
 import {
   Clock,
@@ -526,10 +527,12 @@ const overlayStyles = `
   }
 
   .sg-ticker-label {
+    position: relative;
+    z-index: 3;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 20px;
+    padding: 6px 24px;
     background:
       linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.18)),
       color-mix(in srgb, var(--overlay-secondary) 78%, #111827);
@@ -549,6 +552,7 @@ const overlayStyles = `
     text-shadow:
       3px 3px 0 var(--overlay-shadow),
       0 0 14px rgba(0,0,0,0.9);
+    box-shadow: 12px 0 18px rgba(0,0,0,0.38);
   }
 
   .sg-ticker-items {
@@ -558,16 +562,28 @@ const overlayStyles = `
     overflow: hidden;
   }
 
+  .sg-ticker-track {
+    display: flex;
+    align-items: stretch;
+    width: max-content;
+    min-width: max-content;
+    animation-name: sgTickerCarousel;
+    animation-duration: var(--ticker-duration, 48s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform;
+  }
+
   .sg-ticker-segment {
     position: relative;
-    min-width: 0;
-    flex: 1 1 0;
+    width: var(--ticker-item-width, 310px);
+    min-width: var(--ticker-item-width, 310px);
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     column-gap: 12px;
-    padding: 6px 22px 6px 28px;
-    clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 50%, calc(100% - 22px) 100%, 0 100%, 22px 50%);
+    padding: 6px 22px 6px 30px;
+    clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 0 100%, 24px 50%);
     background:
       linear-gradient(180deg, rgba(255,255,255,0.30), rgba(0,0,0,0.10)),
       color-mix(in srgb, var(--overlay-primary) 70%, #111827);
@@ -651,6 +667,16 @@ const overlayStyles = `
     font-size: clamp(16px, 2.3vw, 28px);
     font-weight: 400;
     text-transform: uppercase;
+  }
+
+  @keyframes sgTickerCarousel {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
   }
 
   @media (max-width: 700px) {
@@ -1265,30 +1291,41 @@ function ScheduleTickerView({
   const entries =
     normalizeScheduleEntries(schedule);
 
-  const itemsParam =
+  const speedParam =
     Number(
-      getQueryParam("items", "3")
+      getQueryParam("speed", "5")
     );
 
-  const pageSize =
-    Number.isFinite(itemsParam) &&
-    itemsParam > 0
-      ? Math.min(5, Math.max(1, Math.floor(itemsParam)))
-      : 3;
+  const itemWidthParam =
+    Number(
+      getQueryParam("itemWidth", "310")
+    );
 
-  const pageCount =
+  const secondsPerEntry =
+    Number.isFinite(speedParam) &&
+    speedParam > 0
+      ? Math.min(12, Math.max(2, speedParam))
+      : 5;
+
+  const itemWidth =
+    Number.isFinite(itemWidthParam) &&
+    itemWidthParam > 0
+      ? Math.min(520, Math.max(220, Math.floor(itemWidthParam)))
+      : 310;
+
+  const animationDuration =
     Math.max(
-      1,
-      Math.ceil(entries.length / pageSize)
+      18,
+      entries.length * secondsPerEntry
     );
 
-  const currentPage =
-    Math.floor(Date.now() / 6500) % pageCount;
-
-  const visibleEntries =
-    entries.slice(
-      currentPage * pageSize,
-      currentPage * pageSize + pageSize);
+  const repeatedEntries =
+    entries.length > 0
+      ? [
+          ...entries,
+          ...entries,
+        ]
+      : [];
 
   const eventName =
     schedule?.event ??
@@ -1303,28 +1340,38 @@ function ScheduleTickerView({
           Horario
         </div>
 
-        {visibleEntries.length > 0 ? (
+        {entries.length > 0 ? (
           <div className="sg-ticker-items">
-            {visibleEntries.map((entry) => (
-              <article
-                key={entry.id}
-                className="sg-ticker-segment"
-              >
-                <div className="sg-ticker-time">
-                  {entry.startTime}
-                </div>
+            <div
+              className="sg-ticker-track"
+              style={
+                {
+                  "--ticker-duration": `${animationDuration}s`,
+                  "--ticker-item-width": `${itemWidth}px`,
+                } as CSSProperties
+              }
+            >
+              {repeatedEntries.map((entry, index) => (
+                <article
+                  key={`${entry.id}-${index}`}
+                  className="sg-ticker-segment"
+                >
+                  <div className="sg-ticker-time">
+                    {entry.startTime}
+                  </div>
 
-                <div className="sg-ticker-main">
-                  <span className="sg-ticker-game">
-                    {entry.game}
-                  </span>
+                  <div className="sg-ticker-main">
+                    <span className="sg-ticker-game">
+                      {entry.game}
+                    </span>
 
-                  <span className="sg-ticker-meta">
-                    {entry.runnerName} · {formatScheduleDay(entry.dayDate)} · {entry.category} · {entry.platform}
-                  </span>
-                </div>
-              </article>
-            ))}
+                    <span className="sg-ticker-meta">
+                      {entry.runnerName} · {formatScheduleDay(entry.dayDate)} · {entry.category} · {entry.platform}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="sg-ticker-empty">
