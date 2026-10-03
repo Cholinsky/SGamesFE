@@ -6,12 +6,11 @@ import {
 import {
   Clock,
   Gamepad2,
-  MessageSquare,
   Radio,
   User,
   Users,
-  Zap,
 } from "lucide-react";
+import { API_URL } from "../config/api";
 import {
   getStreamPanelPublic,
   type StreamPanelData,
@@ -31,7 +30,48 @@ type DisplayData = {
   note?: string;
 };
 
+type PublicScheduleEntry = {
+  id?: string;
+  dayDate?: string;
+  DayDate?: string;
+  startTime?: string;
+  StartTime?: string;
+  durationMinutes?: number;
+  DurationMinutes?: number;
+  runnerName?: string | null;
+  RunnerName?: string | null;
+  game?: string | null;
+  Game?: string | null;
+  category?: string | null;
+  Category?: string | null;
+  platform?: string | null;
+  Platform?: string | null;
+  runStatus?: string | null;
+  RunStatus?: string | null;
+};
+
+type PublicScheduleResponse = {
+  eventActive?: boolean;
+  EventActive?: boolean;
+  isPublished?: boolean;
+  IsPublished?: boolean;
+  event?: string;
+  Event?: string;
+  eventId?: string;
+  EventId?: string;
+  entries?: PublicScheduleEntry[];
+  Entries?: PublicScheduleEntry[];
+};
+
 const overlayStyles = `
+  @font-face {
+    font-family: "SGamesOverlayFont";
+    src: url("/fonts/OVERLAY_FONT_NAME.OVERLAY_FONT_EXT") format("OVERLAY_FONT_FORMAT");
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+  }
+
   html,
   body,
   #root {
@@ -48,12 +88,24 @@ const overlayStyles = `
     background: transparent;
     color: #f8fafc;
     font-family:
+      "SGamesOverlayFont",
+      "Berani",
+      "Arial Black",
+      Impact,
       Inter,
       system-ui,
       -apple-system,
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
+    --overlay-primary: #22d3ee;
+    --overlay-secondary: #d946ef;
+    --overlay-accent: #facc15;
+    --overlay-bg: rgba(12, 10, 50, 0.84);
+    --overlay-border: rgba(34, 211, 238, 0.46);
+    --overlay-text: #f8fafc;
+    --overlay-muted: #cbd5e1;
+    --overlay-shadow: rgba(0, 0, 0, 0.86);
   }
 
   .dynamic-overlay-root * {
@@ -65,245 +117,326 @@ const overlayStyles = `
     --overlay-secondary: #d946ef;
     --overlay-accent: #facc15;
     --overlay-bg: rgba(12, 10, 50, 0.84);
-    --overlay-bg-soft: rgba(30, 27, 75, 0.82);
-    --overlay-border: rgba(34, 211, 238, 0.52);
-    --overlay-shadow: rgba(217, 70, 239, 0.35);
+    --overlay-border: rgba(34, 211, 238, 0.46);
+    --overlay-shadow-color: rgba(34, 211, 238, 0.42);
   }
 
-  .theme-autumn,
-  .theme-fall {
-    --overlay-primary: #94a3b8;
-    --overlay-secondary: #ef4444;
-    --overlay-accent: #fca5a5;
-    --overlay-bg: rgba(3, 5, 7, 0.88);
-    --overlay-bg-soft: rgba(15, 23, 42, 0.84);
+  .theme-autumn {
+    --overlay-primary: #ef4444;
+    --overlay-secondary: #f97316;
+    --overlay-accent: #facc15;
+    --overlay-bg: rgba(5, 7, 12, 0.84);
     --overlay-border: rgba(239, 68, 68, 0.50);
-    --overlay-shadow: rgba(239, 68, 68, 0.32);
+    --overlay-shadow-color: rgba(249, 115, 22, 0.38);
   }
 
   .theme-winter {
-    --overlay-primary: #bfdbfe;
-    --overlay-secondary: #38bdf8;
-    --overlay-accent: #e0f2fe;
-    --overlay-bg: rgba(2, 6, 23, 0.86);
-    --overlay-bg-soft: rgba(15, 23, 42, 0.82);
-    --overlay-border: rgba(56, 189, 248, 0.52);
-    --overlay-shadow: rgba(56, 189, 248, 0.34);
+    --overlay-primary: #1ae7ca;
+    --overlay-secondary: #12dd78;
+    --overlay-accent: #f2fbff;
+    --overlay-bg: rgba(1, 45, 58, 0.84);
+    --overlay-border: rgba(26, 231, 202, 0.52);
+    --overlay-shadow-color: rgba(26, 231, 202, 0.38);
   }
 
-  .sg-dynamic-panel {
-    border: 1px solid var(--overlay-border);
-    background:
-      linear-gradient(135deg, var(--overlay-bg), var(--overlay-bg-soft)),
-      radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--overlay-secondary), transparent 70%), transparent 28rem);
-    box-shadow:
-      0 0 36px rgba(0, 0, 0, 0.72),
-      0 0 26px var(--overlay-shadow),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(10px);
-  }
-
-  .sg-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    border: 1px solid var(--overlay-border);
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.35);
-    color: var(--overlay-accent);
-    padding: 0.26rem 0.7rem;
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .sg-current-run {
-    position: absolute;
-    left: 3.5vw;
-    right: 3.5vw;
-    bottom: 5.2vh;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 1rem;
-    align-items: end;
-  }
-
-  .sg-current-main {
-    min-width: 0;
-    border-radius: 1.35rem;
-    padding: 1rem 1.25rem;
-  }
-
-  .sg-current-main h1 {
-    margin: 0.45rem 0 0;
-    color: #ffffff;
-    font-size: clamp(2.3rem, 5vw, 5.6rem);
-    font-weight: 1000;
-    line-height: 0.92;
-    letter-spacing: -0.055em;
-    text-shadow: 0 3px 18px rgba(0,0,0,0.8), 0 0 20px var(--overlay-shadow);
-  }
-
-  .sg-current-main h2 {
-    margin: 0.3rem 0 0;
-    color: var(--overlay-primary);
-    font-size: clamp(1.1rem, 2vw, 2.1rem);
-    font-weight: 900;
-  }
-
-  .sg-current-meta {
-    display: grid;
-    gap: 0.55rem;
-    min-width: min(34vw, 30rem);
-    border-radius: 1.35rem;
-    padding: 1rem 1.15rem;
-  }
-
-  .sg-meta-row {
+  .sg-text-only {
+    width: 100vw;
+    height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    color: #cbd5e1;
-    font-size: clamp(0.9rem, 1.2vw, 1.15rem);
-    font-weight: 800;
+    padding: 4.6vh 5vw;
+    background: transparent;
+    pointer-events: none;
   }
 
-  .sg-meta-row strong {
-    color: #fff;
-    text-align: right;
-  }
-
-  .sg-runner-tag {
-    position: absolute;
-    left: 3vw;
-    top: 41vh;
-    min-width: 18rem;
-    max-width: 34rem;
-    border-radius: 0.9rem;
-    padding: 0.85rem 1.1rem;
-  }
-
-  .sg-runner-tag span {
-    color: var(--overlay-primary);
-    font-size: 0.75rem;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  .sg-runner-tag h1 {
-    margin: 0.15rem 0 0;
-    color: #ffffff;
-    font-size: clamp(1.6rem, 3vw, 3.2rem);
-    font-weight: 1000;
-    line-height: 0.95;
-  }
-
-  .sg-info-bar {
-    position: absolute;
-    left: 5vw;
-    right: 5vw;
-    bottom: 4vh;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border-radius: 1rem;
-    padding: 0.85rem 1.1rem;
-  }
-
-  .sg-info-icon {
-    display: flex;
-    height: 3.2rem;
-    width: 3.2rem;
-    flex-shrink: 0;
+  .sg-text-only.center {
     align-items: center;
     justify-content: center;
-    border-radius: 0.8rem;
-    background: color-mix(in srgb, var(--overlay-secondary), transparent 65%);
-    color: var(--overlay-accent);
-  }
-
-  .sg-info-bar h1 {
-    margin: 0;
-    color: #fff;
-    font-size: clamp(1.2rem, 2vw, 2.1rem);
-    font-weight: 950;
-  }
-
-  .sg-info-bar p {
-    margin: 0.1rem 0 0;
-    color: #cbd5e1;
-    font-size: clamp(0.9rem, 1.2vw, 1.15rem);
-    font-weight: 700;
-  }
-
-  .sg-next-run {
-    position: absolute;
-    right: 4vw;
-    bottom: 5vh;
-    width: min(52rem, 58vw);
-    border-radius: 1.25rem;
-    padding: 1rem 1.25rem;
-  }
-
-  .sg-next-run h1 {
-    margin: 0.35rem 0 0;
-    color: #fff;
-    font-size: clamp(1.8rem, 3.5vw, 4rem);
-    font-weight: 1000;
-    line-height: 0.94;
-    letter-spacing: -0.04em;
-  }
-
-  .sg-next-run p {
-    margin: 0.35rem 0 0;
-    color: var(--overlay-primary);
-    font-size: clamp(1rem, 1.6vw, 1.6rem);
-    font-weight: 850;
-  }
-
-  .sg-intermission {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5vw;
-  }
-
-  .sg-intermission-card {
-    width: min(70rem, 82vw);
-    border-radius: 2rem;
-    padding: clamp(2rem, 5vw, 5rem);
     text-align: center;
   }
 
-  .sg-intermission-card h1 {
-    margin: 0.8rem 0 0;
-    color: #fff;
-    font-size: clamp(3rem, 7vw, 8rem);
-    font-weight: 1000;
-    line-height: 0.85;
-    letter-spacing: -0.07em;
+  .sg-text-only.left {
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
   }
 
-  .sg-intermission-card p {
-    margin: 1rem auto 0;
-    max-width: 54rem;
-    color: #cbd5e1;
-    font-size: clamp(1.2rem, 2vw, 2rem);
-    font-weight: 800;
+  .sg-text-stack {
+    width: min(1600px, 92vw);
+  }
+
+  .sg-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    margin-bottom: 0.45em;
+    color: var(--overlay-primary);
+    font-size: clamp(22px, 2vw, 42px);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-shadow:
+      4px 4px 0 var(--overlay-shadow),
+      0 0 18px var(--overlay-shadow-color);
+  }
+
+  .sg-text-title {
+    margin: 0;
+    color: var(--overlay-text);
+    font-size: clamp(54px, 8.8vw, 158px);
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    text-shadow:
+      7px 7px 0 var(--overlay-shadow),
+      0 0 26px var(--overlay-shadow-color),
+      0 0 46px rgba(0, 0, 0, 0.75);
+  }
+
+  .sg-text-subtitle {
+    margin: 0.35em 0 0;
+    color: var(--overlay-secondary);
+    font-size: clamp(26px, 4.2vw, 78px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: 0.02em;
+    text-shadow:
+      5px 5px 0 var(--overlay-shadow),
+      0 0 22px var(--overlay-shadow-color);
+  }
+
+  .sg-text-meta {
+    margin: 0.45em 0 0;
+    color: var(--overlay-muted);
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-size: clamp(18px, 2vw, 36px);
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    text-shadow:
+      3px 3px 0 var(--overlay-shadow),
+      0 0 18px rgba(0, 0, 0, 0.9);
+  }
+
+  .sg-runner-tag-text {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1vh 3vw;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .sg-runner-tag-text h1 {
+    margin: 0;
+    color: var(--overlay-text);
+    font-size: clamp(40px, 14vw, 160px);
+    font-weight: 400;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    text-shadow:
+      6px 6px 0 var(--overlay-shadow),
+      0 0 24px var(--overlay-shadow-color),
+      0 0 42px rgba(0, 0, 0, 0.85);
+  }
+
+  .sg-next-run-text .sg-text-title {
+    font-size: clamp(42px, 7vw, 118px);
+  }
+
+  .sg-next-run-text .sg-text-subtitle {
+    font-size: clamp(22px, 3.2vw, 58px);
+  }
+
+  .sg-schedule-root {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 4.6vh 4vw;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .sg-schedule-card {
+    width: min(1780px, 94vw);
+    height: min(920px, 90vh);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    border: 4px solid var(--overlay-border);
+    border-radius: 26px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 28%),
+      radial-gradient(circle at 20% 0%, var(--overlay-shadow-color), transparent 34%),
+      rgba(5, 7, 12, 0.86);
+    box-shadow:
+      0 0 0 6px rgba(0, 0, 0, 0.32),
+      0 0 42px var(--overlay-shadow-color);
+    overflow: hidden;
+  }
+
+  .sg-schedule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 32px 18px;
+    border-bottom: 2px solid color-mix(in srgb, var(--overlay-border) 60%, transparent);
+  }
+
+  .sg-schedule-header h1 {
+    margin: 0;
+    color: var(--overlay-text);
+    font-size: clamp(32px, 3.8vw, 72px);
+    font-weight: 400;
+    line-height: 1;
+    text-shadow:
+      5px 5px 0 var(--overlay-shadow),
+      0 0 20px var(--overlay-shadow-color);
+  }
+
+  .sg-schedule-header span {
+    color: var(--overlay-primary);
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-size: clamp(16px, 1.6vw, 30px);
+    font-weight: 1000;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .sg-schedule-list {
+    display: grid;
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+  }
+
+  .sg-schedule-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 260px;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .sg-schedule-row:nth-child(2n) {
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .sg-schedule-time {
+    color: var(--overlay-accent);
+    font-family:
+      "Arial Black",
+      Impact,
+      Inter,
+      system-ui,
+      sans-serif;
+    font-size: clamp(26px, 3.2vw, 60px);
+    font-weight: 900;
+    line-height: 1;
+    text-shadow:
+      4px 4px 0 var(--overlay-shadow),
+      0 0 18px var(--overlay-shadow-color);
+  }
+
+  .sg-schedule-main h2 {
+    margin: 0;
+    color: var(--overlay-text);
+    font-size: clamp(26px, 3vw, 58px);
+    font-weight: 400;
+    line-height: 1.02;
+    text-shadow:
+      4px 4px 0 var(--overlay-shadow),
+      0 0 18px rgba(0, 0, 0, 0.85);
+  }
+
+  .sg-schedule-main p {
+    margin: 8px 0 0;
+    color: var(--overlay-muted);
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-size: clamp(15px, 1.45vw, 28px);
+    font-weight: 900;
+    line-height: 1.22;
+    text-transform: uppercase;
+  }
+
+  .sg-schedule-runner {
+    color: var(--overlay-secondary);
+    font-size: clamp(22px, 2.2vw, 44px);
+    font-weight: 400;
+    line-height: 1;
+    text-align: right;
+    text-shadow:
+      4px 4px 0 var(--overlay-shadow),
+      0 0 18px var(--overlay-shadow-color);
+  }
+
+  .sg-schedule-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 32px 22px;
+    color: var(--overlay-muted);
+    border-top: 2px solid color-mix(in srgb, var(--overlay-border) 60%, transparent);
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-size: clamp(14px, 1.4vw, 24px);
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .sg-schedule-empty {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    color: var(--overlay-muted);
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-size: clamp(24px, 2.2vw, 42px);
+    font-weight: 900;
+    text-align: center;
   }
 
   @media (max-width: 900px) {
-    .sg-current-run {
-      grid-template-columns: 1fr;
+    .sg-schedule-row {
+      grid-template-columns: 120px 1fr;
     }
 
-    .sg-current-meta {
-      min-width: 0;
+    .sg-schedule-runner {
+      grid-column: 1 / -1;
+      text-align: left;
     }
   }
 `;
@@ -316,6 +449,65 @@ function getView() {
   return new URLSearchParams(
     window.location.search
   ).get("view") ?? "current-run";
+}
+
+function getQueryParam(
+  key: string,
+  fallback = ""
+) {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  return new URLSearchParams(
+    window.location.search
+  ).get(key) ?? fallback;
+}
+
+function sanitizeFontName(
+  value: string
+) {
+  const clean =
+    String(value || "Berani")
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]/g, "");
+
+  return clean || "Berani";
+}
+
+function sanitizeFontExt(
+  value: string
+) {
+  const clean =
+    String(value || "ttf")
+      .trim()
+      .toLowerCase();
+
+  if (
+    clean === "ttf" ||
+    clean === "otf" ||
+    clean === "woff" ||
+    clean === "woff2"
+  ) {
+    return clean;
+  }
+
+  return "ttf";
+}
+
+function getFontFormat(
+  extension: string
+) {
+  switch (extension) {
+    case "otf":
+      return "opentype";
+    case "woff":
+      return "woff";
+    case "woff2":
+      return "woff2";
+    default:
+      return "truetype";
+  }
 }
 
 function getThemeClass(
@@ -407,6 +599,101 @@ function getRunnerLine(
     "Runner";
 }
 
+function normalizeScheduleEntries(
+  response?: PublicScheduleResponse | null
+) {
+  const entries =
+    response?.entries ??
+    response?.Entries ??
+    [];
+
+  return entries
+    .map((entry) => {
+      const dayDate =
+        entry.dayDate ??
+        entry.DayDate ??
+        "";
+
+      const startTime =
+        entry.startTime ??
+        entry.StartTime ??
+        "";
+
+      return {
+        id:
+          entry.id ??
+          `${dayDate}-${startTime}-${entry.game ?? entry.Game ?? ""}`,
+
+        dayDate:
+          String(dayDate),
+
+        startTime:
+          String(startTime).slice(0, 5),
+
+        durationMinutes:
+          Number(
+            entry.durationMinutes ??
+            entry.DurationMinutes ??
+            0),
+
+        runnerName:
+          entry.runnerName ??
+          entry.RunnerName ??
+          "Runner",
+
+        game:
+          entry.game ??
+          entry.Game ??
+          "Run",
+
+        category:
+          entry.category ??
+          entry.Category ??
+          "Categoría",
+
+        platform:
+          entry.platform ??
+          entry.Platform ??
+          "Plataforma",
+
+        runStatus:
+          entry.runStatus ??
+          entry.RunStatus ??
+          null,
+      };
+    })
+    .filter((entry) =>
+      Boolean(entry.dayDate) &&
+      Boolean(entry.startTime))
+    .sort((a, b) =>
+      `${a.dayDate} ${a.startTime}`.localeCompare(
+        `${b.dayDate} ${b.startTime}`));
+}
+
+function formatScheduleDay(
+  value: string
+) {
+  if (!value) {
+    return "";
+  }
+
+  const date =
+    new Date(`${value}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString(
+    "es-MX",
+    {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    }
+  );
+}
+
 function CurrentRunView({
   panelData,
 }: {
@@ -419,44 +706,27 @@ function CurrentRunView({
     parseDisplayData(item);
 
   return (
-    <div className="sg-current-run">
-      <section className="sg-dynamic-panel sg-current-main">
-        <span className="sg-pill">
-          <Gamepad2 size={14} />
-          RUN ACTUAL
-        </span>
+    <section className="sg-text-only center">
+      <div className="sg-text-stack">
+        <div className="sg-kicker">
+          <Gamepad2 size={24} />
+          Run actual
+        </div>
 
-        <h1>
-          {getMainTitle(item, data)}
+        <h1 className="sg-text-title">
+          {getRunnerLine(item, data)}
         </h1>
 
-        <h2>
-          {getSubtitle(item, data)}
+        <h2 className="sg-text-subtitle">
+          {getMainTitle(item, data)}
         </h2>
-      </section>
 
-      <aside className="sg-dynamic-panel sg-current-meta">
-        <div className="sg-meta-row">
-          <span>Runner</span>
-          <strong>{getRunnerLine(item, data)}</strong>
-        </div>
-
-        <div className="sg-meta-row">
-          <span>Estimado</span>
-          <strong>{data.estimate || "--:--:--"}</strong>
-        </div>
-
-        <div className="sg-meta-row">
-          <span>Comentaristas</span>
-          <strong>{data.commentators || "Staff"}</strong>
-        </div>
-
-        <div className="sg-meta-row">
-          <span>Idioma</span>
-          <strong>{data.language || "ES"}</strong>
-        </div>
-      </aside>
-    </div>
+        <p className="sg-text-meta">
+          {getSubtitle(item, data)}
+          {data.estimate ? ` · Est. ${data.estimate}` : ""}
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -473,19 +743,25 @@ function NextRunView({
     parseDisplayData(item);
 
   return (
-    <section className="sg-dynamic-panel sg-next-run">
-      <span className="sg-pill">
-        <Clock size={14} />
-        SIGUIENTE RUN
-      </span>
+    <section className="sg-text-only left sg-next-run-text">
+      <div className="sg-text-stack">
+        <div className="sg-kicker">
+          <Clock size={24} />
+          Siguiente run
+        </div>
 
-      <h1>
-        {getMainTitle(item, data)}
-      </h1>
+        <h1 className="sg-text-title">
+          {getMainTitle(item, data)}
+        </h1>
 
-      <p>
-        {getRunnerLine(item, data)} · {getSubtitle(item, data)}
-      </p>
+        <h2 className="sg-text-subtitle">
+          {getRunnerLine(item, data)}
+        </h2>
+
+        <p className="sg-text-meta">
+          {getSubtitle(item, data)}
+        </p>
+      </div>
     </section>
   );
 }
@@ -502,11 +778,7 @@ function RunnerTagView({
     parseDisplayData(item);
 
   return (
-    <section className="sg-dynamic-panel sg-runner-tag">
-      <span>
-        RUNNER
-      </span>
-
+    <section className="sg-runner-tag-text">
       <h1>
         {getRunnerLine(item, data)}
       </h1>
@@ -514,7 +786,7 @@ function RunnerTagView({
   );
 }
 
-function InfoBarView({
+function RunInfoTextView({
   panelData,
 }: {
   panelData: StreamPanelData;
@@ -526,72 +798,173 @@ function InfoBarView({
     parseDisplayData(item);
 
   return (
-    <section className="sg-dynamic-panel sg-info-bar">
-      <div className="sg-info-icon">
-        <MessageSquare size={24} />
-      </div>
+    <section className="sg-text-only center">
+      <div className="sg-text-stack">
+        <div className="sg-kicker">
+          <Users size={24} />
+          Info runner
+        </div>
 
-      <div>
-        <h1>
-          {item?.title ||
-            panelData.settings.overlayHeadline ||
-            panelData.eventName}
+        <h1 className="sg-text-title">
+          {getRunnerLine(item, data)}
         </h1>
 
-        <p>
-          {data.note ||
-            item?.detailText ||
-            item?.subtitle ||
-            panelData.settings.overlaySubheadline ||
-            panelData.settings.streamStatus ||
-            "Información del stream"}
+        <h2 className="sg-text-subtitle">
+          {getMainTitle(item, data)}
+        </h2>
+
+        <p className="sg-text-meta">
+          {data.commentators
+            ? `Comentaristas: ${data.commentators}`
+            : getSubtitle(item, data)}
         </p>
       </div>
     </section>
   );
 }
 
-function IntermissionView({
+function ScheduleCarouselView({
   panelData,
+  schedule,
 }: {
   panelData: StreamPanelData;
+  schedule: PublicScheduleResponse | null;
 }) {
-  const item =
-    panelData.currentItem;
+  const entries =
+    normalizeScheduleEntries(schedule);
+
+  const pageSize =
+    4;
+
+  const pageCount =
+    Math.max(
+      1,
+      Math.ceil(entries.length / pageSize)
+    );
+
+  const currentPage =
+    Math.floor(Date.now() / 8500) % pageCount;
+
+  const visibleEntries =
+    entries.slice(
+      currentPage * pageSize,
+      currentPage * pageSize + pageSize);
 
   return (
-    <section className="sg-intermission">
-      <div className="sg-dynamic-panel sg-intermission-card">
-        <span className="sg-pill">
-          <Radio size={14} />
-          {panelData.settings.streamStatus || "INTERMEDIO"}
-        </span>
+    <section className="sg-schedule-root">
+      <div className="sg-schedule-card">
+        <header className="sg-schedule-header">
+          <h1>
+            Horario del evento
+          </h1>
 
-        <h1>
-          {item?.title ||
-            panelData.settings.overlayHeadline ||
-            "SGames"}
-        </h1>
+          <span>
+            {(schedule?.event ??
+              schedule?.Event ??
+              panelData.eventName)}
+          </span>
+        </header>
 
-        <p>
-          {item?.detailText ||
-            item?.subtitle ||
-            panelData.settings.overlaySubheadline ||
-            "Volvemos en un momento"}
-        </p>
+        {visibleEntries.length > 0 ? (
+          <div className="sg-schedule-list">
+            {visibleEntries.map((entry) => (
+              <article
+                key={entry.id}
+                className="sg-schedule-row"
+              >
+                <div className="sg-schedule-time">
+                  {entry.startTime}
+                </div>
+
+                <div className="sg-schedule-main">
+                  <h2>
+                    {entry.game}
+                  </h2>
+
+                  <p>
+                    {formatScheduleDay(entry.dayDate)} · {entry.category} · {entry.platform}
+                  </p>
+                </div>
+
+                <div className="sg-schedule-runner">
+                  {entry.runnerName}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="sg-schedule-empty">
+            El horario público aparecerá aquí cuando esté publicado.
+          </div>
+        )}
+
+        <footer className="sg-schedule-footer">
+          <span>
+            Página {currentPage + 1} / {pageCount}
+          </span>
+
+          <span>
+            Super Games
+          </span>
+        </footer>
       </div>
     </section>
   );
+}
+
+async function getCurrentPublicSchedule() {
+  const response =
+    await fetch(
+      `${API_URL}/Schedule/public-current?t=${Date.now()}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return await response.json() as PublicScheduleResponse;
 }
 
 export default function StreamDynamicOverlayPage() {
   const [panelData, setPanelData] =
     useState<StreamPanelData | null>(null);
 
+  const [schedule, setSchedule] =
+    useState<PublicScheduleResponse | null>(null);
+
   const view =
     useMemo(
       () => getView(),
       []
+    );
+
+  const fontName =
+    sanitizeFontName(
+      getQueryParam("font", "Berani")
+    );
+
+  const fontExt =
+    sanitizeFontExt(
+      getQueryParam("fontExt", "ttf")
+    );
+
+  const overlayCss =
+    useMemo(
+      () =>
+        overlayStyles
+          .split("OVERLAY_FONT_NAME")
+          .join(fontName)
+          .split("OVERLAY_FONT_EXT")
+          .join(fontExt)
+          .split("OVERLAY_FONT_FORMAT")
+          .join(getFontFormat(fontExt)),
+      [
+        fontName,
+        fontExt,
+      ]
     );
 
   useEffect(() => {
@@ -625,10 +998,41 @@ export default function StreamDynamicOverlayPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled =
+      false;
+
+    async function loadSchedule() {
+      try {
+        const data =
+          await getCurrentPublicSchedule();
+
+        if (!cancelled) {
+          setSchedule(data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadSchedule();
+
+    const interval =
+      window.setInterval(
+        loadSchedule,
+        30000
+      );
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   if (!panelData) {
     return (
       <main className="dynamic-overlay-root">
-        <style>{overlayStyles}</style>
+        <style>{overlayCss}</style>
       </main>
     );
   }
@@ -640,7 +1044,7 @@ export default function StreamDynamicOverlayPage() {
 
   return (
     <main className={`dynamic-overlay-root ${themeClass}`}>
-      <style>{overlayStyles}</style>
+      <style>{overlayCss}</style>
 
       {view === "next-run" && (
         <NextRunView panelData={panelData} />
@@ -650,18 +1054,25 @@ export default function StreamDynamicOverlayPage() {
         <RunnerTagView panelData={panelData} />
       )}
 
-      {view === "info-bar" && (
-        <InfoBarView panelData={panelData} />
+      {(view === "info-bar" ||
+        view === "event-schedule") && (
+        <ScheduleCarouselView
+          panelData={panelData}
+          schedule={schedule}
+        />
       )}
 
-      {view === "intermission" && (
-        <IntermissionView panelData={panelData} />
+      {(view === "intermission" ||
+        view === "runner-info") && (
+        <RunInfoTextView panelData={panelData} />
       )}
 
       {view !== "next-run" &&
         view !== "runner-tag" &&
         view !== "info-bar" &&
-        view !== "intermission" && (
+        view !== "event-schedule" &&
+        view !== "intermission" &&
+        view !== "runner-info" && (
           <CurrentRunView panelData={panelData} />
         )}
     </main>

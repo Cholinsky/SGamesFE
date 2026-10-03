@@ -174,8 +174,17 @@ export function getStreamOverlayUrl() {
   return `${window.location.origin}/overlay/stream`;
 }
 
+export type StreamDynamicOverlayView =
+  | "current-run"
+  | "next-run"
+  | "runner-tag"
+  | "info-bar"
+  | "intermission"
+  | "event-schedule"
+  | "runner-info";
+
 export function getStreamDynamicOverlayUrl(
-  view: "current-run" | "next-run" | "runner-tag" | "info-bar" | "intermission" = "current-run"
+  view: StreamDynamicOverlayView = "current-run"
 ) {
   return `${window.location.origin}/overlay/stream/dynamic?view=${view}`;
 }

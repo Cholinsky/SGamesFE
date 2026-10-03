@@ -34,32 +34,32 @@ const overlayOptions: Array<{
 }> = [
   {
     view: "current-run",
-    title: "Current Run",
-    description: "Juego, categoría, runner, estimado y comentaristas.",
+    title: "Current Run Text",
+    description: "Texto sin marco: runner, juego, categoría y estimado.",
     recommendedSize: "1920x1080",
   },
   {
     view: "next-run",
-    title: "Next Run",
-    description: "Tarjeta compacta para anunciar la siguiente run.",
+    title: "Next Run Text",
+    description: "Texto sin marco para anunciar la siguiente run.",
     recommendedSize: "1920x1080",
   },
   {
     view: "runner-tag",
-    title: "Runner Tag",
-    description: "Nameplate pequeño para poner sobre barras existentes.",
+    title: "Runner Text",
+    description: "Sólo letras del runner, sin recuadro ni fondo.",
     recommendedSize: "800x220",
   },
   {
     view: "info-bar",
-    title: "Info Bar",
-    description: "Mensaje rápido para avisos, breaks o información del staff.",
-    recommendedSize: "1920x240",
+    title: "Horario Evento",
+    description: "Carrusel tipo GDQ con runs del horario público.",
+    recommendedSize: "1920x1080",
   },
   {
     view: "intermission",
-    title: "Intermission",
-    description: "Tarjeta central para BRB, comenzando o terminando stream.",
+    title: "Info Runner",
+    description: "Texto grande sin marco para runner + juego.",
     recommendedSize: "1920x1080",
   },
 ];
