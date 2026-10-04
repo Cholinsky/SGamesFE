@@ -25,6 +25,7 @@ import StreamTimerOverlayPage from "./pages/StreamTimerOverlayPage";
 import RunnerLoginPage from "./pages/RunnerLoginPage";
 import RunnerRegisterPage from "./pages/RunnerRegisterPage";
 import RunnerProfilePage from "./pages/RunnerProfilePage";
+import RunnerRunsPage from "./pages/RunnerRunsPage";
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
           { path: "runner/login", Component: RunnerLoginPage },
           { path: "runner/registro", Component: RunnerRegisterPage },
           { path: "runner/perfil", Component: RunnerProfilePage },
+          { path: "runner/runs", Component: RunnerRunsPage },
         ],
       },
       {

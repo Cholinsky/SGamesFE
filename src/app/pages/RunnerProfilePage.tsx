@@ -4,7 +4,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   clearRunnerToken,
@@ -315,6 +315,13 @@ export default function RunnerProfilePage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
+              <Link
+                to="/runner/runs"
+                className="rounded-2xl border border-orange-500/40 px-4 py-2 font-bold text-orange-200 hover:bg-orange-500/10"
+              >
+                Mis runs
+              </Link>
+
               <button
                 type="button"
                 onClick={logout}
