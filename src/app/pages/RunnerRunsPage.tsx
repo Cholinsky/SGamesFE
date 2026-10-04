@@ -301,6 +301,13 @@ export default function RunnerRunsPage() {
 
           <div className="flex flex-wrap gap-2">
             <Link
+              to="/runner/postular"
+              className="rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 px-4 py-2 font-black text-black transition hover:scale-[1.01]"
+            >
+              Postular runs
+            </Link>
+
+            <Link
               to="/runner/perfil"
               className="rounded-2xl border border-slate-700 px-4 py-2 font-bold text-slate-300 hover:border-orange-400"
             >
