@@ -1,4 +1,5 @@
 import {
+  type ChangeEvent,
   type FormEvent,
   useEffect,
   useState,
@@ -11,6 +12,8 @@ import {
   getRunnerMe,
   type RunnerAccountMe,
   updateRunnerMe,
+  uploadRunnerBannerImage,
+  uploadRunnerProfileImage,
 } from "../services/runnerAuthService";
 
 const defaultProfile = {
@@ -45,6 +48,12 @@ export default function RunnerProfilePage() {
     useState(true);
 
   const [saving, setSaving] =
+    useState(false);
+
+  const [uploadingAvatar, setUploadingAvatar] =
+    useState(false);
+
+  const [uploadingBanner, setUploadingBanner] =
     useState(false);
 
   useEffect(() => {
@@ -104,6 +113,90 @@ export default function RunnerProfilePage() {
       ...current,
       [key]: value,
     }));
+  }
+
+  function syncProfileFromRunner(
+    data: RunnerAccountMe
+  ) {
+    setRunner(data);
+
+    setForm((current) => ({
+      ...current,
+      profileImageUrl:
+        data.profileImageUrl ?? "",
+      bannerImageUrl:
+        data.bannerImageUrl ?? "",
+    }));
+  }
+
+  async function handleAvatarUpload(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+
+      const updated =
+        await uploadRunnerProfileImage(file);
+
+      syncProfileFromRunner(updated);
+
+      toast.success(
+        "Imagen de perfil actualizada."
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo subir la imagen de perfil."
+      );
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function handleBannerUpload(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      setUploadingBanner(true);
+
+      const updated =
+        await uploadRunnerBannerImage(file);
+
+      syncProfileFromRunner(updated);
+
+      toast.success(
+        "Banner actualizado."
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo subir el banner."
+      );
+    } finally {
+      setUploadingBanner(false);
+    }
   }
 
   async function handleSave(
@@ -378,6 +471,76 @@ export default function RunnerProfilePage() {
             </h2>
 
             <div className="mt-6 space-y-5">
+              <div className="rounded-2xl border border-orange-500/25 bg-black/40 p-4">
+                <span className="text-sm font-bold text-slate-300">
+                  Imagen de perfil
+                </span>
+
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 px-4 py-3 font-black text-black transition hover:scale-[1.01]">
+                    {uploadingAvatar
+                      ? "Subiendo..."
+                      : "Subir avatar"}
+
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <p className="text-xs text-slate-400">
+                    JPG, PNG, WEBP o GIF. Máximo 5 MB.
+                  </p>
+                </div>
+
+                <input
+                  value={form.profileImageUrl}
+                  onChange={(event) =>
+                    updateField("profileImageUrl", event.target.value)
+                  }
+                  className="mt-3 w-full rounded-2xl border border-red-500/25 bg-black px-4 py-3 text-white outline-none focus:border-orange-400"
+                  placeholder="También puedes pegar una URL manualmente"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-orange-500/25 bg-black/40 p-4">
+                <span className="text-sm font-bold text-slate-300">
+                  Banner de perfil
+                </span>
+
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 px-4 py-3 font-black text-black transition hover:scale-[1.01]">
+                    {uploadingBanner
+                      ? "Subiendo..."
+                      : "Subir banner"}
+
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={handleBannerUpload}
+                      disabled={uploadingBanner}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <p className="text-xs text-slate-400">
+                    JPG, PNG, WEBP o GIF. Máximo 8 MB.
+                  </p>
+                </div>
+
+                <input
+                  value={form.bannerImageUrl}
+                  onChange={(event) =>
+                    updateField("bannerImageUrl", event.target.value)
+                  }
+                  className="mt-3 w-full rounded-2xl border border-red-500/25 bg-black px-4 py-3 text-white outline-none focus:border-orange-400"
+                  placeholder="También puedes pegar una URL manualmente"
+                />
+              </div>
+
               <label className="block">
                 <span className="text-sm font-bold text-slate-300">
                   Twitch
@@ -412,26 +575,12 @@ export default function RunnerProfilePage() {
                 </span>
                 <input value={form.discordUser} onChange={(event) => updateField("discordUser", event.target.value)} className="mt-2 w-full rounded-2xl border border-red-500/25 bg-black px-4 py-3 text-white outline-none focus:border-orange-400" />
               </label>
-
-              <label className="block">
-                <span className="text-sm font-bold text-slate-300">
-                  Avatar URL
-                </span>
-                <input value={form.profileImageUrl} onChange={(event) => updateField("profileImageUrl", event.target.value)} className="mt-2 w-full rounded-2xl border border-red-500/25 bg-black px-4 py-3 text-white outline-none focus:border-orange-400" />
-              </label>
-
-              <label className="block">
-                <span className="text-sm font-bold text-slate-300">
-                  Banner URL
-                </span>
-                <input value={form.bannerImageUrl} onChange={(event) => updateField("bannerImageUrl", event.target.value)} className="mt-2 w-full rounded-2xl border border-red-500/25 bg-black px-4 py-3 text-white outline-none focus:border-orange-400" />
-              </label>
             </div>
           </section>
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploadingAvatar || uploadingBanner}
             className="lg:col-span-2 w-full rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 px-5 py-3 font-black text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving
