@@ -22,6 +22,9 @@ import AdminStream from "./pages/admin/AdminStream";
 import StreamOverlayPage from "./pages/StreamOverlayPage";
 import StreamDynamicOverlayPage from "./pages/StreamDynamicOverlayPage";
 import StreamTimerOverlayPage from "./pages/StreamTimerOverlayPage";
+import RunnerLoginPage from "./pages/RunnerLoginPage";
+import RunnerRegisterPage from "./pages/RunnerRegisterPage";
+import RunnerProfilePage from "./pages/RunnerProfilePage";
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +39,9 @@ export const router = createBrowserRouter([
           { path: "horario", Component: HorarioPage },
           { path: "runs", Component: RunsPage },
           { path: "clips", Component: ClipsPage },
+          { path: "runner/login", Component: RunnerLoginPage },
+          { path: "runner/registro", Component: RunnerRegisterPage },
+          { path: "runner/perfil", Component: RunnerProfilePage },
         ],
       },
       {
@@ -58,7 +64,6 @@ export const router = createBrowserRouter([
         path: "/admin/login",
         Component: AdminLogin,
       },
-      
       {
         path: "/admin",
         element: (
