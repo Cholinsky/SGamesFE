@@ -21,7 +21,7 @@ const emptyForm = {
   categoryName: "",
   platformName: "",
   estimatedTime: "",
-  gameReleaseDate: "",
+  gameReleaseYear: "",
   runType: "Individual",
   isRace: false,
   maxPlayers: 1,
@@ -130,8 +130,10 @@ export default function RunnerRunsPage() {
       estimatedTime:
         form.estimatedTime.trim(),
 
-      gameReleaseDate:
-        form.gameReleaseDate || null,
+      gameReleaseYear:
+  form.gameReleaseYear
+    ? Number(form.gameReleaseYear)
+    : null,
 
       runType:
         form.isRace
@@ -224,7 +226,8 @@ export default function RunnerRunsPage() {
       categoryName: run.categoryName,
       platformName: run.platformName,
       estimatedTime: run.estimatedTime,
-      gameReleaseDate: run.gameReleaseDate ?? "",
+      gameReleaseYear:
+  run.gameReleaseYear?.toString() ?? "",
       runType: run.runType,
       isRace: run.isRace,
       maxPlayers: run.maxPlayers,
@@ -394,17 +397,23 @@ export default function RunnerRunsPage() {
 
               <label className="block">
                 <span className="text-sm font-bold text-slate-300">
-                  Fecha de lanzamiento
-                </span>
+    Año de lanzamiento
+  </span>
 
-                <input
-                  type="date"
-                  value={form.gameReleaseDate}
-                  onChange={(event) =>
-                    updateField("gameReleaseDate", event.target.value)
-                  }
-                  className="mt-2 w-full rounded-2xl border border-red-500/25 bg-black px-4 py-3 text-white outline-none focus:border-orange-400"
-                />
+  <input
+    type="number"
+    min="1950"
+    max={new Date().getFullYear()}
+    placeholder="Ej. 2017"
+    value={form.gameReleaseYear}
+    onChange={(event) =>
+      updateField(
+        "gameReleaseYear",
+        event.target.value
+      )
+    }
+    className="mt-2 w-full rounded-2xl border border-red-500/25 bg-black px-4 py-3 text-white outline-none focus:border-orange-400"
+  />
               </label>
 
               <label className="flex items-center gap-3 rounded-2xl border border-red-500/25 bg-black px-4 py-3 md:col-span-2">
@@ -530,9 +539,9 @@ export default function RunnerRunsPage() {
                             {run.estimatedTime}
                           </span>
 
-                          {run.gameReleaseDate && (
+                          {run.gameReleaseYear && (
                             <span className="rounded-full bg-slate-700/60 px-3 py-1 text-xs font-black text-slate-200">
-                              {run.gameReleaseDate}
+                              {run.gameReleaseYear}
                             </span>
                           )}
                         </div>
