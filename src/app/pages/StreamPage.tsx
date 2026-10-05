@@ -104,7 +104,8 @@ function extractTwitchChannel(
 }
 
 function getTwitchEmbedUrl(
-  twitchUrl?: string | null
+  twitchUrl?: string | null,
+  muted = false
 ) {
   const channel =
     extractTwitchChannel(
@@ -119,7 +120,7 @@ function getTwitchEmbedUrl(
     window.location.hostname ||
     "localhost";
 
-  return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(parent)}&muted=false&autoplay=false`;
+  return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(parent)}&muted=${muted ? "true" : "false"}&autoplay=false`;
 }
 
 function getRunnerLine(
@@ -234,6 +235,16 @@ export default function StreamPage() {
     useMemo(
       () =>
         getTwitchEmbedUrl(
+          officialTwitchUrl,
+          false
+        ),
+      [officialTwitchUrl]
+    );
+
+  const officialTwitchLogin =
+    useMemo(
+      () =>
+        extractTwitchChannel(
           officialTwitchUrl
         ),
       [officialTwitchUrl]
@@ -266,6 +277,27 @@ export default function StreamPage() {
     runnerPublicProfile
       ? displayData.runnerProfileImageUrl?.trim() || ""
       : "";
+
+  const normalizedRunnerTwitchUrl =
+    runnerTwitchUrl ||
+    (runnerTwitchLogin
+      ? `https://www.twitch.tv/${runnerTwitchLogin}`
+      : "");
+
+  const runnerTwitchEmbedUrl =
+    useMemo(
+      () =>
+        getTwitchEmbedUrl(
+          normalizedRunnerTwitchUrl,
+          true
+        ),
+      [normalizedRunnerTwitchUrl]
+    );
+
+  const showRunnerPlayer =
+    Boolean(runnerTwitchEmbedUrl) &&
+    runnerTwitchLogin.toLowerCase() !==
+      officialTwitchLogin.toLowerCase();
 
   const runnerLine =
     getRunnerLine(
@@ -306,66 +338,128 @@ export default function StreamPage() {
         </div>
 
         <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[1.7fr_0.8fr]">
-          <Card className="sgames-glass sgames-neon-border overflow-hidden">
-            <CardHeader className="border-b border-[var(--sg-border)]">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-[var(--sg-text)]">
-                    <Twitch className="h-5 w-5 text-violet-300" />
-                    Transmisión oficial
-                  </CardTitle>
+          <div className="space-y-6">
+            <Card className="sgames-glass sgames-neon-border overflow-hidden">
+              <CardHeader className="border-b border-[var(--sg-border)]">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-[var(--sg-text)]">
+                      <Twitch className="h-5 w-5 text-violet-300" />
+                      Transmisión oficial
+                    </CardTitle>
 
-                  <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
-                    {panelData?.eventName ||
-                      publicSettings?.eventName ||
-                      "Super Games"}
-                  </p>
-                </div>
+                    <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                      {panelData?.eventName ||
+                        publicSettings?.eventName ||
+                        "Super Games"}
+                    </p>
+                  </div>
 
-                {officialTwitchUrl && (
-                  <a
-                    href={officialTwitchUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button
-                      variant="outline"
-                      className="sgames-outline-button"
+                  {officialTwitchUrl && (
+                    <a
+                      href={officialTwitchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      Abrir Twitch
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </a>
+                      <Button
+                        variant="outline"
+                        className="sgames-outline-button"
+                      >
+                        Abrir Twitch
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-0">
+                {officialTwitchEmbedUrl ? (
+                  <div className="aspect-video bg-black">
+                    <iframe
+                      title="Super Games Twitch"
+                      src={officialTwitchEmbedUrl}
+                      className="h-full w-full"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <div className="flex aspect-video flex-col items-center justify-center bg-black/35 p-8 text-center">
+                    <Twitch className="mb-4 h-12 w-12 text-violet-300" />
+
+                    <h2 className="text-xl font-bold text-[var(--sg-text)]">
+                      Canal oficial por configurar
+                    </h2>
+
+                    <p className="mt-2 max-w-lg text-sm text-[var(--sg-muted-text)]">
+                      Cuando el canal oficial de Twitch esté configurado, el reproductor aparecerá aquí automáticamente.
+                    </p>
+                  </div>
                 )}
-              </div>
-            </CardHeader>
+              </CardContent>
+            </Card>
 
-            <CardContent className="p-0">
-              {officialTwitchEmbedUrl ? (
-                <div className="aspect-video bg-black">
-                  <iframe
-                    title="Super Games Twitch"
-                    src={officialTwitchEmbedUrl}
-                    className="h-full w-full"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <div className="flex aspect-video flex-col items-center justify-center bg-black/35 p-8 text-center">
-                  <Twitch className="mb-4 h-12 w-12 text-violet-300" />
+            {showRunnerPlayer && (
+              <Card className="sgames-glass sgames-neon-border overflow-hidden">
+                <CardHeader className="border-b border-[var(--sg-border)]">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-[var(--sg-text)]">
+                          <Twitch className="h-5 w-5 text-violet-300" />
+                          Canal del runner
+                        </CardTitle>
 
-                  <h2 className="text-xl font-bold text-[var(--sg-text)]">
-                    Canal oficial por configurar
-                  </h2>
+                        <Badge className="border border-violet-400/25 bg-violet-500/10 text-violet-200">
+                          Runner de SGames
+                        </Badge>
+                      </div>
 
-                  <p className="mt-2 max-w-lg text-sm text-[var(--sg-muted-text)]">
-                    Cuando el canal oficial de Twitch esté configurado, el reproductor aparecerá aquí automáticamente.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      <p className="mt-1 text-sm text-[var(--sg-muted-text)]">
+                        {displayData.runnerDisplayName ||
+                          displayData.runnerName ||
+                          runnerTwitchLogin}
+                        {runnerTwitchLogin
+                          ? ` · twitch.tv/${runnerTwitchLogin}`
+                          : ""}
+                      </p>
+
+                      <p className="mt-1 text-xs text-[var(--sg-muted-text)]">
+                        Si el runner está transmitiendo desde su propio canal, su directo aparecerá aquí. El audio inicia silenciado para evitar duplicarlo con la transmisión oficial.
+                      </p>
+                    </div>
+
+                    <a
+                      href={normalizedRunnerTwitchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button
+                        variant="outline"
+                        className="sgames-outline-button"
+                      >
+                        Abrir canal del runner
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </Button>
+                    </a>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="p-0">
+                  <div className="aspect-video bg-black">
+                    <iframe
+                      title={`Twitch de ${runnerTwitchLogin}`}
+                      src={runnerTwitchEmbedUrl}
+                      className="h-full w-full"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
           <Card className="sgames-glass sgames-neon-border h-fit">
             <CardHeader className="border-b border-[var(--sg-border)]">
@@ -446,9 +540,9 @@ export default function StreamPage() {
                     )}
                   </div>
 
-                  {runnerTwitchUrl ? (
+                  {normalizedRunnerTwitchUrl ? (
                     <a
-                      href={runnerTwitchUrl}
+                      href={normalizedRunnerTwitchUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block"
