@@ -6,6 +6,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import PostulacionPage from "./pages/PostulacionPage";
 import HorarioPage from "./pages/HorarioPage";
+import StreamPage from "./pages/StreamPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPostulaciones from "./pages/admin/AdminPostulaciones";
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
           { index: true, Component: HomePage },
           { path: "postulacion", Component: PostulacionPage },
           { path: "horario", Component: HorarioPage },
+          { path: "stream", Component: StreamPage },
           { path: "runs", Component: RunsPage },
           { path: "clips", Component: ClipsPage },
           { path: "runner/login", Component: RunnerLoginPage },

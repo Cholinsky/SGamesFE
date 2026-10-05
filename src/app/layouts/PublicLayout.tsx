@@ -952,6 +952,20 @@ export function PublicLayout() {
 
             <Link
 
+              to="/stream"
+
+              className={navLinkClass("/stream")}
+
+            >
+
+              Stream
+
+            </Link>
+
+
+
+            <Link
+
               to="/#faq"
 
               className="sgames-nav-link"
@@ -1112,6 +1126,26 @@ export function PublicLayout() {
               >
 
                 Horario
+
+              </Link>
+
+
+
+              <Link
+
+                to="/stream"
+
+                onClick={() =>
+
+                  setMobileMenuOpen(false)
+
+                }
+
+                className={navLinkClass("/stream")}
+
+              >
+
+                Stream
 
               </Link>
 

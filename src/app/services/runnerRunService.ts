@@ -8,8 +8,7 @@ export type RunnerRun = {
   categoryName: string;
   platformName: string;
   estimatedTime: string;
-  gameReleaseDate?: string | null;
-  runType: string;
+  gameReleaseYear?: number | null;  runType: string;
   isRace: boolean;
   maxPlayers: number;
   videoUrl?: string | null;
@@ -24,7 +23,7 @@ export type RunnerRunPayload = {
   categoryName: string;
   platformName: string;
   estimatedTime: string;
-  gameReleaseDate?: string | null;
+  gameReleaseYear?: number | null;
   runType: string;
   isRace: boolean;
   maxPlayers: number;
