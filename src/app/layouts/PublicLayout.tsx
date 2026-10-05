@@ -1351,6 +1351,20 @@ export function PublicLayout() {
 
                 <Link
 
+                  to="/stream"
+
+                  className="transition hover:text-[var(--sg-accent)]"
+
+                >
+
+                  Streams en vivo
+
+                </Link>
+
+
+
+                <Link
+
                   to="/#faq"
 
                   className="transition hover:text-[var(--sg-accent)]"

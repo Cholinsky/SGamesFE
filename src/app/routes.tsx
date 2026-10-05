@@ -6,7 +6,6 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import PostulacionPage from "./pages/PostulacionPage";
 import HorarioPage from "./pages/HorarioPage";
-import StreamPage from "./pages/StreamPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPostulaciones from "./pages/admin/AdminPostulaciones";
@@ -28,6 +27,7 @@ import RunnerRegisterPage from "./pages/RunnerRegisterPage";
 import RunnerProfilePage from "./pages/RunnerProfilePage";
 import RunnerRunsPage from "./pages/RunnerRunsPage";
 import RunnerPostulacionPage from "./pages/RunnerPostulacionPage";
+import StreamPage from "./pages/StreamPage";
 
 export const router = createBrowserRouter([
   {
